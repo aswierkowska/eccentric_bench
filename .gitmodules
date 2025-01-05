@@ -1,0 +1,3 @@
+[submodule "external/qiskit-qec"]
+	path = external/qiskit-qec
+	url = git@github.com:aswierkowska/qiskit-qec.git
