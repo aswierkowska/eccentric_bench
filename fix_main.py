@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/home/aswierkowska/eccentric_bench/external/qiskit_qec")
+
 import stim
 import pymatching
 import numpy as np
