@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/aswierkowska/eccentric_bench/external/qiskit_qec/src")
+#sys.path.append("/home/aswierkowska/eccentric_bench/external/qiskit_qec/src")
 
 import stim
 import pymatching
@@ -7,6 +7,8 @@ import numpy as np
 import yaml
 import logging
 import matplotlib.pyplot as plt
+from dotenv import load_dotenv
+import os
 
 from itertools import product
 from concurrent.futures import ProcessPoolExecutor
@@ -17,17 +19,34 @@ from qiskit_qec.circuits import SurfaceCodeCircuit, CSSCodeCircuit
 from qiskit_qec.codes.hhc import HHC
 from qiskit_qec.utils import get_stim_circuits, noisify_circuit
 from qiskit_qec.noise import PauliNoiseModel
+from qiskit_qec.codes.gross_code import GrossCode
+from qiskit_qec.circuits.gross_code_circuit import GrossCodeCircuit
+
 
 #def get_code(code: str, d: int):
 #    surface_code = CSSCode.from_code_name("surface", 3)
 #    ft_prep = gate_optimal_prep_circuit(surface_code, zero_state=True, max_timeout=2)
 #    return ft_prep.circ
 
+
+def load_IBM_account():
+    load_dotenv()
+    token=os.getenv("IBM_TOKEN")
+    QiskitRuntimeService.save_account(
+    token=token,
+    channel="ibm_quantum" # `channel` distinguishes between different account types
+    )
+
+
 def get_code(code_name: str, d: int):
     if code_name == "hh":
         code = HHC(d)
         css_code = CSSCodeCircuit(code, T=d)
         return css_code
+    elif code_name == "gross":
+        code = GrossCode(d)
+        code_circuit = GrossCodeCircuit(code, T=d)
+        return code_circuit
     elif code_name == "surface":
         code = SurfaceCodeCircuit(d=d, T=d)
     
@@ -76,7 +95,7 @@ def run_experiment(experiment_name, backend, code_name, d, num_samples, error_pr
         code = get_code(code_name, d)
         detectors, logicals = code.stim_detectors()
         code.circuit['0'] = map_circuit(code.circuit['0'], backend)
-        
+        print("Are we there yet?")
         for state, qc in code.circuit.items():
             code.noisy_circuit[state] = noisify_circuit(qc, error_prob)
         
@@ -91,6 +110,8 @@ def run_experiment(experiment_name, backend, code_name, d, num_samples, error_pr
         logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend}: {e}")
 
 if __name__ == '__main__':
+    #load_IBM_account()
+
     logging.getLogger("qiskit").setLevel(logging.WARNING)
     logging.basicConfig(
         filename='qecc_benchmark.log',
