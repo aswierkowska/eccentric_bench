@@ -22,6 +22,8 @@ from qiskit_qec.noise import PauliNoiseModel
 from qiskit_qec.codes.gross_code import GrossCode
 from qiskit_qec.circuits.gross_code_circuit import GrossCodeCircuit
 
+from custom_backend import FakeLargeBackend
+
 
 #def get_code(code: str, d: int):
 #    surface_code = CSSCode.from_code_name("surface", 3)
@@ -57,6 +59,13 @@ def map_circuit(circuit: QuantumCircuit, backend: str):
     if backend[:3] == "ibm":
         service = QiskitRuntimeService(instance="ibm-q/open/main")
         backend = service.backend(backend)
+        circuit = transpile(circuit, 
+            backend=backend,
+            basis_gates=stim_gates,
+            optimization_level=0
+        )
+    elif backend == "fake_11":
+        backend = FakeLargeBackend(distance=11, number_of_chips=1)
         circuit = transpile(circuit, 
             backend=backend,
             basis_gates=stim_gates,

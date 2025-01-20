@@ -1,7 +1,7 @@
 experiments:
   - name: "Basic"
     num_samples: 10000
-    backends: ["ibm_brisbane"]
+    backends: ["fake_11"]
     codes: ["gross"]
     distances: [3, 5]
     error_probability: 0.001
