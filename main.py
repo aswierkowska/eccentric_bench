@@ -77,9 +77,14 @@ def map_circuit(circuit: QuantumCircuit, backend: str):
 def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
     sampler = circuit.compile_detector_sampler()
     detection_events, observable_flips = sampler.sample(num_shots, separate_observables=True)
+
+
     detector_error_model = circuit.detector_error_model(decompose_errors=True, approximate_disjoint_errors=True)
+
+    
     matcher = pymatching.Matching.from_detector_error_model(detector_error_model)
     predictions = matcher.decode_batch(detection_events)
+
     num_errors = 0
     for shot in range(num_shots):
         actual_for_shot = observable_flips[shot]
@@ -104,14 +109,12 @@ def run_experiment(experiment_name, backend, code_name, d, num_samples, error_pr
         code = get_code(code_name, d)
         detectors, logicals = code.stim_detectors()
         code.circuit['0'] = map_circuit(code.circuit['0'], backend)
-        print("Are we there yet?")
         for state, qc in code.circuit.items():
             code.noisy_circuit[state] = noisify_circuit(qc, error_prob)
         
         stim_circuit = get_stim_circuits(
             code.noisy_circuit['0'], detectors=detectors, logicals=logicals
         )[0][0]
-        
         logical_error_rate = simulate_circuit(stim_circuit, num_samples)
         logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend}: {logical_error_rate}")
     
