@@ -2,6 +2,6 @@ experiments:
   - name: "Basic"
     num_samples: 10000
     backends: ["fake_11"]
-    codes: ["gross"]
+    codes: ["hh"]
     distances: [3]
     error_probability: 0.001
