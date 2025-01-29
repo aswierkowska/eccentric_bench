@@ -78,9 +78,10 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
     sampler = circuit.compile_detector_sampler()
     detection_events, observable_flips = sampler.sample(num_shots, separate_observables=True)
 
-    s = circuit.diagram('detslice-with-ops-svg', tick=range(14, 24), filter_coords=['D326', 'D508', 'L0', ])
-    with open("circuit.svg", "w") as f:
-        f.write(str(s)) # For testing reasons
+    #s = circuit.diagram('detslice-with-ops-svg', tick=range(14, 24), filter_coords=['D326', 'D508', 'L0', ])
+    #with open("circuit.svg", "w") as f:
+    #    f.write(str(s)) # For testing reasons
+    circuit.to_file("circuit.stim")
     detector_error_model = circuit.detector_error_model(decompose_errors=True, approximate_disjoint_errors=True)
 
 
