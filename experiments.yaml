@@ -1,7 +1,7 @@
 experiments:
   - name: "Basic"
-    num_samples: 10000
+    num_samples: 100
     backends: ["fake_11"]
     codes: ["gross"]
     distances: [1]
-    error_probability: 0.001
+    error_probability: 0.3
