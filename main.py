@@ -82,12 +82,14 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
     #with open("circuit.svg", "w") as f:
     #    f.write(str(s)) # For testing reasons
     circuit.to_file("circuit.stim")
-    detector_error_model = circuit.detector_error_model(decompose_errors=True, approximate_disjoint_errors=True)
+    detector_error_model = circuit.detector_error_model(ignore_decomposition_failures=True,decompose_errors=True, approximate_disjoint_errors=True)
 
+    print("Do we get here?")
 
     matcher = pymatching.Matching.from_detector_error_model(detector_error_model)
+    print("Does this work?")
     predictions = matcher.decode_batch(detection_events)
-
+    print("Does this work?")
     num_errors = 0
     for shot in range(num_shots):
         actual_for_shot = observable_flips[shot]
@@ -98,8 +100,8 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
 
 def generate_pauli_error(p: int) -> PauliNoiseModel:
     pnm = PauliNoiseModel()
-    #pnm.add_operation("h", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p}) # here the weights do NOT need to be normalized
-    pnm.add_operation("h", {"x": 0.00, "y": 0.00, "z": 0.00,  "i": 1 - 0.000}) # here the weights do NOT need to be normalized
+    pnm.add_operation("h", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p}) # here the weights do NOT need to be normalized
+    #pnm.add_operation("h", {"x": 0.00, "y": 0.00, "z": 0.00,  "i": 1 - 0.000}) # here the weights do NOT need to be normalized
    
     #pnm.add_operation("cx", {"ix": 1, "xi": 1, "xx": 1})
     #pnm.add_operation("id", {"x": 1})
