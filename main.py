@@ -80,21 +80,26 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
     sampler = circuit.compile_detector_sampler()
     detection_events, observable_flips = sampler.sample(num_shots, separate_observables=True)
 
+    np.set_printoptions(threshold=sys.maxsize)
+    logging.info(f"Observable flips: {observable_flips}")
+    logging.info(f"Detection events: {detection_events}")
+
     #np.set_printoptions(threshold=sys.maxsize)
     #print(detection_events)
     #s = circuit.diagram('detslice-with-ops-svg', tick=range(14, 24), filter_coords=['D326', 'D508', 'L0', ])
     #with open("detection.txt", "w") as f:
     #    f.write(str(detection_events)) # For testing reasons
     #circuit.to_file("circuit.stim")
-    detector_error_model = circuit.detector_error_model(ignore_decomposition_failures=True,decompose_errors=True, approximate_disjoint_errors=True)
+    detector_error_model = circuit.detector_error_model(approximate_disjoint_errors=True)
 
-    print("Do we get here?")
-    
+    logging.info(f"Detector error model: {detector_error_model}")
     #matcher = pymatching.Matching.from_detector_error_model(detector_error_model)
-    print("Does this work?")
-    matcher = BPOSD(detector_error_model, max_bp_iters=20)
+    matcher = BPOSD(detector_error_model, max_bp_iters=1)
     predictions = matcher.decode_batch(detection_events)
-    print("Does this work?")
+
+    logging.info(f"Predictions: {predictions}")
+
+    num_mistakes = np.sum(np.any(predictions != observable_flips, axis=1))
     num_errors = 0
     for shot in range(num_shots):
         actual_for_shot = observable_flips[shot]
@@ -105,13 +110,13 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
 
 def generate_pauli_error(p: float) -> PauliNoiseModel:
     pnm = PauliNoiseModel()
-    #pnm.add_operation("h", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p}) # here the weights do NOT need to be normalized
+    pnm.add_operation("h", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p}) # here the weights do NOT need to be normalized
     #pnm.add_operation("h", {"x": 0.00, "y": 0.00, "z": 0.00,  "i": 1 - 0.000}) # here the weights do NOT need to be normalized
    
-    pnm.add_operation("cx", {"ix": 1, "xi": 1, "xx": 1})
+    pnm.add_operation("cx", {"ix": p/3, "xi": p/3, "xx": p/3, "ii": 1 - p})
     #pnm.add_operation("id", {"x": 1})
     #pnm.add_operation("reset", {"x": 1})
-    #pnm.add_operation("measure", {"x": .5, "y": 0.00, "z": 0.00,  "i": 1 - 0.5})
+    pnm.add_operation("measure", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p})
     #pnm.add_operation("x", {"x": p, "y": 0, "z": 0, "i": 1-p})
     return pnm
 
@@ -121,13 +126,23 @@ def run_experiment(experiment_name, backend, code_name, d, num_samples, error_pr
         code = get_code(code_name, d)
         detectors, logicals = code.stim_detectors()
         code.circuit['0'] = map_circuit(code.circuit['0'], backend)
+        print(code.circuit.items())
         for state, qc in code.circuit.items():
             code.noisy_circuit[state] = noisify_circuit(qc, error_prob)
         
+        #circuit to pdf
+        #code.noisy_circuit['0'].draw(output='mpl', filename='circuit.pdf',vertical_compression='high', scale=0.3, fold=500)
+        print(type(code.circuit['0']))
         stim_circuit = get_stim_circuits(
+            code.circuit['0'], detectors=detectors, logicals=logicals
+        )[0][0]
+
+        stim_circuit_2 = get_stim_circuits(
             code.noisy_circuit['0'], detectors=detectors, logicals=logicals
         )[0][0]
-        logical_error_rate = simulate_circuit(stim_circuit, num_samples)
+        #stim_circuit.to_file(file="circuit_noNoise.stim")
+        #stim_circuit_2.to_file(file="circuit_withNoise.stim")
+        logical_error_rate = simulate_circuit(stim_circuit_2, num_samples)
         logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend}: {logical_error_rate}")
     
     except Exception as e:

@@ -3,5 +3,5 @@ experiments:
     num_samples: 100
     backends: ["fake_11"]
     codes: ["gross"]
-    distances: [1]
-    error_probability: 0.3
+    distances: [9]
+    error_probability: 0.07
