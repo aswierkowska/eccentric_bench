@@ -1,5 +1,6 @@
 import sys
-sys.path.append("/home/aswierkowska/eccentric_bench/external/qiskit_qec/src")
+import os
+sys.path.append(os.path.join(os.getcwd(), "external/qiskit_qec/src"))
 
 import stim
 import pymatching
