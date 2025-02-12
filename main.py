@@ -9,6 +9,7 @@ import logging
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 import os
+import random
 
 from itertools import product
 from concurrent.futures import ProcessPoolExecutor
@@ -24,7 +25,9 @@ from qiskit_qec.circuits.gross_code_circuit import GrossCodeCircuit
 
 from custom_backend import FakeLargeBackend
 
-from stimbposd import BPOSD
+from stimbposd import BPOSD#doesn't work with current ldpc code  pip install -U ldpc==0.1.60
+
+#from ldpc.bplsd_decoder import BpLsdDecoder
 
 
 #def get_code(code: str, d: int):
@@ -81,25 +84,20 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
     detection_events, observable_flips = sampler.sample(num_shots, separate_observables=True)
 
     np.set_printoptions(threshold=sys.maxsize)
-    logging.info(f"Observable flips: {observable_flips}")
-    logging.info(f"Detection events: {detection_events}")
-
-    #np.set_printoptions(threshold=sys.maxsize)
-    #print(detection_events)
-    #s = circuit.diagram('detslice-with-ops-svg', tick=range(14, 24), filter_coords=['D326', 'D508', 'L0', ])
-    #with open("detection.txt", "w") as f:
-    #    f.write(str(detection_events)) # For testing reasons
-    #circuit.to_file("circuit.stim")
     detector_error_model = circuit.detector_error_model(approximate_disjoint_errors=True)
 
-    logging.info(f"Detector error model: {detector_error_model}")
-    #matcher = pymatching.Matching.from_detector_error_model(detector_error_model)
-    matcher = BPOSD(detector_error_model, max_bp_iters=1)
+    #logging.info(f"Detector error model: {detector_error_model}")
+    matcher = BPOSD(detector_error_model, max_bp_iters=40)
+
+
     predictions = matcher.decode_batch(detection_events)
 
-    logging.info(f"Predictions: {predictions}")
+    random_predictions = [random.choice([[True], [False]]) for _ in range(len(observable_flips))]
 
-    num_mistakes = np.sum(np.any(predictions != observable_flips, axis=1))
+    #logging.info(f"Predictions: {predictions}")
+
+    num_mistakes = np.sum(np.any(random_predictions != observable_flips, axis=1))
+    print(f"Random predictions: {num_mistakes}")
     num_errors = 0
     for shot in range(num_shots):
         actual_for_shot = observable_flips[shot]
@@ -121,9 +119,33 @@ def generate_pauli_error(p: float) -> PauliNoiseModel:
     return pnm
 
 
+def try_different_decoder(code):
+    H = code.H
+    bp_osd = BpLsdDecoder(
+            H,
+            error_rate = 0.01,
+            bp_method = 'product_sum',
+            max_iter = 2,
+            schedule = 'parallel',
+            lsd_method = 'lsd_cs',
+            lsd_order = 0
+        )
+    
+    syndrome = np.random.randint(size=H.shape[0], low=0, high=2).astype(np.uint8)
+
+    print(f"Syndrome: {syndrome}")
+    decoding = bp_osd.decode(syndrome)
+    print(f"Decoding: {decoding}")
+    decoding_syndrome = H@decoding % 2
+    print(f"Decoding syndrome: {decoding_syndrome}")
+    
+
+
 def run_experiment(experiment_name, backend, code_name, d, num_samples, error_prob):
+    code = get_code(code_name, d)
+    #try_different_decoder(code)
     try:
-        code = get_code(code_name, d)
+        
         detectors, logicals = code.stim_detectors()
         code.circuit['0'] = map_circuit(code.circuit['0'], backend)
         print(code.circuit.items())
