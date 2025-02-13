@@ -1,5 +1,6 @@
 import sys
-#sys.path.append("/home/aswierkowska/eccentric_bench/external/qiskit_qec/src")
+import os
+sys.path.append(os.path.join(os.getcwd(), "external/qiskit_qec/src"))
 
 import stim
 import pymatching
@@ -7,7 +8,6 @@ import numpy as np
 import yaml
 import logging
 import matplotlib.pyplot as plt
-from dotenv import load_dotenv
 import os
 import random
 
@@ -28,21 +28,12 @@ from custom_backend import FakeLargeBackend
 from stimbposd import BPOSD#doesn't work with current ldpc code  pip install -U ldpc==0.1.60
 
 #from ldpc.bplsd_decoder import BpLsdDecoder
+from qiskit.visualization import circuit_drawer
 
-
-#def get_code(code: str, d: int):
+# def get_code(code: str, d: int):
 #    surface_code = CSSCode.from_code_name("surface", 3)
 #    ft_prep = gate_optimal_prep_circuit(surface_code, zero_state=True, max_timeout=2)
 #    return ft_prep.circ
-
-
-def load_IBM_account():
-    load_dotenv()
-    token=os.getenv("IBM_TOKEN")
-    QiskitRuntimeService.save_account(
-    token=token,
-    channel="ibm_quantum" # `channel` distinguishes between different account types
-    )
 
 
 def get_code(code_name: str, d: int):
@@ -55,19 +46,31 @@ def get_code(code_name: str, d: int):
         code_circuit = GrossCodeCircuit(code, T=d)
         return code_circuit
     elif code_name == "surface":
-        code = SurfaceCodeCircuit(d=d, T=d)
-    
+        code = SurfaceCodeCircuit(d=d, T=1)
+        return code
 
 
 def map_circuit(circuit: QuantumCircuit, backend: str):
-    stim_gates = ['x', 'y', 'z', 'cx', 'cz', 'cy', 'h', 's', 's_dag', 'swap', 'reset', 'measure', 'barrier'] # only allows basis gates available in Stim
+    stim_gates = [
+        "x",
+        "y",
+        "z",
+        "cx",
+        "cz",
+        "cy",
+        "h",
+        "s",
+        "s_dag",
+        "swap",
+        "reset",
+        "measure",
+        "barrier",
+    ]  # only allows basis gates available in Stim
     if backend[:3] == "ibm":
         service = QiskitRuntimeService(instance="ibm-q/open/main")
         backend = service.backend(backend)
-        circuit = transpile(circuit, 
-            backend=backend,
-            basis_gates=stim_gates,
-            optimization_level=0
+        circuit = transpile(
+            circuit, backend=backend, basis_gates=stim_gates, optimization_level=0
         )
     elif backend == "fake_11":
         backend = FakeLargeBackend(distance=11, number_of_chips=1)
@@ -88,8 +91,6 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
 
     #logging.info(f"Detector error model: {detector_error_model}")
     matcher = BPOSD(detector_error_model, max_bp_iters=40)
-
-
     predictions = matcher.decode_batch(detection_events)
 
     random_predictions = [random.choice([[True], [False]]) for _ in range(len(observable_flips))]
@@ -172,12 +173,11 @@ def run_experiment(experiment_name, backend, code_name, d, num_samples, error_pr
 
 if __name__ == '__main__':
     #load_IBM_account()
-
     logging.getLogger("qiskit").setLevel(logging.WARNING)
     logging.basicConfig(
-        filename='qecc_benchmark.log',
+        filename="qecc_benchmark.log",
         level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(levelname)s - %(message)s",
     )
 
     with open("experiments.yaml", "r") as f:
@@ -195,7 +195,15 @@ if __name__ == '__main__':
 
         with ProcessPoolExecutor() as executor:
             futures = [
-                executor.submit(run_experiment, experiment_name, backend, code_name, d, num_samples, error_prob)
+                executor.submit(
+                    run_experiment,
+                    experiment_name,
+                    backend,
+                    code_name,
+                    d,
+                    num_samples,
+                    error_prob,
+                )
                 for backend, code_name, d in parameter_combinations
             ]
 
