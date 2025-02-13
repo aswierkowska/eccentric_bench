@@ -25,15 +25,8 @@ from qiskit_qec.circuits.gross_code_circuit import GrossCodeCircuit
 
 from custom_backend import FakeLargeBackend
 
-from stimbposd import BPOSD#doesn't work with current ldpc code  pip install -U ldpc==0.1.60
+from stimbposd import BPOSD#doesn't work with current ldpcv2 code  pip install -U ldpc==0.1.60
 
-#from ldpc.bplsd_decoder import BpLsdDecoder
-
-
-#def get_code(code: str, d: int):
-#    surface_code = CSSCode.from_code_name("surface", 3)
-#    ft_prep = gate_optimal_prep_circuit(surface_code, zero_state=True, max_timeout=2)
-#    return ft_prep.circ
 
 
 def load_IBM_account():
@@ -45,14 +38,14 @@ def load_IBM_account():
     )
 
 
-def get_code(code_name: str, d: int):
+def get_code(code_name: str, d: int, depol_error: float = 0.00):
     if code_name == "hh":
         code = HHC(d)
         css_code = CSSCodeCircuit(code, T=d)
         return css_code
     elif code_name == "gross":
         code = GrossCode(d)
-        code_circuit = GrossCodeCircuit(code, T=d)
+        code_circuit = GrossCodeCircuit(code, T=d, depol_error_rate=depol_error)
         return code_circuit
     elif code_name == "surface":
         code = SurfaceCodeCircuit(d=d, T=d)
@@ -60,7 +53,7 @@ def get_code(code_name: str, d: int):
 
 
 def map_circuit(circuit: QuantumCircuit, backend: str):
-    stim_gates = ['x', 'y', 'z', 'cx', 'cz', 'cy', 'h', 's', 's_dag', 'swap', 'reset', 'measure', 'barrier'] # only allows basis gates available in Stim
+    stim_gates = ['x', 'y', 'z', 'cx', 'cz', 'cy', 'h', 's', 's_dag', 'swap', 'reset', 'measure', 'barrier', 'id'] # only allows basis gates available in Stim
     if backend[:3] == "ibm":
         service = QiskitRuntimeService(instance="ibm-q/open/main")
         backend = service.backend(backend)
@@ -84,12 +77,17 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
     detection_events, observable_flips = sampler.sample(num_shots, separate_observables=True)
 
     np.set_printoptions(threshold=sys.maxsize)
-    detector_error_model = circuit.detector_error_model(approximate_disjoint_errors=True)
-
-    #logging.info(f"Detector error model: {detector_error_model}")
+    detector_error_model = circuit.detector_error_model(approximate_disjoint_errors=True,
+                                                         allow_gauge_detectors=True,
+                                                         flatten_loops=True, decompose_errors=True,
+                                                         ignore_decomposition_failures=True,
+                                                         block_decomposition_from_introducing_remnant_edges=True)
     matcher = BPOSD(detector_error_model, max_bp_iters=40)
 
-
+    #print(detection_events[0])
+    #for i in list(detection_events[0]):
+    #    list(detection_events)[0][i] = False
+    #print(detection_events[0])
     predictions = matcher.decode_batch(detection_events)
 
     random_predictions = [random.choice([[True], [False]]) for _ in range(len(observable_flips))]
@@ -108,63 +106,32 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
 
 def generate_pauli_error(p: float) -> PauliNoiseModel:
     pnm = PauliNoiseModel()
-    pnm.add_operation("h", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p}) # here the weights do NOT need to be normalized
-    #pnm.add_operation("h", {"x": 0.00, "y": 0.00, "z": 0.00,  "i": 1 - 0.000}) # here the weights do NOT need to be normalized
-   
-    pnm.add_operation("cx", {"ix": p/3, "xi": p/3, "xx": p/3, "ii": 1 - p})
-    #pnm.add_operation("id", {"x": 1})
-    #pnm.add_operation("reset", {"x": 1})
-    pnm.add_operation("measure", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p})
-    #pnm.add_operation("x", {"x": p, "y": 0, "z": 0, "i": 1-p})
+    pnm.add_operation("h", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 0}) # here the weights do NOT need to be normalized
+    pnm.add_operation("cx", {"ix": p/3, "xi": p/3, "xx": p/3, "ii": 0})
+    pnm.add_operation("id", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 0})
+    pnm.add_operation("measure", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 0})
     return pnm
 
 
-def try_different_decoder(code):
-    H = code.H
-    bp_osd = BpLsdDecoder(
-            H,
-            error_rate = 0.01,
-            bp_method = 'product_sum',
-            max_iter = 2,
-            schedule = 'parallel',
-            lsd_method = 'lsd_cs',
-            lsd_order = 0
-        )
-    
-    syndrome = np.random.randint(size=H.shape[0], low=0, high=2).astype(np.uint8)
-
-    print(f"Syndrome: {syndrome}")
-    decoding = bp_osd.decode(syndrome)
-    print(f"Decoding: {decoding}")
-    decoding_syndrome = H@decoding % 2
-    print(f"Decoding syndrome: {decoding_syndrome}")
-    
-
-
-def run_experiment(experiment_name, backend, code_name, d, num_samples, error_prob):
-    code = get_code(code_name, d)
-    #try_different_decoder(code)
+def run_experiment(experiment_name, backend, code_name, d, num_samples, error_prob,depol_error=0.00):
+    code = get_code(code_name, d,depol_error)
+    detectors, logicals = code.stim_detectors()
+    code.circuit['0'] = map_circuit(code.circuit['0'], backend)
     try:
         
-        detectors, logicals = code.stim_detectors()
-        code.circuit['0'] = map_circuit(code.circuit['0'], backend)
-        print(code.circuit.items())
+        
+        print("DO WE GET HERE?")
         for state, qc in code.circuit.items():
             code.noisy_circuit[state] = noisify_circuit(qc, error_prob)
         
         #circuit to pdf
         #code.noisy_circuit['0'].draw(output='mpl', filename='circuit.pdf',vertical_compression='high', scale=0.3, fold=500)
-        print(type(code.circuit['0']))
         stim_circuit = get_stim_circuits(
-            code.circuit['0'], detectors=detectors, logicals=logicals
-        )[0][0]
-
-        stim_circuit_2 = get_stim_circuits(
             code.noisy_circuit['0'], detectors=detectors, logicals=logicals
         )[0][0]
-        #stim_circuit.to_file(file="circuit_noNoise.stim")
-        #stim_circuit_2.to_file(file="circuit_withNoise.stim")
-        logical_error_rate = simulate_circuit(stim_circuit_2, num_samples)
+        #TODO ADD INSERT FUNCTION TO ADD DEPOL NOISE
+        #stim_circuit.safe_insert("What are the paramesters")
+        logical_error_rate = simulate_circuit(stim_circuit, num_samples)
         logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend}: {logical_error_rate}")
     
     except Exception as e:
@@ -189,13 +156,15 @@ if __name__ == '__main__':
         backends = experiment["backends"]
         codes = experiment["codes"]
         distances = experiment["distances"]
+        depol_error = experiment["depol_error"]
         error_prob = generate_pauli_error(experiment["error_probability"])
+        print(error_prob.to_dict())
 
         parameter_combinations = product(backends, codes, distances)
 
         with ProcessPoolExecutor() as executor:
             futures = [
-                executor.submit(run_experiment, experiment_name, backend, code_name, d, num_samples, error_prob)
+                executor.submit(run_experiment, experiment_name, backend, code_name, d, num_samples, error_prob,depol_error)
                 for backend, code_name, d in parameter_combinations
             ]
 
