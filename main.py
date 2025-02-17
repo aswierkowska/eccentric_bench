@@ -21,7 +21,9 @@ from qiskit_qec.codes.hhc import HHC
 from qiskit_qec.utils import get_stim_circuits, noisify_circuit
 from qiskit_qec.noise import PauliNoiseModel
 from qiskit_qec.codes.gross_code import GrossCode
+from qiskit_qec.codes.bbc import BBCode
 from qiskit_qec.circuits.gross_code_circuit import GrossCodeCircuit
+from BBCODE_DICT import BBCODE_DICT
 
 from custom_backend import FakeLargeBackend
 
@@ -38,13 +40,14 @@ def load_IBM_account():
     )
 
 
-def get_code(code_name: str, d: int, depol_error: float = 0.00):
+def get_code(code_name: str, d: int, depol_error: float = 0.00, bb_tuple=None):
     if code_name == "hh":
         code = HHC(d)
         css_code = CSSCodeCircuit(code, T=d)
         return css_code
     elif code_name == "gross":
-        code = GrossCode(d)
+        l, m, exp_A, exp_B = BBCODE_DICT[tuple(bb_tuple)]
+        code = BBCode(bb_tuple[0],bb_tuple[1],bb_tuple[2],l,m,exp_A,exp_B)
         code_circuit = GrossCodeCircuit(code, T=d, depol_error_rate=depol_error)
         return code_circuit
     elif code_name == "surface":
@@ -113,8 +116,8 @@ def generate_pauli_error(p: float) -> PauliNoiseModel:
     return pnm
 
 
-def run_experiment(experiment_name, backend, code_name, d, num_samples, error_prob,depol_error=0.00):
-    code = get_code(code_name, d,depol_error)
+def run_experiment(experiment_name, backend, code_name, d, num_samples, error_prob,depol_error=0.00,bb_tuple=None):
+    code = get_code(code_name, d,depol_error,bb_tuple=bb_tuple)
     detectors, logicals = code.stim_detectors()
     code.circuit['0'] = map_circuit(code.circuit['0'], backend)
     try:
@@ -132,7 +135,7 @@ def run_experiment(experiment_name, backend, code_name, d, num_samples, error_pr
         #TODO ADD INSERT FUNCTION TO ADD DEPOL NOISE
         #stim_circuit.safe_insert("What are the paramesters")
         logical_error_rate = simulate_circuit(stim_circuit, num_samples)
-        logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend}: {logical_error_rate}")
+        logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend}: {logical_error_rate:.4f}")
     
     except Exception as e:
         logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend}: {e}")
@@ -158,13 +161,14 @@ if __name__ == '__main__':
         distances = experiment["distances"]
         depol_error = experiment["depol_error"]
         error_prob = generate_pauli_error(experiment["error_probability"])
+        bb_tuple = experiment["bb_tuple"]
         print(error_prob.to_dict())
 
         parameter_combinations = product(backends, codes, distances)
 
         with ProcessPoolExecutor() as executor:
             futures = [
-                executor.submit(run_experiment, experiment_name, backend, code_name, d, num_samples, error_prob,depol_error)
+                executor.submit(run_experiment, experiment_name, backend, code_name, d, num_samples, error_prob,depol_error,bb_tuple)
                 for backend, code_name, d in parameter_combinations
             ]
 

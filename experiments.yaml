@@ -3,6 +3,7 @@ experiments:
     num_samples: 10
     backends: ["fake_11"]
     codes: ["gross"]
-    distances: [3]
+    distances: [8]
     error_probability: 0.9
     depol_error: 0.0
+    bb_tuple: [144,12,12]
