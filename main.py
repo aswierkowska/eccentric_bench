@@ -25,18 +25,20 @@ from qiskit_qec.codes.hhc import HHC
 from qiskit_qec.utils import get_stim_circuits, noisify_circuit
 from qiskit_qec.noise import PauliNoiseModel
 from qiskit_qec.codes.gross_code import GrossCode
+from qiskit_qec.codes.bbc import BBCode
 from qiskit_qec.circuits.gross_code_circuit import GrossCodeCircuit
 from codes_q import create_bivariate_bicycle_codes
 
 from codes import get_gross_code
 from noise import add_stim_noise
+from BBCODE_DICT import BBCODE_DICT
 
 from custom_backend import FakeLargeBackend
 
 from stimbposd import BPOSD #doesn't work with current ldpcv2 code  pip install -U ldpc==0.1.60
 from ldpc import bposd_decoder
 
-def get_code(code_name: str, d: int, depol_error: float = 0.00):
+def get_code(code_name: str, d: int, depol_error: float = 0.00, bb_tuple=None):
     if code_name == "hh":
         code = HHC(d)
         css_code = CSSCodeCircuit(code, T=d)
@@ -264,7 +266,7 @@ if __name__ == '__main__':
 
         with ProcessPoolExecutor() as executor:
             futures = [
-                executor.submit(run_experiment, experiment_name, backend, code_name, d, num_samples, error_prob,depol_error)
+                executor.submit(run_experiment, experiment_name, backend, code_name, d, num_samples, error_prob,depol_error,bb_tuple)
                 for backend, code_name, d in parameter_combinations
             ]
 
