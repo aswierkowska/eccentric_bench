@@ -81,8 +81,32 @@ def map_circuit(circuit: QuantumCircuit, backend: str):
         )
     return circuit
 
+def get_matcher(detector_error_model: stim.DetectorErrorModel, decoder: str):
+    if decoder == "mwpm":
+        return pymatching.Matching.from_detector_error_model(detector_error_model)
+    elif decoder == "bposd":
+        return BPOSD(detector_error_model, max_bp_iters=40)
 
-def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
+def simulate_circuit(circuit: stim.Circuit, num_shots: int, decoder: str) -> int:
+    sampler = circuit.compile_detector_sampler()
+    detection_events, observable_flips = sampler.sample(
+        num_shots, separate_observables=True
+    )
+    detector_error_model = circuit.detector_error_model(
+        decompose_errors=True, approximate_disjoint_errors=True
+    )
+    matcher = get_matcher(detector_error_model, decoder)
+    predictions = matcher.decode_batch(detection_events)
+    num_errors = 0
+    for shot in range(num_shots):
+        actual_for_shot = observable_flips[shot]
+        predicted_for_shot = predictions[shot]
+        if not np.array_equal(actual_for_shot, predicted_for_shot):
+            num_errors += 1
+    return num_errors / num_shots
+
+"""
+def simulate_circuit_bposd(circuit: stim.Circuit, num_shots: int) -> int:
     sampler = circuit.compile_detector_sampler()
     detection_events, observable_flips = sampler.sample(num_shots, separate_observables=True)
 
@@ -106,6 +130,7 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
         if not np.array_equal(actual_for_shot, predicted_for_shot):
             num_errors += 1
     return num_errors / num_shots
+"""
 
 def generate_pauli_error(p: float) -> PauliNoiseModel:
     pnm = PauliNoiseModel()
@@ -120,29 +145,7 @@ def generate_pauli_error(p: float) -> PauliNoiseModel:
     return pnm
 
 
-def try_different_decoder(code):
-    H = code.H
-    bp_osd = BpLsdDecoder(
-            H,
-            error_rate = 0.01,
-            bp_method = 'product_sum',
-            max_iter = 2,
-            schedule = 'parallel',
-            lsd_method = 'lsd_cs',
-            lsd_order = 0
-        )
-    
-    syndrome = np.random.randint(size=H.shape[0], low=0, high=2).astype(np.uint8)
-
-    print(f"Syndrome: {syndrome}")
-    decoding = bp_osd.decode(syndrome)
-    print(f"Decoding: {decoding}")
-    decoding_syndrome = H@decoding % 2
-    print(f"Decoding syndrome: {decoding_syndrome}")
-    
-
-
-def run_experiment(experiment_name, backend, code_name, d, num_samples, error_prob):
+def run_experiment(experiment_name, backend, code_name, d, num_samples, error_prob, decoder):
     code = get_code(code_name, d)
     #try_different_decoder(code)
     try:
@@ -165,8 +168,8 @@ def run_experiment(experiment_name, backend, code_name, d, num_samples, error_pr
         )[0][0]
         #stim_circuit.to_file(file="circuit_noNoise.stim")
         #stim_circuit_2.to_file(file="circuit_withNoise.stim")
-        logical_error_rate = simulate_circuit(stim_circuit_2, num_samples)
-        logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend}: {logical_error_rate}")
+        logical_error_rate = simulate_circuit(stim_circuit_2, num_samples, decoder)
+        logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend}, decoder {decoder}: {logical_error_rate}")
     
     except Exception as e:
         logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend}: {e}")
@@ -189,9 +192,10 @@ if __name__ == '__main__':
         backends = experiment["backends"]
         codes = experiment["codes"]
         distances = experiment["distances"]
+        decoders = experiment["decoders"]
         error_prob = generate_pauli_error(experiment["error_probability"])
 
-        parameter_combinations = product(backends, codes, distances)
+        parameter_combinations = product(backends, codes, decoders, distances)
 
         with ProcessPoolExecutor() as executor:
             futures = [
@@ -203,8 +207,9 @@ if __name__ == '__main__':
                     d,
                     num_samples,
                     error_prob,
+                    decoder,
                 )
-                for backend, code_name, d in parameter_combinations
+                for backend, code_name, decoder, d in parameter_combinations
             ]
 
             for future in futures:

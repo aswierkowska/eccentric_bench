@@ -2,6 +2,7 @@ experiments:
   - name: "Basic"
     num_samples: 100
     backends: ["fake_11"]
-    codes: ["gross"]
-    distances: [2]
+    codes: ["hh", "surface"]
+    distances: [3] # since gross code uses 12 should all use it?
     error_probability: 0.07
+    decoders: ["bposd", "mwpm"] # mwpm
