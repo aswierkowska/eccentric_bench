@@ -1,7 +1,8 @@
 experiments:
-  - name: "Basic"
+  - name: "Topology_size"
     num_samples: 10000
-    backends: ["ibm_brisbane"]
+    backends: ["custom_cube"] # custom_line, custom_grid, custom_cube, custom_full
+    backends_sizes: [90] # [64, 125, 216, 343, 512]
     codes: ["hh"]
-    distances: [3, 5]
+    #distances: [3]
     error_probability: 0.001

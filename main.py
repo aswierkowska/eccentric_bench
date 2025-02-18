@@ -6,6 +6,7 @@ import stim
 import pymatching
 import numpy as np
 import yaml
+import math
 import logging
 import matplotlib.pyplot as plt
 
@@ -18,6 +19,7 @@ from qiskit_qec.circuits import SurfaceCodeCircuit, CSSCodeCircuit
 from qiskit_qec.codes.hhc import HHC
 from qiskit_qec.utils import get_stim_circuits, noisify_circuit
 from qiskit_qec.noise import PauliNoiseModel
+from backends import get_custom_backend
 
 #def get_code(code: str, d: int):
 #    surface_code = CSSCode.from_code_name("surface", 3)
@@ -31,20 +33,19 @@ def get_code(code_name: str, d: int):
         return css_code
     elif code_name == "surface":
         code = SurfaceCodeCircuit(d=d, T=d)
+        return code
     
 
 
-def map_circuit(circuit: QuantumCircuit, backend: str):
-    stim_gates = ['x', 'y', 'z', 'cx', 'cz', 'cy', 'h', 's', 's_dag', 'swap', 'reset', 'measure', 'barrier'] # only allows basis gates available in Stim
-    if backend[:3] == "ibm":
+def get_backend(backend: str, backend_size: int):
+    backed_type = backend.split("_")[0]
+    if backed_type == "ibm":
         service = QiskitRuntimeService(instance="ibm-q/open/main")
         backend = service.backend(backend)
-        circuit = transpile(circuit, 
-            backend=backend,
-            basis_gates=stim_gates,
-            optimization_level=0
-        )
-    return circuit
+    elif backed_type == "custom" and backend_size:
+        shape =  backend.split("_")[1]
+        backend = get_custom_backend(shape, backend_size)
+    return backend
 
 
 def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
@@ -67,29 +68,71 @@ def generate_pauli_error(p: int) -> PauliNoiseModel:
     #pnm.add_operation("cx", {"ix": 1, "xi": 1, "xx": 1})
     #pnm.add_operation("id", {"x": 1})
     #pnm.add_operation("reset", {"x": 1})
-    #pnm.add_operation("measure", {"x": 1})
+    pnm.add_operation("measure", {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p})
     #pnm.add_operation("x", {"x": 1, "y": 1, "z": 1})
     return pnm
 
+def generate_circuit_specific_pauli_error(gates: list, p: int) -> PauliNoiseModel:
+    pnm = PauliNoiseModel()
+    for gate in gates:
+        if gate in ["cx", "swap"]:
+            pnm.add_operation(gate, {"ix": p / 3, "xi": p / 3, "xx": p / 3, "ii": 1 - p})
+        else:
+            pnm.add_operation(gate, {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p})
+    return pnm
 
-def run_experiment(experiment_name, backend, code_name, d, num_samples, error_prob):
-    try:
+def get_max_d(code_name: str, n: int):
+    if code_name == "surface":
+        # d**2 data qubits + d**2 - 1 ancilla qubits
+        d =  math.floor(math.sqrt((n + 1) / 2))
+        d = d - ((1 - d) % 2)
+        return d
+    elif code_name == "hh":
+        # TODO: seems incorrect
+        d = math.floor(math.sqrt((2 * (n - 1) / 3) + 1))
+        d = d - ((1 - d) % 2)
+        return d
+    elif code_name == "gross":
+        return math.floor(n / 2)
+    return 0
+
+
+def run_experiment(experiment_name, backend_name, backend_size, code_name, d, num_samples, error_prob):
+        #   try:
+        stim_gates = ['x', 'y', 'z', 'cx', 'cz', 'cy', 'h', 's', 's_dag', 'swap', 'reset', 'measure', 'barrier']
+        backend = get_backend(backend_name, backend_size)
+        if d == None:
+           d = get_max_d(code_name, backend.coupling_map.size())
+           if d < 3:
+               logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible")
+               return
+        print(code_name, d)
         code = get_code(code_name, d)
         detectors, logicals = code.stim_detectors()
-        code.circuit['0'] = map_circuit(code.circuit['0'], backend)
+        code.circuit['0'] = transpile(code.circuit['0'], 
+            backend=backend,
+            basis_gates=stim_gates,
+            optimization_level=0
+        )
         
+        gates = set([gate[0].name for gate in code.circuit['0'].data])
+        print(gates)
+
+        # error_prob = generate_pauli_error(experiment["error_probability"])
+        error_prob = generate_circuit_specific_pauli_error(gates, experiment["error_probability"])
+
         for state, qc in code.circuit.items():
             code.noisy_circuit[state] = noisify_circuit(qc, error_prob)
-        
+        #print(code.noisy_circuit['0'])
         stim_circuit = get_stim_circuits(
             code.noisy_circuit['0'], detectors=detectors, logicals=logicals
         )[0][0]
         
         logical_error_rate = simulate_circuit(stim_circuit, num_samples)
-        logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend}: {logical_error_rate}")
+        logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: {logical_error_rate}")
     
-    except Exception as e:
-        logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend}: {e}")
+        #except Exception as e:
+        #logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}")
 
 if __name__ == '__main__':
     logging.getLogger("qiskit").setLevel(logging.WARNING)
@@ -107,16 +150,30 @@ if __name__ == '__main__':
         num_samples = experiment["num_samples"]
         backends = experiment["backends"]
         codes = experiment["codes"]
-        distances = experiment["distances"]
-        error_prob = generate_pauli_error(experiment["error_probability"])
+        error_prob = experiment["error_probability"]
 
-        parameter_combinations = product(backends, codes, distances)
-
+        # TODO: make parameters like distance=d
         with ProcessPoolExecutor() as executor:
-            futures = [
-                executor.submit(run_experiment, experiment_name, backend, code_name, d, num_samples, error_prob)
-                for backend, code_name, d in parameter_combinations
-            ]
+            if "distances" in experiment:
+                distances = experiment["distances"]
+                parameter_combinations = product(backends, codes, distances)
+                futures = [
+                    executor.submit(run_experiment, experiment_name, backend, None, code_name, d, num_samples, error_prob)
+                    for backend, code_name, d in parameter_combinations
+                ]
+            elif "backends_sizes" in experiment:
+                backends_sizes = experiment["backends_sizes"]
+                parameter_combinations = product(backends, backends_sizes, codes)
+                futures = [
+                    executor.submit(run_experiment, experiment_name, backend, backends_sizes, code_name, None, num_samples, error_prob)
+                    for backend, backends_sizes, code_name in parameter_combinations
+                ]
+            else:
+                parameter_combinations = product(backends, codes)
+                futures = [
+                    executor.submit(run_experiment, experiment_name, backend, None, code_name, None, num_samples, error_prob)
+                    for backend, code_name in parameter_combinations
+                ]
 
             for future in futures:
                 future.result()
