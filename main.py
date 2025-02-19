@@ -88,8 +88,8 @@ def get_max_d(code_name: str, n: int):
         d = d - ((1 - d) % 2)
         return d
     elif code_name == "hh":
-        # TODO: seems incorrect
-        d = math.floor(math.sqrt((2 * (n - 1) / 3) + 1))
+        # n = 5d^2 - 2d - 1 /2
+        d = int((2 + math.sqrt(40 * n + 24)) / 10)
         d = d - ((1 - d) % 2)
         return d
     elif code_name == "gross":
@@ -109,6 +109,7 @@ def run_experiment(experiment_name, backend_name, backend_size, code_name, d, nu
         print(code_name, d)
         code = get_code(code_name, d)
         detectors, logicals = code.stim_detectors()
+        print(code.circuit['0'].num_qubits)
         code.circuit['0'] = transpile(code.circuit['0'], 
             backend=backend,
             basis_gates=stim_gates,
@@ -152,7 +153,6 @@ if __name__ == '__main__':
         codes = experiment["codes"]
         error_prob = experiment["error_probability"]
 
-        # TODO: make parameters like distance=d
         with ProcessPoolExecutor() as executor:
             if "distances" in experiment:
                 distances = experiment["distances"]
