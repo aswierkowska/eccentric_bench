@@ -119,18 +119,21 @@ def run_experiment(experiment_name, backend_name, backend_size, code_name, d, nu
         gates = set([gate[0].name for gate in code.circuit['0'].data])
         print(gates)
 
-        # error_prob = generate_pauli_error(experiment["error_probability"])
-        error_prob = generate_circuit_specific_pauli_error(gates, experiment["error_probability"])
+        error_model = generate_circuit_specific_pauli_error(gates, error_prob)
+        #error_model = generate_pauli_error(error_prob)
 
         for state, qc in code.circuit.items():
-            code.noisy_circuit[state] = noisify_circuit(qc, error_prob)
+            code.noisy_circuit[state] = noisify_circuit(qc, error_model)
         #print(code.noisy_circuit['0'])
         stim_circuit = get_stim_circuits(
             code.noisy_circuit['0'], detectors=detectors, logicals=logicals
         )[0][0]
         
         logical_error_rate = simulate_circuit(stim_circuit, num_samples)
-        logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: {logical_error_rate}")
+        if backend_size:
+            logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}: {logical_error_rate}")
+        else:
+            logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: {logical_error_rate}")
     
         #except Exception as e:
         #logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}")
