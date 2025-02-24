@@ -5,4 +5,4 @@ experiments:
     codes: ["gross"]
     distances: [12]
     error_probability: 0.02
-    depol_error: 0.0
+
