@@ -1,9 +1,9 @@
 experiments:
   - name: "Basic"
     num_samples: 10
-    backends: ["fake_11"]
+    backends: ["full"]
     codes: ["gross"]
     distances: [8]
-    error_probability: 0.9
+    error_probability: 0.1
     depol_error: 0.0
     bb_tuple: [144,12,12]
