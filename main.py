@@ -268,43 +268,50 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
 
 
     #VERSION 2 BPOSD DECODER
+    #THIS DOES NOT WORK
     #print(observable_flips)
-    #bpd = bposd_decoder(
-    #    code.H,#the parity check matrix
-    #    error_rate=0.05,
-    #    channel_probs=[None], #assign error_rate to each qubit. This will override "error_rate" input variable
-    #    max_iter=10, #the maximum number of iterations for BP)
-    #    bp_method="ms",
-    #    ms_scaling_factor=0, #min sum scaling factor. If set to zero the variable scaling factor method is used
-    #    osd_method="osd_cs", #the OSD method. Choose from:  1) "osd_e", "osd_cs", "osd0"
-    #    osd_order=7 #the osd search depth
-    #)
-    #sum = 0
-    #for detection_event in detection_events:
-    #    #turn True into 1 and False into 0
-    #    detection_event = [int(i) for i in detection_event]
-    #    #print(len(detection_event))
-    #    syndrome = code.H@detection_event % 2
-    #    bpd.decode(syndrome)
-    #    residual_error = (bpd.osdw_decoding+detection_event) % 2
-    #    #print(bpd.osdw_decoding)
-    #    #print(code.logical_x)
-    #    logicals = code.logical_x + code.logical_z
-    #    a = (logicals@residual_error%2).any() 
-    #    if a: sum+=1
-    #
-    #return sum/num_shots
+    bpd = bposd_decoder(
+        code.H,#the parity check matrix
+        error_rate=0.001,
+        channel_probs=[None], #assign error_rate to each qubit. This will override "error_rate" input variable
+        max_iter=10, #the maximum number of iterations for BP)
+        bp_method="ms",
+        ms_scaling_factor=0, #min sum scaling factor. If set to zero the variable scaling factor method is used
+        osd_method="osd_cs", #the OSD method. Choose from:  1) "osd_e", "osd_cs", "osd0"
+        osd_order=7 #the osd search depth
+    )
+    print("BPD Done")
+    sum = 0
+
+    for detection_event in detection_events:
+        #turn True into 1 and False into 0
+        detection_event = [int(i) for i in detection_event]
+        residual_error = np.zeros(72,dtype=int)
+        for i in range(0,len(detection_events[0])-1,72):
+            #print(len(detection_event))
+            syndrome = code.H@detection_event[i:i+72] % 2
+            bpd.decode(syndrome)
+            #print("What: ",what)
+            residual_error = (residual_error + np.array((bpd.osd0_decoding+detection_event[i:i+72]) % 2) ) % 2
+        #print(bpd.osdw_decoding)
+        #print(code.logical_x)
+        logicals = np.vstack((code.logical_x,code.logical_z))
+        a = (logicals@residual_error%2).any() 
+        print("A: ",a)
+        if a: sum+=1
+    
+    return sum/num_shots
 
 
     #VERSION 1 BPOSD DECODER
-    matcher = BPOSD(detector_error_model, bp_method="min_sum", max_bp_iters=144, osd_order=10 ,osd_method="osd_cs")
+    #matcher = BPOSD(detector_error_model, bp_method="min_sum", max_bp_iters=144, osd_order=10 ,osd_method="osd_cs")
     #print("Matcher Done")
-    predictions = []
-    for detection_event in detection_events:
-        prediction = matcher.decode(detection_event)
-        predictions.append(prediction)
+    #predictions = []
+    #for detection_event in detection_events:
+    #    prediction = matcher.decode(detection_event)
+    #    predictions.append(prediction)
     
-    print("Predictions Done")
+    #print("Predictions Done")
 
     num_errors = 0
     for shot in range(num_shots):
@@ -362,8 +369,8 @@ def run_experiment(experiment_name, backend, code_name, d, num_samples, error_pr
         logical_error_rate = simulate_circuit(stim_circuit, num_samples, code)
         logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend}: {logical_error_rate:.4f}")
 
-    #except Exception as e:
-    #    logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend}: {e}")
+    except Exception as e:
+        logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend}: {e}")
 
 if __name__ == '__main__':
     logging.getLogger("qiskit").setLevel(logging.WARNING)
