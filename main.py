@@ -1,5 +1,5 @@
 import sys
-#sys.path.append("/home/aswierkowska/eccentric_bench/external/qiskit_qec/src")
+sys.path.append("/home/aswierkowska/eccentric_bench/external/qiskit_qec/src")
 
 import stim
 import pymatching
@@ -7,7 +7,6 @@ import numpy as np
 import yaml
 import logging
 import matplotlib.pyplot as plt
-from dotenv import load_dotenv
 import os
 import random
 
@@ -79,32 +78,35 @@ def map_circuit(circuit: QuantumCircuit, backend: str):
     return circuit
 
 
+def generate_circuit_specific_pauli_error(gates: list, p: float) -> PauliNoiseModel:
+    pnm = PauliNoiseModel()
+    for gate in gates:
+        if gate in ["cx", "cy", "cz", "swap"]:
+            pnm.add_operation(gate, {"ix": p / 3, "xi": p / 3, "xx": p / 3, "ii": 1 - p})
+        elif gate in ['x', 'y', 'z', 'h', 's', 's_dag', 'reset', 'measure']:
+            pnm.add_operation(gate, {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p})
+    return pnm
+
 def simulate_circuit(circuit: stim.Circuit, num_shots: int) -> int:
     sampler = circuit.compile_detector_sampler()
-    detection_events, observable_flips = sampler.sample(num_shots, separate_observables=True)
-
-    np.set_printoptions(threshold=sys.maxsize)
+    detection_events, actual_observables = sampler.sample(num_shots, separate_observables=True)
+    print("Detection events (first 10):", detection_events[:10])
+    print("Non-zero detection events:", np.sum(np.any(detection_events, axis=1)))
     detector_error_model = circuit.detector_error_model(approximate_disjoint_errors=True)
 
-    #logging.info(f"Detector error model: {detector_error_model}")
-    matcher = BPOSD(detector_error_model, max_bp_iters=40)
-
+    matcher = BPOSD(detector_error_model, osd_order=0)
 
     predictions = matcher.decode_batch(detection_events)
+    
+    num_errors = np.sum(np.any(predictions != actual_observables, axis=1))
+    print(num_errors)
+    num_vacuous_errors = np.sum(np.any(actual_observables, axis=1))
 
-    random_predictions = [random.choice([[True], [False]]) for _ in range(len(observable_flips))]
+    print(num_vacuous_errors)
 
-    #logging.info(f"Predictions: {predictions}")
-
-    num_mistakes = np.sum(np.any(random_predictions != observable_flips, axis=1))
-    print(f"Random predictions: {num_mistakes}")
-    num_errors = 0
-    for shot in range(num_shots):
-        actual_for_shot = observable_flips[shot]
-        predicted_for_shot = predictions[shot]
-        if not np.array_equal(actual_for_shot, predicted_for_shot):
-            num_errors += 1
+    print(f"{num_errors}/{num_shots}")
     return num_errors / num_shots
+    
 
 def generate_pauli_error(p: float) -> PauliNoiseModel:
     pnm = PauliNoiseModel()
@@ -143,29 +145,18 @@ def try_different_decoder(code):
 
 def run_experiment(experiment_name, backend, code_name, d, num_samples, error_prob):
     code = get_code(code_name, d)
-    #try_different_decoder(code)
     try:
-        
         detectors, logicals = code.stim_detectors()
-        code.circuit['0'] = map_circuit(code.circuit['0'], backend)
-        print(code.circuit.items())
         for state, qc in code.circuit.items():
-            code.noisy_circuit[state] = noisify_circuit(qc, error_prob)
-        
-        #circuit to pdf
-        #code.noisy_circuit['0'].draw(output='mpl', filename='circuit.pdf',vertical_compression='high', scale=0.3, fold=500)
-        print(type(code.circuit['0']))
-        stim_circuit = get_stim_circuits(
-            code.circuit['0'], detectors=detectors, logicals=logicals
-        )[0][0]
-
-        stim_circuit_2 = get_stim_circuits(
-            code.noisy_circuit['0'], detectors=detectors, logicals=logicals
-        )[0][0]
-        #stim_circuit.to_file(file="circuit_noNoise.stim")
-        #stim_circuit_2.to_file(file="circuit_withNoise.stim")
-        logical_error_rate = simulate_circuit(stim_circuit_2, num_samples)
-        logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend}: {logical_error_rate}")
+            code.circuit[state] = map_circuit(code.circuit[state], backend)
+            gates = set([operation.name for operation in code.circuit[state].data])
+            error_model = generate_circuit_specific_pauli_error(gates, error_prob)
+            code.noisy_circuit[state] = noisify_circuit(qc, error_model)
+            stim_circuit = get_stim_circuits(
+                code.noisy_circuit[state], detectors=detectors, logicals=logicals
+            )[0][0]
+            logical_error_rate = simulate_circuit(stim_circuit, num_samples)
+            logging.info(f"{experiment_name} | Logical error rate for {code_name} and state {state} with distance {d}, backend {backend}: {logical_error_rate}")
     
     except Exception as e:
         logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend}: {e}")
@@ -189,7 +180,7 @@ if __name__ == '__main__':
         backends = experiment["backends"]
         codes = experiment["codes"]
         distances = experiment["distances"]
-        error_prob = generate_pauli_error(experiment["error_probability"])
+        error_prob = experiment["error_probability"]
 
         parameter_combinations = product(backends, codes, distances)
 
