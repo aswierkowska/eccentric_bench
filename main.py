@@ -27,9 +27,9 @@ from BBCODE_DICT import BBCODE_DICT
 
 from custom_backend import FakeLargeBackend
 
-from stimbposd import BPOSD#doesn't work with current ldpcv2 code  pip install -U ldpc==0.1.60
+#from stimbposd import BPOSD#doesn't work with current ldpcv2 code  pip install -U ldpc==0.1.60
 
-#from bposd import bposd_decoder
+from bposd import bposd_decoder
 
 
 from qiskit.providers.fake_provider import GenericBackendV2
@@ -185,51 +185,58 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int, code=None) -> float:
 
 
     #VERSION 2 BPOSD DECODER
+    #THIS DOES NOT WORK
     #print(observable_flips)
-    #bpd = bposd_decoder(
-    #    code.H,#the parity check matrix
-    #    error_rate=0.05,
-    #    channel_probs=[None], #assign error_rate to each qubit. This will override "error_rate" input variable
-    #    max_iter=10, #the maximum number of iterations for BP)
-    #    bp_method="ms",
-    #    ms_scaling_factor=0, #min sum scaling factor. If set to zero the variable scaling factor method is used
-    #    osd_method="osd_cs", #the OSD method. Choose from:  1) "osd_e", "osd_cs", "osd0"
-    #    osd_order=7 #the osd search depth
-    #)
-    #sum = 0
-    #for detection_event in detection_events:
-    #    #turn True into 1 and False into 0
-    #    detection_event = [int(i) for i in detection_event]
-    #    #print(len(detection_event))
-    #    syndrome = code.H@detection_event % 2
-    #    bpd.decode(syndrome)
-    #    residual_error = (bpd.osdw_decoding+detection_event) % 2
-    #    #print(bpd.osdw_decoding)
-    #    #print(code.logical_x)
-    #    logicals = code.logical_x + code.logical_z
-    #    a = (logicals@residual_error%2).any() 
-    #    if a: sum+=1
-    #
-    #return sum/num_shots
+    bpd = bposd_decoder(
+        code.H,#the parity check matrix
+        error_rate=0.001,
+        channel_probs=[None], #assign error_rate to each qubit. This will override "error_rate" input variable
+        max_iter=10, #the maximum number of iterations for BP)
+        bp_method="ms",
+        ms_scaling_factor=0, #min sum scaling factor. If set to zero the variable scaling factor method is used
+        osd_method="osd_cs", #the OSD method. Choose from:  1) "osd_e", "osd_cs", "osd0"
+        osd_order=7 #the osd search depth
+    )
+    print("BPD Done")
+    sum = 0
+
+    for detection_event in detection_events:
+        #turn True into 1 and False into 0
+        detection_event = [int(i) for i in detection_event]
+        residual_error = np.zeros(72,dtype=int)
+        for i in range(0,len(detection_events[0])-1,72):
+            #print(len(detection_event))
+            syndrome = code.H@detection_event[i:i+72] % 2
+            bpd.decode(syndrome)
+            #print("What: ",what)
+            residual_error = (residual_error + np.array((bpd.osd0_decoding+detection_event[i:i+72]) % 2) ) % 2
+        #print(bpd.osdw_decoding)
+        #print(code.logical_x)
+        logicals = np.vstack((code.logical_x,code.logical_z))
+        a = (logicals@residual_error%2).any() 
+        print("A: ",a)
+        if a: sum+=1
+    
+    return sum/num_shots
 
 
     #VERSION 1 BPOSD DECODER
-    matcher = BPOSD(detector_error_model, bp_method="min_sum", max_bp_iters=144, osd_order=10 ,osd_method="osd_cs")
+    #matcher = BPOSD(detector_error_model, bp_method="min_sum", max_bp_iters=144, osd_order=10 ,osd_method="osd_cs")
     #print("Matcher Done")
-    predictions = []
-    for detection_event in detection_events:
-        prediction = matcher.decode(detection_event)
-        predictions.append(prediction)
+    #predictions = []
+    #for detection_event in detection_events:
+    #    prediction = matcher.decode(detection_event)
+    #    predictions.append(prediction)
     
-    print("Predictions Done")
+    #print("Predictions Done")
 
-    num_errors = 0
-    for shot in range(num_shots):
-        actual_for_shot = observable_flips[shot]
-        predicted_for_shot = predictions[shot]
-        if not np.array_equal(actual_for_shot, predicted_for_shot):
-            num_errors += 1
-    return num_errors / num_shots
+    #num_errors = 0
+    #for shot in range(num_shots):
+    #    actual_for_shot = observable_flips[shot]
+    #    predicted_for_shot = predictions[shot]
+    #    if not np.array_equal(actual_for_shot, predicted_for_shot):
+    #        num_errors += 1
+    #return num_errors / num_shots
     #return 0.0
 
 def generate_pauli_error(p: float) -> PauliNoiseModel:
@@ -302,7 +309,6 @@ if __name__ == '__main__':
         depol_error = experiment["depol_error"]
         error_prob = generate_pauli_error(experiment["error_probability"])
         bb_tuple = experiment["bb_tuple"]
-        print(error_prob.to_dict())
 
         parameter_combinations = product(backends, codes, distances)
 
