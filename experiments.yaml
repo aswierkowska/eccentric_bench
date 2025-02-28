@@ -1,8 +1,17 @@
 experiments:
-  - name: "Basic"
-    num_samples: 100
-    backends: ["fake_11"]
-    codes: ["hh", "surface"]
-    distances: [3] # since gross code uses 12 should all use it?
-    error_probability: 0.07
+  - name: "Topology_size"
+    num_samples: 10000
+    backends: ["custom_cube"] # custom_line, custom_grid, custom_cube, custom_full
+    backends_sizes: [64, 125, 216, 343, 512]
+    codes: ["surface", "hh"]
+    #distances: [3]
+    error_probability: 0.0015
+    decoders: ["bposd", "mwpm"] # mwpm
+  - name: "Topology_connectivity"
+    num_samples: 10000
+    backends: ["custom_line", "custom_grid", "custom_cube", "custom_full"] # custom_line, custom_grid, custom_cube, custom_full
+    backends_sizes: [512] #[64, 125, 216, 343, 512]
+    codes: ["surface", "hh"]
+    #distances: [3]
+    error_probability: 0.0015
     decoders: ["bposd", "mwpm"] # mwpm
