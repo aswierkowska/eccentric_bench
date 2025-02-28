@@ -2,6 +2,6 @@ experiments:
   - name: "Basic"
     num_samples: 10000
     backends: ["ibm_brisbane"]
-    codes: ["hh"]
-    distances: [3, 5]
+    codes: ["surface"] # "h"
+    distances: [3]
     error_probability: 0.001
