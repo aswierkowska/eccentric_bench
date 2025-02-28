@@ -20,8 +20,8 @@ from qiskit_qec.circuits import SurfaceCodeCircuit, CSSCodeCircuit
 from qiskit_qec.codes.hhc import HHC
 from qiskit_qec.utils import get_stim_circuits, noisify_circuit
 from qiskit_qec.noise import PauliNoiseModel
-from qiskit_qec.codes.gross_code import GrossCode
-from qiskit_qec.circuits.gross_code_circuit import GrossCodeCircuit
+#from qiskit_qec.codes.gross_code import GrossCode
+#from qiskit_qec.circuits.gross_code_circuit import GrossCodeCircuit
 
 from custom_backend import FakeLargeBackend
 
@@ -41,10 +41,10 @@ def get_code(code_name: str, d: int):
         code = HHC(d)
         css_code = CSSCodeCircuit(code, T=d)
         return css_code
-    elif code_name == "gross":
-        code = GrossCode(d)
-        code_circuit = GrossCodeCircuit(code, T=d)
-        return code_circuit
+    #elif code_name == "gross":
+    #    code = GrossCode(d)
+    #    code_circuit = GrossCodeCircuit(code, T=d)
+    #    return code_circuit
     elif code_name == "surface":
         code = SurfaceCodeCircuit(d=d, T=1)
         return code
