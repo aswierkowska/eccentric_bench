@@ -30,6 +30,9 @@ from stimbposd import BPOSD#doesn't work with current ldpc code  pip install -U 
 
 #from ldpc.bplsd_decoder import BpLsdDecoder
 from qiskit.visualization import circuit_drawer
+            
+        
+        
 
 # def get_code(code: str, d: int):
 #    surface_code = CSSCode.from_code_name("surface", 3)
@@ -88,27 +91,17 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int, decoder: str) -> int
 """
 def simulate_circuit_bposd(circuit: stim.Circuit, num_shots: int) -> int:
     sampler = circuit.compile_detector_sampler()
-    detection_events, observable_flips = sampler.sample(num_shots, separate_observables=True)
-
-    np.set_printoptions(threshold=sys.maxsize)
+    detection_events, actual_observables = sampler.sample(num_shots, separate_observables=True)
+    print("Detection events (first 10):", detection_events[:10])
+    print("Non-zero detection events:", np.sum(np.any(detection_events, axis=1)))
     detector_error_model = circuit.detector_error_model(approximate_disjoint_errors=True)
-
-    #logging.info(f"Detector error model: {detector_error_model}")
-    matcher = BPOSD(detector_error_model, max_bp_iters=40)
+    matcher = BPOSD(detector_error_model, osd_order=0)
     predictions = matcher.decode_batch(detection_events)
-
-    random_predictions = [random.choice([[True], [False]]) for _ in range(len(observable_flips))]
-
-    #logging.info(f"Predictions: {predictions}")
-
-    num_mistakes = np.sum(np.any(random_predictions != observable_flips, axis=1))
-    print(f"Random predictions: {num_mistakes}")
-    num_errors = 0
-    for shot in range(num_shots):
-        actual_for_shot = observable_flips[shot]
-        predicted_for_shot = predictions[shot]
-        if not np.array_equal(actual_for_shot, predicted_for_shot):
-            num_errors += 1
+    num_errors = np.sum(np.any(predictions != actual_observables, axis=1))
+    print(num_errors)
+    num_vacuous_errors = np.sum(np.any(actual_observables, axis=1))
+    print(num_vacuous_errors)
+    print(f"{num_errors}/{num_shots}")
     return num_errors / num_shots
 """
 
@@ -124,12 +117,12 @@ def generate_pauli_error(p: float) -> PauliNoiseModel:
     #pnm.add_operation("x", {"x": p, "y": 0, "z": 0, "i": 1-p})
     return pnm
 
-def generate_circuit_specific_pauli_error(gates: list, p: int) -> PauliNoiseModel:
+def generate_circuit_specific_pauli_error(gates: list, p: float) -> PauliNoiseModel:
     pnm = PauliNoiseModel()
     for gate in gates:
-        if gate in ["cx", "swap"]:
+        if gate in ["cx", "cy", "cz", "swap"]:
             pnm.add_operation(gate, {"ix": p / 3, "xi": p / 3, "xx": p / 3, "ii": 1 - p})
-        else:
+        elif gate in ['x', 'y', 'z', 'h', 's', 's_dag', 'reset', 'measure']:
             pnm.add_operation(gate, {"x": p / 3, "y": p / 3, "z": p / 3, "i": 1 - p})
     return pnm
 
@@ -150,7 +143,7 @@ def get_max_d(code_name: str, n: int):
 
 
 def run_experiment(experiment_name, backend_name, backend_size, code_name, decoder, d, num_samples, error_prob):
-        #   try:
+    try:
         stim_gates = ['x', 'y', 'z', 'cx', 'cz', 'cy', 'h', 's', 's_dag', 'swap', 'reset', 'measure', 'barrier']
         backend = get_backend(backend_name, backend_size)
         if d == None:
@@ -158,38 +151,29 @@ def run_experiment(experiment_name, backend_name, backend_size, code_name, decod
            if d < 3:
                logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible")
                return
-        print(code_name, d)
         code = get_code(code_name, d)
         detectors, logicals = code.stim_detectors()
-        print(code.circuit['0'].num_qubits)
-        code.circuit['0'] = transpile(code.circuit['0'], 
-            backend=backend,
-            basis_gates=stim_gates,
-            optimization_level=0
-        )
         
-        gates = set([gate[0].name for gate in code.circuit['0'].data])
-        print(gates)
-
-        error_model = generate_circuit_specific_pauli_error(gates, error_prob)
-        #error_model = generate_pauli_error(error_prob)
-
         for state, qc in code.circuit.items():
+            code.circuit[state] = transpile(code.circuit[state], 
+                backend=backend,
+                basis_gates=stim_gates,
+                optimization_level=0
+            )
+            gates = set([operation.name for operation in code.circuit[state].data])
+            error_model = generate_circuit_specific_pauli_error(gates, error_prob)
             code.noisy_circuit[state] = noisify_circuit(qc, error_model)
-        #print(code.noisy_circuit['0'])
+            stim_circuit = get_stim_circuits(
+                code.noisy_circuit[state], detectors=detectors, logicals=logicals
+            )[0][0]
+            logical_error_rate = simulate_circuit(stim_circuit, num_samples, decoder)
+            if backend_size:
+                logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}, decoder {decoder}: {logical_error_rate:.6f}")
+            else:
+                logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, decoder {decoder}: {logical_error_rate:.6f}")
 
-        stim_circuit = get_stim_circuits(
-            code.noisy_circuit['0'], detectors=detectors, logicals=logicals
-        )[0][0]
-        
-        logical_error_rate = simulate_circuit(stim_circuit, num_samples, decoder)
-        if backend_size:
-            logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}, decoder {decoder}: {logical_error_rate}")
-        else:
-            logging.info(f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, decoder {decoder}: {logical_error_rate}")
-    
-        #except Exception as e:
-        #logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}")
+    except Exception as e:
+        logging.error(f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}")
 
 if __name__ == '__main__':
     #load_IBM_account()
