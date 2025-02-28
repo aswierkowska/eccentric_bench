@@ -1,7 +1,8 @@
 experiments:
   - name: "Basic"
-    num_samples: 10000
-    backends: ["ibm_brisbane"]
-    codes: ["surface"] # "h"
-    distances: [3]
-    error_probability: 0.001
+    num_samples: 100
+    backends: ["fake_11"]
+    codes: ["hh", "surface"]
+    distances: [3] # since gross code uses 12 should all use it?
+    error_probability: 0.07
+    decoders: ["bposd", "mwpm"] # mwpm
