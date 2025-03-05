@@ -1,8 +1,8 @@
 experiments:
   - name: "Basic"
-    num_samples: 10
+    num_samples: 100
     backends: ["fake_11"]
     codes: ["gross"]
-    distances: [3]
-    error_probability: 0.9
+    distances: [12]
+    error_probability: 0.02
     depol_error: 0.0
