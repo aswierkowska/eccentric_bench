@@ -1,4 +1,5 @@
 import stim
+import re
 
 def add_stim_noise(circuit, p_after_clifford_depolarization=0, p_after_reset_flip_probability=0,
                            p_before_measure_flip_probability=0, p_before_round_data_depolarization=0):

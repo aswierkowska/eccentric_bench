@@ -37,7 +37,7 @@ def generate_cube_map(num_layers, num_rows, num_columns, bidirectional=True):
     return CouplingMap(graph.edge_list(), description="cube")
 
 
-def get_custom_backend(shape: str, num_qubits: int):
+def get_custom_topology(shape: str, num_qubits: int):
     if shape == "line":
         coupling_map = CouplingMap.from_line(num_qubits)
     elif shape == "grid":

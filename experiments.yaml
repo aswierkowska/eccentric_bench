@@ -15,9 +15,16 @@ experiments:
 #    #distances: [3]
 #    error_probability: 0.0015
 #    decoders: ["bposd", "mwpm"] # mwpm
+#  - name: "Basic"
+#    num_samples: 100
+#    backends: ["fake_11"]
+#    codes: ["gross"]
+#    distances: [12]
+#    error_probability: 0.02
   - name: "Basic"
     num_samples: 100
-    backends: ["fake_11"]
-    codes: ["gross"]
-    distances: [12]
+    backends: ["custom_grid"]
+    backends_sizes: [216]
+    codes: ["hh"]
     error_probability: 0.02
+    decoders: ["bposd", "mwpm"]
