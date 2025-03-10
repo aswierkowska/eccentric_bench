@@ -3,9 +3,8 @@ import rustworkx as rx
  
 from qiskit.providers import BackendV2, Options
 from qiskit.transpiler import Target, InstructionProperties
-from qiskit.circuit.library import XGate, SXGate, RZGate, CZGate, ECRGate
+from qiskit.circuit.library import XGate, SXGate, RZGate, CZGate
 from qiskit.circuit import Measure, Delay, Parameter, Reset
-from qiskit import QuantumCircuit, transpile
 from qiskit.visualization import plot_gate_map
  
  
