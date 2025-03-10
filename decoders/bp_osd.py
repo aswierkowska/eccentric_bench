@@ -104,31 +104,15 @@ def modified_bposd_decoder(dem, num_repeat, num_shots, osd_order=10):
         input_vector_type="syndrome",  # "received_vector"
     )
 
-    #start_time = time.perf_counter()
     dem_sampler: stim.CompiledDemSampler = dem.compile_sampler()
     det_data, obs_data, err_data = dem_sampler.sample(
         shots=num_shots, return_errors=False, bit_packed=False
     )
-    #print("detector data shape", det_data.shape)
-    #print("observable data shape", obs_data.shape)
-    #end_time = time.perf_counter()
-    #print(
-    #    f"Stim: noise sampling for {num_shots} shots, elapsed time:",
-    #    end_time - start_time,
-    #)
-
     num_err = 0
-    #num_flag_err = 0
-    #start_time = time.perf_counter()
     for i in range(num_shots):
         e_hat = bpd.decode(det_data[i])
-        #num_flag_err += ((chk @ e_hat + det_data[i]) % 2).any()
         ans = (obs @ e_hat + obs_data[i]) % 2
         num_err += ans.any()
-    #end_time = time.perf_counter()
-    #print("Elapsed time:", end_time - start_time)
-    #print(f"Flagged Errors: {num_flag_err}/{num_shots}")  # expect 0 for OSD
-    #print(f"Logical Errors: {num_err}/{num_shots}")
     p_l = num_err / num_shots
     p_l_per_round = 1 - (1 - p_l) ** (1 / num_repeat)
-    print("Logical error per round:", p_l_per_round)
+    return p_l
