@@ -84,13 +84,14 @@ def dem_to_check_matrices(dem: stim.DetectorErrorModel, return_col_dict=False):
 
 def modified_bposd_decoder(dem, num_repeat, num_shots, osd_order=10):
     chk, obs, priors, col_dict = dem_to_check_matrices(dem, return_col_dict=True)
-    #num_row, num_col = chk.shape
-    #chk_row_wt = np.sum(chk, axis=1)
-    #chk_col_wt = np.sum(chk, axis=0)
-    #print(
-    #    f"check matrix shape {chk.shape}, max (row, column) weight ({np.max(chk_row_wt)}, {np.max(chk_col_wt)}),",
-    #    f"min (row, column) weight ({np.min(chk_row_wt)}, {np.min(chk_col_wt)})",
-    #)
+    chk, obs, priors, col_dict = dem_to_check_matrices(dem, return_col_dict=True)
+    num_row, num_col = chk.shape
+    chk_row_wt = np.sum(chk, axis=1)
+    chk_col_wt = np.sum(chk, axis=0)
+    print(
+        f"check matrix shape {chk.shape}, max (row, column) weight ({np.max(chk_row_wt)}, {np.max(chk_col_wt)}),",
+        f"min (row, column) weight ({np.min(chk_row_wt)}, {np.min(chk_col_wt)})",
+    )
 
     bpd = bposd_decoder(
         chk,  # the parity check matrix

@@ -25,16 +25,20 @@ def simulate_circuit(circuit: stim.Circuit, num_shots: int, decoder: str) -> int
         num_shots, separate_observables=True
     )
     detector_error_model = circuit.detector_error_model()
+    print(f"DEM type: {type(detector_error_model)}")
+    print("ERROR" in detector_error_model)
+
+    #modified_bposd_decoder(detector_error_model, 12, 500)
     # TODO do we need those:    decompose_errors=True, approximate_disjoint_errors=True
     predictions = decode(decoder, detector_error_model, detection_events)
     # TODO: create metrics and move following there:
-    num_errors = 0
-    for shot in range(num_shots):
-        actual_for_shot = observable_flips[shot]
-        predicted_for_shot = predictions[shot]
-        if not np.array_equal(actual_for_shot, predicted_for_shot):
-            num_errors += 1
-    return num_errors / num_shots
+    #num_errors = 0
+    #for shot in range(num_shots):
+    #    actual_for_shot = observable_flips[shot]
+    #    predicted_for_shot = predictions[shot]
+    #    if not np.array_equal(actual_for_shot, predicted_for_shot):
+    #        num_errors += 1
+    #return num_errors / num_shots
 
 
 def run_experiment(
@@ -73,21 +77,20 @@ def run_experiment(
             return
     code = get_code(code_name, d)
     detectors, logicals = code.stim_detectors()
-    # FOR GROSS CODE:
-    # detectors, logicals = code.detectors, code.logicals
-    # circuit = code.qc
 
     for state, qc in code.circuit.items():
-        code.circuit[state] = transpile(
-            code.circuit[state],
-            backend=backend,
-            basis_gates=stim_gates,
-            optimization_level=0,
-        )
+        #code.circuit[state] = transpile(
+        #    code.circuit[state],
+        #    backend=backend,
+        #    basis_gates=stim_gates,
+        #    optimization_level=0,
+        #)
         stim_circuit = get_stim_circuits(
             code.circuit[state], detectors=detectors, logicals=logicals
         )[0][0]
-        stim_circuit = add_stim_noise(stim_circuit, error_prob)
+        stim_circuit.to_file("TEST1.stim")
+        stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
+        stim_circuit.to_file("TEST2.stim")
         logical_error_rate = simulate_circuit(stim_circuit, num_samples, decoder)
         if backend_size:
             logging.info(
@@ -97,10 +100,10 @@ def run_experiment(
             logging.info(
                 f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, decoder {decoder}: {logical_error_rate:.6f}"
             )
-    #except Exception as e:
-    #    logging.error(
-    #        f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}"
-    #    )
+        #except Exception as e:
+        #    logging.error(
+        #        f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}"
+        #    )
 
 
 if __name__ == "__main__":
