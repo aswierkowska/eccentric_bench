@@ -14,7 +14,7 @@ from gen import _gen_util
 
 print(dir(_bacon_shor))
 
-def get_bacon_shot_code():
+def get_bacon_shot_code(d=5):
     #_gen_util.py -> _generate_single_circuit retuns stim circuit then we can do the same wrapper i guess
 
     #_bacon_shor.make_bacon_shor_constructions
@@ -22,10 +22,13 @@ def get_bacon_shot_code():
 
     circuit = _gen_util._generate_single_circuit(
                 constructions=construction,
-                params=_gen_util.CircuitBuildParams(style='bacon_shor', rounds=5, diameter=5, custom={'b': 1}),
+                params=_gen_util.CircuitBuildParams(style='bacon_shor', rounds=5, diameter=d, custom={'b': 1}),
                 noise=None,
                 debug_out_dir=None,
                 convert_to_cz='auto',
             )
 
     #we should get stim circuit from that and the we can just return it
+
+if __name__ == "__main__":
+    get_bacon_shot_code()
