@@ -2,6 +2,7 @@ import math
 from qiskit_qec.circuits import SurfaceCodeCircuit, CSSCodeCircuit
 from qiskit_qec.codes.hhc import HHC
 from .gross_code import get_gross_code
+from .color_code_stim import get_color_code
 
 def get_code(code_name: str, d: int):
     if code_name == "hh":
@@ -14,6 +15,8 @@ def get_code(code_name: str, d: int):
     elif code_name == "surface":
         code = SurfaceCodeCircuit(d=d, T=d)
         return code
+    elif code_name == "color":
+        return get_color_code()
 
 
 def get_max_d(code_name: str, n: int):
@@ -29,4 +32,7 @@ def get_max_d(code_name: str, n: int):
         return d
     elif code_name == "gross":
         return math.floor(n / 2)
+    elif code_name == "color":
+        #TODO check actually which distance to put here
+        return math.floor((n - 1) / 3)
     return 0

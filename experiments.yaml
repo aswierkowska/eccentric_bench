@@ -19,7 +19,7 @@ experiments:
     num_samples: 500
     backends: ["custom_full"]
     backends_sizes: [343]
-    codes: ["gross"]
+    codes: ["color"]
     error_probability: 0.02
     decoders: ["bposd"]
   #- name: "Basic"
