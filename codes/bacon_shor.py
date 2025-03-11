@@ -12,21 +12,27 @@ from baconshor import _bacon_shor
 from baconshor._bacon_shor import make_bacon_shor_constructions
 from gen import _gen_util
 
+from qiskit_qec.circuits import StimCodeCircuit
+
 print(dir(_bacon_shor))
 
 def get_bacon_shot_code(d=5):
-    #_gen_util.py -> _generate_single_circuit retuns stim circuit then we can do the same wrapper i guess
+    #This custom value should be fixed because it seems there lies the problem
+    #Workflow:
+    #https://github.com/Strilanc/more-bacon-less-threshold/blob/main/step1_generate_circuits.sh
+    #https://github.com/Strilanc/more-bacon-less-threshold/blob/main/tools/gen_circuits
+    #https://github.com/Strilanc/more-bacon-less-threshold/blob/main/src/gen/_gen_util.py
+    #https://github.com/Strilanc/more-bacon-less-threshold/blob/main/src/baconshor/_bacon_shor.py
 
-    #_bacon_shor.make_bacon_shor_constructions
     construction = {**make_bacon_shor_constructions()}
-
     circuit = _gen_util._generate_single_circuit(
                 constructions=construction,
-                params=_gen_util.CircuitBuildParams(style='bacon_shor', rounds=5, diameter=d, custom={'b': 1}),
+                params=_gen_util.CircuitBuildParams(style='bacon_shor', rounds=5, diameter=d, custom={'b': 'X'}),
                 noise=None,
                 debug_out_dir=None,
                 convert_to_cz='auto',
             )
+    return StimCodeCircuit(stim_circuit=circuit)
 
     #we should get stim circuit from that and the we can just return it
 
