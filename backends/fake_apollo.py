@@ -6,11 +6,11 @@ from qiskit.circuit import Parameter
 from qiskit.providers import BackendV2, Options
 from qiskit.visualization import plot_coupling_map
 
-class FakeContinuumApolloBackend(BackendV2):
-    """Fake Continnum Apollo Backend."""
+class FakeQuantinuumApolloBackend(BackendV2):
+    """Fake Quantinnum Apollo Backend."""
     
     def __init__(self):
-        super().__init__(name="FakeContinuumApollo", backend_version=2)
+        super().__init__(name="FakeQuantinuumApollo", backend_version=2)
         # if 192 probably 12 x 16
         # then 1000s could be 1728 (36*48) or 3072 (48*64)
         self._coupling_map = CouplingMap.from_grid(36, 48)
@@ -62,6 +62,10 @@ class FakeContinuumApolloBackend(BackendV2):
     def num_qubits(self):
         return self._num_qubits
     
+    @property
+    def coupling_map(self):
+        return self._coupling_map
+    
     @classmethod
     def _default_options(cls):
         return Options(shots=1024)
@@ -70,5 +74,5 @@ class FakeContinuumApolloBackend(BackendV2):
         raise NotImplementedError("This backend does not contain a run method")
 
 if __name__ == "__main__":
-    backend = FakeContinuumApolloBackend()
+    backend = FakeQuantinuumApolloBackend()
     plot_coupling_map(backend.coupling_map.size(), None, backend.coupling_map.get_edges(), filename="apollo.png")
