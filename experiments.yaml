@@ -16,9 +16,9 @@ experiments:
 #    error_probability: 0.0015
 #    decoders: ["bposd", "mwpm"] # mwpm
   - name: "Basic"
-    num_samples: 500
+    num_samples: 100
     backends: ["custom_full"]
-    backends_sizes: [343]
+    backends_sizes: [100]
     codes: ["color"]
     error_probability: 0.02
     decoders: ["bposd"]

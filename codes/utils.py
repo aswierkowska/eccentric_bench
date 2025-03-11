@@ -16,7 +16,7 @@ def get_code(code_name: str, d: int):
         code = SurfaceCodeCircuit(d=d, T=d)
         return code
     elif code_name == "color":
-        return get_color_code()
+        return get_color_code(d)
 
 
 def get_max_d(code_name: str, n: int):
@@ -34,5 +34,8 @@ def get_max_d(code_name: str, n: int):
         return math.floor(n / 2)
     elif code_name == "color":
         #TODO check actually which distance to put here
-        return math.floor((n - 1) / 3)
+        d = int((math.sqrt(4*n) +1)/3)
+        d = d - ((1 - d) % 2)
+        print("Distance for color code: ", d)
+        return d
     return 0
