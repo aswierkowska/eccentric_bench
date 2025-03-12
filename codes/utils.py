@@ -4,19 +4,31 @@ from qiskit_qec.codes.hhc import HHC
 from .gross_code import get_gross_code
 from .color_code_stim import get_color_code
 
-def get_code(code_name: str, d: int):
+def get_code(code_name: str, d: int, cycles: int):
     if code_name == "hh":
         code = HHC(d)
-        css_code = CSSCodeCircuit(code, T=d)
+        if cycles == None:
+            css_code = CSSCodeCircuit(code, T=d)
+        else:
+            css_code = CSSCodeCircuit(code, T=cycles)
         return css_code
     elif code_name == "gross":
+        if cycles == None:
         # TODO: should gross code accept parameter?
-        return get_gross_code()
+            return get_gross_code()
+        else:
+            return get_color_code(rounds=cycles)
     elif code_name == "surface":
-        code = SurfaceCodeCircuit(d=d, T=d)
+        if cycles == None:
+            code = SurfaceCodeCircuit(d=d, T=d)
+        else:
+            code = SurfaceCodeCircuit(d=d, T=cycles)
         return code
     elif code_name == "color":
-        return get_color_code(d)
+        if cycles == None:
+            return get_color_code(d, rounds=d)
+        else:
+            return get_color_code(d, rounds=cycles)
 
 
 def get_max_d(code_name: str, n: int):

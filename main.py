@@ -23,6 +23,7 @@ def run_experiment(
     code_name,
     decoder,
     d,
+    cycles,
     num_samples,
     error_prob,
 ):
@@ -50,7 +51,7 @@ def run_experiment(
                 f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible"
             )
             return
-    code = get_code(code_name, d)
+    code = get_code(code_name, d, cycles)
     detectors, logicals = code.stim_detectors()
 
     for state, qc in code.circuit.items():
@@ -98,6 +99,11 @@ if __name__ == "__main__":
         decoders = experiment["decoders"]
         error_prob = experiment["error_probability"]
 
+        if "cycles" in experiment:
+            cycles = experiment["cycles"]
+        else:
+            cycles = None
+
         # TODO: better handling case if distances and backends_sizes are both set
 
         with ProcessPoolExecutor() as executor:
@@ -113,6 +119,7 @@ if __name__ == "__main__":
                         code_name,
                         decoder,
                         d,
+                        cycles,
                         num_samples,
                         error_prob,
                     )
@@ -132,6 +139,7 @@ if __name__ == "__main__":
                         code_name,
                         decoder,
                         None,
+                        cycles,
                         num_samples,
                         error_prob,
                     )
@@ -148,6 +156,7 @@ if __name__ == "__main__":
                         code_name,
                         decoder,
                         None,
+                        cycles,
                         num_samples,
                         error_prob,
                     )

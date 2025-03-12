@@ -22,6 +22,7 @@ experiments:
     codes: ["color"]
     error_probability: 0.02
     decoders: ["bposd"]
+  #  cycles: 1
   #- name: "Basic"
   #  num_samples: 100
   #  backends: ["custom_grid"]
