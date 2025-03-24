@@ -1,33 +1,15 @@
 import math
-import time
-import itertools
-import io
-import re
 from functools import wraps
 from typing import (
-    Callable,
-    Dict,
     Iterable,
-    List,
-    Set,
-    Literal,
     Optional,
-    Tuple,
     Union,
-    Self,
 )
 
 import igraph as ig
-import matplotlib.pyplot as plt
 import numpy as np
-import pymatching
 import stim
-from matplotlib.ticker import AutoLocator
-from statsmodels.stats.proportion import proportion_confint
-#from ldpc import BpDecoder
-from scipy.sparse import csc_matrix
-from dataclasses import dataclass
-from copy import deepcopy
+
 from qiskit_qec.circuits import StimCodeCircuit
 
 

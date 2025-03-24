@@ -4,8 +4,9 @@ from qiskit_qec.codes.hhc import HHC
 from .gross_code import get_gross_code
 from .color_code_stim import get_color_code
 from .bacon_shor import get_bacon_shot_code
+from .concat_steane import get_concat_steane_code
 
-def get_code(code_name: str, d: int):
+def get_code(code_name: str, d: int, m: int = None):
     if code_name == "hh":
         code = HHC(d)
         css_code = CSSCodeCircuit(code, T=d)
@@ -20,10 +21,12 @@ def get_code(code_name: str, d: int):
         return get_color_code(d)
     elif code_name == "bacon":
         return get_bacon_shot_code(d)
+    elif code_name == "steane":
+        return get_concat_steane_code(m)
 
 
 
-def get_max_d(code_name: str, n: int):
+def get_max_d(code_name: str, n: int, m: int = None):
     if code_name == "surface":
         # d**2 data qubits + d**2 - 1 ancilla qubits
         d = math.floor(math.sqrt((n + 1) / 2))
@@ -43,9 +46,18 @@ def get_max_d(code_name: str, n: int):
     elif code_name == "bacon":
         #TODO: check this
         #assuming square lattice n = d^2
-        #actually it should be d = min(m,n) according to qecc zoo
+        #actually it should be d = min(m,n) according to qecc zoo but we have no m,n structure
         d = int(math.sqrt(n))
         d = d - ((1 - d) % 2) 
         return d
+    elif code_name == 'steane':
+        if m == 1:
+            return 3
+        elif m == 2:
+            return 9
+        elif m == 3:
+            return 27
+        else:
+            ValueError("Steane code only supports m = 1, 2, 3")
 
     return 0

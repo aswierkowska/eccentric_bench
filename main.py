@@ -44,13 +44,13 @@ def run_experiment(
     ]
     backend = get_backend(backend_name, backend_size)
     if d == None:
-        d = get_max_d(code_name, backend.coupling_map.size())
+        d = get_max_d(code_name, backend.coupling_map.size(),2)
         if d < 3:
             logging.info(
                 f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible"
             )
             return
-    code = get_code(code_name, d)
+    code = get_code(code_name, d,2)
     detectors, logicals = code.stim_detectors()
 
     for state, qc in code.circuit.items():
@@ -97,6 +97,7 @@ if __name__ == "__main__":
         codes = experiment["codes"]
         decoders = experiment["decoders"]
         error_prob = experiment["error_probability"]
+        steane_m = experiment["steane_m"] if "steane_m" in experiment else None
 
         # TODO: better handling case if distances and backends_sizes are both set
 
