@@ -61,12 +61,19 @@ def run_experiment(
             code.circuit[state], detectors=detectors, logicals=logicals
         )[0][0]
 
+<<<<<<< HEAD
         noise_model = get_noise_model("", error_prob)
         stim_circuit = noise_model.noisy_circuit(stim_circuit)
         #if hasattr(backend, 'add_realistic_noise'): 
         #    stim_circuit = backend.add_realistic_noise(stim_circuit)
         #else:
         #    stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
+=======
+        if hasattr(backend, 'add_realistic_noise'): 
+            stim_circuit = backend.add_realistic_noise(stim_circuit)
+        else:
+            stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
+>>>>>>> 21ad428 (Modify to work with different noise)
         logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
 
         result_data = {
