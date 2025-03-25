@@ -64,7 +64,11 @@ def run_experiment(
         stim_circuit = get_stim_circuits(
             code.circuit[state], detectors=detectors, logicals=logicals
         )[0][0]
-        stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
+
+        if hasattr(backend, 'add_realistic_noise'): 
+            stim_circuit = backend.add_realistic_noise(stim_circuit)
+        else:
+            stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
         logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
         if backend_size:
             logging.info(
