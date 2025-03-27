@@ -15,7 +15,8 @@ def decode(code_name: str, circuit: stim.Circuit, num_shots: int, decoder: str) 
         num_shots, separate_observables=True
     )
     dem = circuit.detector_error_model() # TODO do we need those: decompose_errors=True, approximate_disjoint_errors=True
-
+    
+    print(dem)
     if decoder == "mwpm":
         matcher = pymatching.Matching.from_detector_error_model(dem)
         predictions = matcher.decode_batch(detection_events)

@@ -14,7 +14,7 @@ from qiskit_qec.circuits import StimCodeCircuit
 class MeasureReset(stimcirq.MeasureAndOrResetGate):
     def __init__(self) -> None:
         super().__init__(
-            measure=True, reset=True, basis="Z", invert_measure=False, key="m"
+            measure=True, reset=False, basis="Z", invert_measure=False, key="m"
         )
 
 MR = MeasureReset()
@@ -134,14 +134,14 @@ class OfflineMemoryCircuit:
         circuit += self.measure_round()
         circuit += self.round_detectors()
 
-        round = stim.Circuit()
-        round += self.measure_round()
-        round += self.round_detectors(2)
-        round += self.measure_round()
-        round += self.round_detectors(1)
+        #round = stim.Circuit()
+        #round += self.measure_round()
+        #round += self.round_detectors(2)
+        #round += self.measure_round()
+        #round += self.round_detectors(1)
 
-        circuit += round * self.n_rounds
-        with open("circuit_offline.stim", "w") as f:
+        #circuit += round * self.n_rounds
+        with open("our_circuit.stim", "w") as f:
             f.write(str(circuit))
         return circuit
     
@@ -200,6 +200,8 @@ class CSSObservableMeasurement(ObservableMeasurement):
 
         xtype, pauli_qs = self._observable_qubits_and_type(obs, qs)
 
+        print("HELP: ",xtype, pauli_qs)
+
         anc = qs[-1]
         qs = qs[:-1]
         if self._separate_measure_reset:
@@ -244,6 +246,8 @@ class BareAncillaOffline(OfflineMemoryCircuit):
         self.measured_observables = (
             self.stabilizer_generators + self.logical_observables
         )
+
+        print(self.measured_observables)
 
     @property
     def n_meas(self):
@@ -457,7 +461,7 @@ def generate_offline_steane_l2_bare_ancilla(m):
 
     experiment = BareAncillaOffline(
         stabilizer_generators=stabilizer_gens,
-        logical_observables=["Z" * n],
+        logical_observables=['Z'*n],
         data=qs,
         syn=anc,
         n_rounds=1,
@@ -467,8 +471,12 @@ def generate_offline_steane_l2_bare_ancilla(m):
     return circuit
 
 def get_concat_steane_code(m):
-    circuit = filter_ticks(generate_offline_steane_l2_bare_ancilla(m))
+    #read whaterver.stim file and make stim circuit out of it
+    circuit = stim.Circuit.from_file("our_own.stim")
     return StimCodeCircuit(stim_circuit=circuit)
+    #circuit = filter_ticks(generate_offline_steane_l2_bare_ancilla(m))
+    #print(circuit)
+    #return StimCodeCircuit(stim_circuit=circuit)
 
 
 

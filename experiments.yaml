@@ -16,12 +16,12 @@ experiments:
 #    error_probability: 0.0015
 #    decoders: ["bposd", "mwpm"] # mwpm
   - name: "Basic"
-    num_samples: 10000
+    num_samples: 100
     backends: ["custom_full"]
-    backends_sizes: [100]
+    backends_sizes: [300]
     codes: ["steane"]
-    error_probability: 0.000
-    decoders: ["bposd"]
+    error_probability: 0.001
+    decoders: ["mwpm"]
     steane_m: 2
   #- name: "Basic"
   #  num_samples: 100

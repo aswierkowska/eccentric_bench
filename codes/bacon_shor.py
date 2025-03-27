@@ -43,6 +43,7 @@ def get_bacon_shot_code(d=5):
                 debug_out_dir=None,
                 convert_to_cz='auto',
             )
+    #print(circuit)
     return StimCodeCircuit(stim_circuit=circuit)
 
 
