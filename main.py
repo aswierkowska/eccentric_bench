@@ -14,6 +14,7 @@ from backends import get_backend
 from codes import get_code, get_max_d
 from noise import add_stim_noise
 from decoders import decode
+from utils import save_experiment_metadata, save_results_to_csv, setup_experiment_logging
 
 
 def run_experiment(
@@ -66,6 +67,21 @@ def run_experiment(
         )[0][0]
         stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
         logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
+
+        result_data = {
+                "backend": backend_name,
+                "backend_size": backend_size,
+                "code": code_name,
+                "decoder": decoder,
+                "distance": d,
+                "cycles": cycles,
+                "num_samples": num_samples,
+                "error_probability": error_prob,
+                "logical_error_rate": logical_error_rate,
+            }
+
+        save_results_to_csv(result_data, experiment_name)
+
         if backend_size:
             logging.info(
                 f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}, decoder {decoder}: {logical_error_rate:.6f}"
@@ -81,13 +97,6 @@ def run_experiment(
 
 
 if __name__ == "__main__":
-    logging.getLogger("qiskit").setLevel(logging.WARNING)
-    logging.basicConfig(
-        filename="qecc_benchmark.log",
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-    )
-
     with open("experiments.yaml", "r") as f:
         config = yaml.safe_load(f)
 
@@ -104,6 +113,7 @@ if __name__ == "__main__":
         else:
             cycles = None
 
+        save_experiment_metadata(experiment, experiment_name)
         # TODO: better handling case if distances and backends_sizes are both set
 
         with ProcessPoolExecutor() as executor:
