@@ -27,6 +27,8 @@ def run_experiment(
     cycles,
     num_samples,
     error_prob,
+    layout_method=None,
+    routing_method=None,
 ):
     #try:
     stim_gates = [
@@ -61,6 +63,8 @@ def run_experiment(
             backend=backend,
             basis_gates=stim_gates,
             optimization_level=0,
+            layout_method=layout_method,
+            routing_method=routing_method,
         )
         stim_circuit = get_stim_circuits(
             code.circuit[state], detectors=detectors, logicals=logicals
@@ -74,10 +78,12 @@ def run_experiment(
                 "code": code_name,
                 "decoder": decoder,
                 "distance": d,
-                "cycles": cycles,
+                "cycles": cycles if cycles else d,
                 "num_samples": num_samples,
                 "error_probability": error_prob,
                 "logical_error_rate": logical_error_rate,
+                "layout_method": layout_method if layout_method else "N/A",
+                "routing_method": routing_method if routing_method else "N/A"
             }
 
         save_results_to_csv(result_data, experiment_name)
@@ -107,11 +113,10 @@ if __name__ == "__main__":
         codes = experiment["codes"]
         decoders = experiment["decoders"]
         error_prob = experiment["error_probability"]
+        cycles = experiment.get("cycles", None)
+        layout_methods = experiment.get("layout_methods", [None])
+        routing_methods = experiment.get("routing_methods", [None])
 
-        if "cycles" in experiment:
-            cycles = experiment["cycles"]
-        else:
-            cycles = None
 
         save_experiment_metadata(experiment, experiment_name)
         # TODO: better handling case if distances and backends_sizes are both set
@@ -119,7 +124,7 @@ if __name__ == "__main__":
         with ProcessPoolExecutor() as executor:
             if "distances" in experiment:
                 distances = experiment["distances"]
-                parameter_combinations = product(backends, codes, decoders, distances)
+                parameter_combinations = product(backends, codes, decoders, distances, layout_methods, routing_methods)
                 futures = [
                     executor.submit(
                         run_experiment,
@@ -132,13 +137,15 @@ if __name__ == "__main__":
                         cycles,
                         num_samples,
                         error_prob,
+                        layout_method,
+                        routing_method,
                     )
-                    for backend, code_name, decoder, d in parameter_combinations
+                    for backend, code_name, decoder, d, layout_method, routing_method in parameter_combinations
                 ]
             elif "backends_sizes" in experiment:
                 backends_sizes = experiment["backends_sizes"]
                 parameter_combinations = product(
-                    backends, backends_sizes, codes, decoders
+                    backends, backends_sizes, codes, decoders, layout_methods, routing_methods
                 )
                 futures = [
                     executor.submit(
@@ -152,11 +159,13 @@ if __name__ == "__main__":
                         cycles,
                         num_samples,
                         error_prob,
+                        layout_method,
+                        routing_method,
                     )
-                    for backend, backends_sizes, code_name, decoder in parameter_combinations
+                    for backend, backends_sizes, code_name, decoder, layout_method, routing_method in parameter_combinations
                 ]
             else:
-                parameter_combinations = product(backends, codes, decoders)
+                parameter_combinations = product(backends, codes, decoders, layout_methods, routing_methods)
                 futures = [
                     executor.submit(
                         run_experiment,
@@ -169,9 +178,10 @@ if __name__ == "__main__":
                         cycles,
                         num_samples,
                         error_prob,
+                        layout_method,
+                        routing_method,
                     )
-                    for backend, code_name, decoder in parameter_combinations
+                    for backend, code_name, decoder, layout_method, routing_method in parameter_combinations
                 ]
-
             for future in futures:
                 future.result()
