@@ -18,10 +18,10 @@ experiments:
   - name: "Basic"
     num_samples: 100
     backends: ["custom_full"]
-    backends_sizes: [300]
+    backends_sizes: [20]
     codes: ["steane"]
-    error_probability: 0.001
-    decoders: ["mwpm"]
+    error_probability: 0.1
+    decoders: ["bposd"]
     steane_m: 2
   #- name: "Basic"
   #  num_samples: 100

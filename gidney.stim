@@ -1,0 +1,67 @@
+QUBIT_COORDS(0, 0) 0
+QUBIT_COORDS(5, 0) 2
+QUBIT_COORDS(0, 5) 4
+QUBIT_COORDS(5, 5) 6
+QUBIT_COORDS(7, 7) 5
+QUBIT_COORDS(2, 7) 3
+QUBIT_COORDS(7, 2) 1
+QUBIT_COORDS(2.5, 2.5, 0) 7
+QUBIT_COORDS(6, 3.5, 0) 8
+QUBIT_COORDS(3.5, 6, 0) 9
+QUBIT_COORDS(2.5, 2.5, 1) 10
+QUBIT_COORDS(6, 3.5, 1) 11
+QUBIT_COORDS(3.5, 6, 1) 12
+#encode into code state
+MPP X3*X4*X5*X6
+MPP X1*X2*X5*X6
+MPP X0*X2*X4*X6
+TICK
+TICK
+    
+#ancilla of X stabilizers
+RX 7 8 9 
+  
+#ancilla of Z stabilizers
+R 10 11 12 
+TICK
+  
+#CNOT of X stabilizers
+CX 7 6 8 5
+TICK
+CX 7 2 8 1
+TICK
+CX 7 4 8 6
+TICK
+CX 7 0 8 2 9 5
+TICK
+CX 9 6
+TICK
+CX 9 3
+TICK
+CX 9 4
+TICK
+ 
+#CNOT of Z stabilizers
+CX 6 12
+TICK
+CX 3 12
+TICK
+CX 4 12
+TICK
+CX 6 10 5 11
+TICK
+CX 2 10 1 11
+TICK
+CX 4 10 6 11    
+TICK
+CX 0 10 2 11 5 12
+TICK    
+#measurement of stabilizers
+MRX 7 8 9
+MR 10 11 12
+DETECTOR rec[-3]
+DETECTOR rec[-2]
+DETECTOR rec[-1]
+DETECTOR rec[-4] rec[-9]
+DETECTOR rec[-5] rec[-8]
+DETECTOR rec[-6] rec[-7]

@@ -134,15 +134,15 @@ class OfflineMemoryCircuit:
         circuit += self.measure_round()
         circuit += self.round_detectors()
 
-        #round = stim.Circuit()
-        #round += self.measure_round()
-        #round += self.round_detectors(2)
-        #round += self.measure_round()
-        #round += self.round_detectors(1)
+        round = stim.Circuit()
+        round += self.measure_round()
+        round += self.round_detectors(2)
+        round += self.measure_round()
+        round += self.round_detectors(1)
 
-        #circuit += round * self.n_rounds
-        with open("our_circuit.stim", "w") as f:
-            f.write(str(circuit))
+        circuit += round * self.n_rounds
+        #with open("our_circuit.stim", "w") as f:
+        #    f.write(str(circuit))
         return circuit
     
 class ObservableMeasurement:
@@ -472,7 +472,7 @@ def generate_offline_steane_l2_bare_ancilla(m):
 
 def get_concat_steane_code(m):
     #read whaterver.stim file and make stim circuit out of it
-    circuit = stim.Circuit.from_file("our_own.stim")
+    circuit = stim.Circuit.from_file("our_own_2.stim")
     return StimCodeCircuit(stim_circuit=circuit)
     #circuit = filter_ticks(generate_offline_steane_l2_bare_ancilla(m))
     #print(circuit)
