@@ -18,12 +18,13 @@ def decode(code_name: str, circuit: stim.Circuit, num_shots: int, decoder: str) 
     )
     if code_name == "steane":
         #stim circuit to file steane_circuit.stim
-        #stim.Circuit.to_file(circuit, "gidney_circuit.stim")
+        #stim.Circuit.to_file(circuit, "whatever_test.stim")
         #subprocess.run("stim diagram --in gidney.stim --out gidney_circuit.svg --type timeline-svg", shell=True)
         #subprocess.run("stim analyze_errors --allow_gauge_detectors --in steane_circuit.stim --out analyze.dem", shell=True)
         # read analyze.dem
         #dem = stim.DetectorErrorModel.from_file("analyze.dem")
         #print(circuit)
+        subprocess.run("stim diagram --in concat_steane_own.stim --out plse_help.svg --type timeline-svg --filter_coords D34",shell=True)
         dem = circuit.detector_error_model()
     else:
         dem = circuit.detector_error_model() # TODO do we need those: decompose_errors=True, approximate_disjoint_errors=True
