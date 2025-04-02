@@ -55,13 +55,19 @@ TICK
 CX 4 10 6 11    
 TICK
 CX 0 10 2 11 5 12
-TICK    
+TICK
+
+#Add measureble observable
+CX 13 0 13 1 13 2 13 3 13 4 13 5 13 6
+
 #measurement of stabilizers
 MRX 7 8 9
 MR 10 11 12
+MR 13
+DETECTOR rec[-4]
 DETECTOR rec[-3]
 DETECTOR rec[-2]
-DETECTOR rec[-1]
-DETECTOR rec[-4] rec[-9]
-DETECTOR rec[-5] rec[-8]
-DETECTOR rec[-6] rec[-7]
+DETECTOR rec[-5] rec[-10]
+DETECTOR rec[-6] rec[-9]
+DETECTOR rec[-7] rec[-8]
+OBSERVABLE_INCLUDE(0) rec[-1]
