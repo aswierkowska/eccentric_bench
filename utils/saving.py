@@ -35,3 +35,12 @@ def setup_experiment_logging(experiment_name):
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
+
+    for logger_name in [
+        "qiskit.transpiler",
+        "qiskit.transpiler.passes",
+        "qiskit.transpiler.passmanager",
+        "qiskit",
+    ]:
+        logging.getLogger(logger_name).setLevel(logging.WARNING)
+        logging.getLogger(logger_name).propagate = False

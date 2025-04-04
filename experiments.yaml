@@ -19,11 +19,14 @@ experiments:
     num_samples: 100
     backends: ["custom_full"]
     backends_sizes: [100]
-    codes: ["color"]
-    error_probability: 0.02
+    codes: ["surface"]
+    error_probability: 0.05
     decoders: ["bposd"]
-    routing_methods: ["basic"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
-    layout_methods: ["default"] # default, dense, trivial, sabre per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
+    #routing_methods: ["basic"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
+    #layout_methods: ["default"] # default, dense, trivial, sabre per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
+    # BUG: https://github.com/Qiskit/qiskit/issues/13152
+    #translating_methods: ["translator"] #default translator synthesis according to https://github.com/Qiskit/qiskit/blob/stable/2.0/qiskit/compiler/transpiler.py#L141
+    translating_methods: ["qiskit"] # qiskit bqskit tket
   #  cycles: 1
   #- name: "Basic"
   #  num_samples: 100
