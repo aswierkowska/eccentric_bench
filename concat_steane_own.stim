@@ -168,7 +168,6 @@ DETECTOR rec[-5]
 DETECTOR rec[-4]
 DETECTOR rec[-3]
 DETECTOR rec[-2]
-#Detector 24+ something is wrong there
 DETECTOR rec[-49] rec[-73]
 DETECTOR rec[-48] rec[-72]
 DETECTOR rec[-47] rec[-71]

@@ -472,17 +472,11 @@ def generate_offline_steane_l2_bare_ancilla(m):
 
 def get_concat_steane_code(m):
     #read whaterver.stim file and make stim circuit out of it
-    circuit = stim.Circuit.from_file("concat_steane_own.stim")
-    #circuit = stim.Circuit.from_file("gidney.stim")
+    if m==2:
+        circuit = stim.Circuit.from_file("codes/concat_steane_own.stim")
+    elif m==1:
+        circuit = stim.Circuit.from_file("codes/gidney.stim")
     return StimCodeCircuit(stim_circuit=circuit)
-    #circuit = filter_ticks(generate_offline_steane_l2_bare_ancilla(m))
-    #print(circuit)
-    #return StimCodeCircuit(stim_circuit=circuit)
-
-
-
-
-
 
 
 if __name__ == "__main__":

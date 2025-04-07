@@ -6,7 +6,7 @@ from .color_code_stim import get_color_code
 from .bacon_shor import get_bacon_shot_code
 from .concat_steane import get_concat_steane_code
 
-def get_code(code_name: str, d: int, m: int = None):
+def get_code(code_name: str, d: int):
     if code_name == "hh":
         code = HHC(d)
         css_code = CSSCodeCircuit(code, T=d)
@@ -21,12 +21,20 @@ def get_code(code_name: str, d: int, m: int = None):
         return get_color_code(d)
     elif code_name == "bacon":
         return get_bacon_shot_code(d)
-    elif code_name == "steane":
+    elif 'steane' in code_name:
+        if code_name[-1] == '1':
+            m = 1
+        elif code_name[-1] == '2':
+            m = 2
+        elif code_name[-1] == '3':
+            m = 3
+        else:
+            raise ValueError("Steane code only supports m = 1, 2, 3")
         return get_concat_steane_code(m)
 
 
 
-def get_max_d(code_name: str, n: int, m: int = None):
+def get_max_d(code_name: str, n: int):
     if code_name == "surface":
         # d**2 data qubits + d**2 - 1 ancilla qubits
         d = math.floor(math.sqrt((n + 1) / 2))
@@ -50,12 +58,12 @@ def get_max_d(code_name: str, n: int, m: int = None):
         d = int(math.sqrt(n))
         d = d - ((1 - d) % 2) 
         return d
-    elif code_name == 'steane':
-        if m == 1:
+    elif 'steane' in code_name:
+        if code_name[-1] == '1':
             return 3
-        elif m == 2:
+        elif code_name[-1] == '2':
             return 9
-        elif m == 3:
+        elif code_name[-1] == '3':
             return 27
         else:
             ValueError("Steane code only supports m = 1, 2, 3")
