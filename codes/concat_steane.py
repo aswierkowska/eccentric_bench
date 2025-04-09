@@ -74,18 +74,12 @@ def star_shaped_ordering_m3():
     orderings.append(stab36_2)
     orderings.append(stab36_3)
 
-
-    colorings = {
-        "red": [2, 4, 6, 9, 13, 17, 19, 21],
-        "green": [1, 5, 8, 10, 12, 15, 20, 22],
-        "blue": [0, 3, 7, 11, 14, 16, 18, 23],
-    }
-    return orderings, colorings
+    return orderings
 
 def build_big_concat_steane_circuit():
     circuit = stim.Circuit()
     #first encoding of the circuit
-    orderings = star_shaped_ordering_m3()[0]
+    orderings = star_shaped_ordering_m3()
     for ordering in orderings:
         #MPP for each of the entries
         string = "MPP "
