@@ -12,7 +12,7 @@ from qiskit.compiler import transpile
 from qiskit_qec.utils import get_stim_circuits
 from backends import get_backend
 from codes import get_code, get_max_d
-from noise import add_stim_noise
+from noise import get_noise_model
 from decoders import decode
 
 
@@ -38,7 +38,7 @@ def run_experiment(
         "h",
         "s",
         "s_dag",
-        "swap",
+      #  "swap",
         "reset",
         "measure",
         "barrier",
@@ -65,10 +65,12 @@ def run_experiment(
             code.circuit[state], detectors=detectors, logicals=logicals
         )[0][0]
 
-        if hasattr(backend, 'add_realistic_noise'): 
-            stim_circuit = backend.add_realistic_noise(stim_circuit)
-        else:
-            stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
+        noise_model = get_noise_model("", error_prob)
+        stim_circuit = noise_model.noisy_circuit(stim_circuit)
+        #if hasattr(backend, 'add_realistic_noise'): 
+        #    stim_circuit = backend.add_realistic_noise(stim_circuit)
+        #else:
+        #    stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
         logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
         if backend_size:
             logging.info(
@@ -107,6 +109,8 @@ if __name__ == "__main__":
             cycles = experiment["cycles"]
         else:
             cycles = None
+
+        print(experiment)
 
         # TODO: better handling case if distances and backends_sizes are both set
 

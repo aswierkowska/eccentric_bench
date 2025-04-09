@@ -16,31 +16,6 @@ class FakeIBMFlamingo(BackendV2):
         self._remote_gates, self._coupling_map = self.get_endpoints()
         self._num_qubits = self._coupling_map.size()
         self._target = Target("Fake IBM Flamingo", num_qubits=self._num_qubits) # TODO: hardware limitations
-        
-
-        """
-        rng = np.random.default_rng(seed=12345678942)
-        rz_props, x_props, sx_props, measure_props, delay_props = {}, {}, {}, {}, {}
-        
-        for i in range(self._num_qubits):
-            qarg = (i,)
-            rz_props[qarg] = InstructionProperties(error=0.0, duration=0.0)
-            x_props[qarg] = InstructionProperties(error=0.00035, duration=rng.uniform(1e-8, 9e-7))
-            sx_props[qarg] = InstructionProperties(error=0.00035, duration=rng.uniform(1e-8, 9e-7))
-            measure_props[qarg] = InstructionProperties(error=0.0077, duration=rng.uniform(1e-8, 9e-7))
-            delay_props[qarg] = None
-        
-        self._target.add_instruction(XGate(), x_props)
-        self._target.add_instruction(SXGate(), sx_props)
-        self._target.add_instruction(RZGate(Parameter("theta")), rz_props)
-        self._target.add_instruction(Measure(), measure_props)
-        self._target.add_instruction(Reset(), measure_props)
-        
-        cz_props = {}
-        for edge in self._coupling_map.get_edges():
-            cz_props[edge] = InstructionProperties(error=0.0033, duration=rng.uniform(1e-8, 9e-7))
-        self._target.add_instruction(CZGate(), cz_props)
-        """
 
     @property
     def target(self):
@@ -101,10 +76,14 @@ class FakeIBMFlamingo(BackendV2):
         all_endpoints = endpoints + endpoints_new
         return all_endpoints, map_large
     
+    def get_dqc_connections():
+        pass
+
     def run(self, circuit, **kwargs):
         raise NotImplementedError("This backend does not contain a run method")
 
 
 if __name__ == "__main__":
     backend = FakeIBMFlamingo()
-    plot_coupling_map(backend.coupling_map.size(), None, backend.coupling_map.get_edges(), filename="flamingo.png")
+    print(backend.get_endpoints())
+    #plot_coupling_map(backend.coupling_map.size(), None, backend.coupling_map.get_edges(), filename="flamingo.png")
