@@ -34,6 +34,24 @@ def run_experiment(
     translating_method=None,
 ):
     #try:
+<<<<<<< HEAD
+=======
+    stim_gates = [
+        "x",
+        "y",
+        "z",
+        "cx",
+        "cz",
+        "cy",
+        "h",
+        "s",
+        "s_dag",
+      #  "swap",
+        "reset",
+        "measure",
+        "barrier",
+    ]
+>>>>>>> bf0e285 (Extending the noise)
     backend = get_backend(backend_name, backend_size)
     if d == None:
         d = get_max_d(code_name, backend.coupling_map.size())
@@ -62,18 +80,24 @@ def run_experiment(
         )[0][0]
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> bf0e285 (Extending the noise)
         noise_model = get_noise_model("", error_prob)
         stim_circuit = noise_model.noisy_circuit(stim_circuit)
         #if hasattr(backend, 'add_realistic_noise'): 
         #    stim_circuit = backend.add_realistic_noise(stim_circuit)
         #else:
         #    stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
+<<<<<<< HEAD
 =======
         if hasattr(backend, 'add_realistic_noise'): 
             stim_circuit = backend.add_realistic_noise(stim_circuit)
         else:
             stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
 >>>>>>> 21ad428 (Modify to work with different noise)
+=======
+>>>>>>> bf0e285 (Extending the noise)
         logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
 
         result_data = {
@@ -123,8 +147,21 @@ if __name__ == "__main__":
         routing_methods = experiment.get("routing_methods", [None])
         translating_methods = experiment.get("translating_methods", [None])
 
+<<<<<<< HEAD
         setup_experiment_logging(experiment_name)
+=======
+        if "cycles" in experiment:
+            cycles = experiment["cycles"]
+        else:
+            cycles = None
+
+<<<<<<< HEAD
+>>>>>>> bf0e285 (Extending the noise)
         save_experiment_metadata(experiment, experiment_name)
+=======
+        print(experiment)
+
+>>>>>>> 1171b32 (Extending the noise)
         # TODO: better handling case if distances and backends_sizes are both set
 
         with ProcessPoolExecutor() as executor:
