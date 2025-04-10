@@ -15,15 +15,15 @@ class QubitTracking:
     
         
     def swap_qubits(self, logical_qubit1: int, logical_qubit2: int):
-        physical_qubit1 = self.qubit_mapping[logical_qubit1]
-        physical_qubit2 = self.qubit_mapping[logical_qubit2]
+        physical_qubit1 = self.get_layout_postion(logical_qubit1)
+        physical_qubit2 = self.get_layout_postion(logical_qubit2)
 
         self.qubit_mapping[logical_qubit1] = physical_qubit2
         self.qubit_mapping[logical_qubit2] = physical_qubit1
 
 
     def get_neighbours(self,logical_qubit: int):
-        physical_qubit = self.qubit_mapping[logical_qubit]
+        physical_qubit = self.get_layout_postion(logical_qubit)
         neighbours = self.coupling_map_graph.neighbors(physical_qubit)
         logical_neighbours = [self.get_logical_qubit(neighbour) for neighbour in neighbours]
         return logical_neighbours
@@ -37,8 +37,12 @@ class QubitTracking:
 
     def get_layout_postion(self, logical_qubit: int):
         """Get physical position of logical qubit"""
-        physical_qubit = self.qubit_mapping[logical_qubit]
-        return physical_qubit
+        try:
+            physical_qubit = self.qubit_mapping[logical_qubit]
+            return physical_qubit
+        except KeyError:
+            raise ValueError(f"Logical qubit {logical_qubit} not found in mapping.")
+        
     
 
 if __name__ == "__main__":
