@@ -5,10 +5,10 @@ from .fake_flamingo import FakeIBMFlamingo
 from .fake_willow import FakeGoogleWillowBackend
 from .fake_aquila import FakeQueraAquilaBackend
 
-def get_neighbours():
+def get_neighbors():
     pass
 
-def get_layout_postion():
+def get_layout_postion(qubit):
     pass
 
 def get_backend(backend: str, backend_size: int):
