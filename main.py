@@ -12,7 +12,7 @@ from qiskit.compiler import transpile
 from qiskit_qec.utils import get_stim_circuits
 from backends import get_backend
 from codes import get_code, get_max_d
-from noise import add_stim_noise
+from noise import get_noise_model
 from decoders import decode
 from transpilers import translate, qiskit_stim_gates
 from utils import save_experiment_metadata, save_results_to_csv, setup_experiment_logging
@@ -60,7 +60,13 @@ def run_experiment(
         stim_circuit = get_stim_circuits(
             code.circuit[state], detectors=detectors, logicals=logicals
         )[0][0]
-        stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
+
+        noise_model = get_noise_model("", error_prob)
+        stim_circuit = noise_model.noisy_circuit(stim_circuit)
+        #if hasattr(backend, 'add_realistic_noise'): 
+        #    stim_circuit = backend.add_realistic_noise(stim_circuit)
+        #else:
+        #    stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
         logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
 
         result_data = {
