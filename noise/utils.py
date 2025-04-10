@@ -17,11 +17,12 @@ def get_noise_model(name: str, p: float = None, qt: QubitTracking = None):
             return NoiseModel.EM3_v2(p)
         elif name == "si1000":
             return NoiseModel.SI1000(p)
+    # TODO: add qt everywhere for crosstalk
     if qt:
         if name == "willow":
             return WillowNoise.get_noise()
         elif name == "flamingo":
-            return FlamingoNoise.get_noise()
+            return FlamingoNoise.get_noise(qt)
         elif name == "aquila":
             return AquilaNoise.get_noise()
         elif name == "apollo":

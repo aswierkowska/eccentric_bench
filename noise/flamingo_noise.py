@@ -1,7 +1,7 @@
 import dataclasses
 import stim
 from noise import *
-from backends import get_layout_postion, FakeIBMFlamingo
+from backends import get_layout_postion, FakeIBMFlamingo, QubitTracking
 
 flamingo_err_prob = {
     "P_CZ": 0,
@@ -18,12 +18,14 @@ flamingo_err_prob = {
 class FlamingoNoise(NoiseModel):
     noisy_gates_connection: Dict[str, float]
     backend: FakeIBMFlamingo
+    qt: QubitTracking
 
     @staticmethod
     def get_noise(
         noisy_gates: Dict[str, float], 
         noisy_gates_connection: Dict[str, float],
-        backend: FakeIBMFlamingo
+        backend: FakeIBMFlamingo,
+        qt: QubitTracking
     ) -> 'FlamingoNoise':
         # Default to the predefined probabilities if no specific gates or connection is provided
         if noisy_gates is None:
@@ -58,6 +60,7 @@ class FlamingoNoise(NoiseModel):
                 "CX": flamingo_err_prob["P_CZ"] + 0.3,
             },
             backend = backend,
+            qt = qt,
             use_correlated_parity_measurement_errors=True
         )
 
@@ -152,9 +155,9 @@ class FlamingoNoise(NoiseModel):
                 if len(op.target_groups()[0]) > 1:
                     logical_q1 = op.target_groups()[0][0].qubit_value
                     logical_q2 = op.target_groups()[0][1].qubit_value
-                    phy_q1 = get_layout_postion(logical_q1)
-                    phy_q2 = get_layout_postion(logical_q2)
-                    if (phy_q1, phy_q2) in backend.get_remote_gates():
+                    phy_q1 = self.qt.get_layout_postion(logical_q1)
+                    phy_q2 = self.qt.get_layout_postion(logical_q2)
+                    if (phy_q1, phy_q2) in self.backend.get_remote_gates():
                         p = self.noisy_gates_conn[op.name]
 
                 if p is None and op.name in self.noisy_gates:
