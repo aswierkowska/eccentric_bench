@@ -10,7 +10,7 @@ from itertools import product
 from concurrent.futures import ProcessPoolExecutor
 from qiskit.compiler import transpile
 from qiskit_qec.utils import get_stim_circuits
-from backends import get_backend
+from backends import get_backend, QubitTracking
 from codes import get_code, get_max_d
 from noise import get_noise_model
 from decoders import decode
@@ -57,10 +57,11 @@ def run_experiment(
                 layout_method=layout_method,
                 routing_method=routing_method,
             )
+        qt = QubitTracking(backend, code.circuit[state])
         stim_circuit = get_stim_circuits(
             code.circuit[state], detectors=detectors, logicals=logicals
         )[0][0]
-        noise_model = get_noise_model("", error_prob)
+        noise_model = get_noise_model("", error_prob, qt)
         stim_circuit = noise_model.noisy_circuit(stim_circuit)
         #if hasattr(backend, 'add_realistic_noise'): 
         #    stim_circuit = backend.add_realistic_noise(stim_circuit)

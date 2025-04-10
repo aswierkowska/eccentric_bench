@@ -1,9 +1,8 @@
 import dataclasses
 import stim
 from noise import *
-from backends import get_layout_postion, FakeIBMFlamingo
 
-flamingo_err_prob = {
+aquila_err_prob = {
     "P_CZ": 0,
     "P_CZ_CROSSTALK": 0,
     "P_CZ_LEAKAGE": 0,
@@ -15,49 +14,45 @@ flamingo_err_prob = {
 }
 
 @dataclasses.dataclass(frozen=True)
-class FlamingoNoise(NoiseModel):
+class AquilaNoise(NoiseModel):
     noisy_gates_connection: Dict[str, float]
-    backend: FakeIBMFlamingo
 
     @staticmethod
     def get_noise(
         noisy_gates: Dict[str, float], 
-        noisy_gates_connection: Dict[str, float],
-        backend: FakeIBMFlamingo
-    ) -> 'FlamingoNoise':
+        noisy_gates_connection: Dict[str, float]
+    ) -> 'AquilaNoise':
         # Default to the predefined probabilities if no specific gates or connection is provided
         if noisy_gates is None:
             noisy_gates = {
-                "CX": flamingo_err_prob["P_CZ"],
-                "H": flamingo_err_prob["P_SQ"],
-                "M": flamingo_err_prob["P_READOUT"],
+                "CX": aquila_err_prob["P_CZ"],
+                "H": aquila_err_prob["P_SQ"],
+                "M": aquila_err_prob["P_READOUT"],
             }
 
         if noisy_gates_connection is None:
             noisy_gates_connection = {
-                "CX": flamingo_err_prob["P_CZ"] + 0.3,
+                "CX": aquila_err_prob["P_CZ"] + 0.3,
             }
 
-        # Create a FlamingoNoise instance with the provided or default noisy gates and backend
-        return FlamingoNoise(
-           idle=flamingo_err_prob["P_IDLE"],
-            measure_reset_idle=flamingo_err_prob["P_RESET"],
+        return AquilaNoise(
+           idle=aquila_err_prob["P_IDLE"],
+            measure_reset_idle=aquila_err_prob["P_RESET"],
             noisy_gates={
                 # TODO: should not be CX
-                "CX": flamingo_err_prob["P_CZ"],
-                "CZ": flamingo_err_prob["P_CZ"],
-                "CZ_CROSSTALK": flamingo_err_prob["P_CZ_CROSSTALK"],
-                "CZ_LEAKAGE": flamingo_err_prob["P_CZ_LEAKAGE"],
-                "R": flamingo_err_prob["P_RESET"],
+                "CX": aquila_err_prob["P_CZ"],
+                "CZ": aquila_err_prob["P_CZ"],
+                "CZ_CROSSTALK": aquila_err_prob["P_CZ_CROSSTALK"],
+                "CZ_LEAKAGE": aquila_err_prob["P_CZ_LEAKAGE"],
+                "R": aquila_err_prob["P_RESET"],
                 # TODO: should not be H
-                "H": flamingo_err_prob["P_SQ"],
-                "M": flamingo_err_prob["P_READOUT"],
-                "MPP": flamingo_err_prob["P_READOUT"],
+                "H": aquila_err_prob["P_SQ"],
+                "M": aquila_err_prob["P_READOUT"],
+                "MPP": aquila_err_prob["P_READOUT"],
             },
             noisy_gates_connection = {
-                "CX": flamingo_err_prob["P_CZ"] + 0.3,
+                "CX": aquila_err_prob["P_CZ"] + 0.3,
             },
-            backend = backend,
             use_correlated_parity_measurement_errors=True
         )
 
@@ -147,17 +142,7 @@ class FlamingoNoise(NoiseModel):
                     result.append_operation("TICK", [])
                     continue
 
-                p = None
-
-                if len(op.target_groups()[0]) > 1:
-                    logical_q1 = op.target_groups()[0][0].qubit_value
-                    logical_q2 = op.target_groups()[0][1].qubit_value
-                    phy_q1 = get_layout_postion(logical_q1)
-                    phy_q2 = get_layout_postion(logical_q2)
-                    if (phy_q1, phy_q2) in backend.get_remote_gates():
-                        p = self.noisy_gates_conn[op.name]
-
-                if p is None and op.name in self.noisy_gates:
+                if op.name in self.noisy_gates:
                     p = self.noisy_gates[op.name]
                 elif self.any_clifford_1 is not None and op.name in ANY_CLIFFORD_1_OPS:
                     p = self.any_clifford_1
@@ -198,13 +183,13 @@ if __name__ == "__main__":
     M 0 1
     """)
     noisy_gates={
-                "CX": flamingo_err_prob["P_CZ"],
-                "H": flamingo_err_prob["P_SQ"],
-                "M": flamingo_err_prob["P_READOUT"],
+                "CX": aquila_err_prob["P_CZ"],
+                "H": aquila_err_prob["P_SQ"],
+                "M": aquila_err_prob["P_READOUT"],
     }
     noisy_gates_connection={
-        "CX": flamingo_err_prob["P_CZ"] + 0.3,
+        "CX": aquila_err_prob["P_CZ"] + 0.3,
     }
-    noise = FlamingoNoise(0, 0, noisy_gates, noisy_gates_connection)
+    noise = AquilaNoise(0, 0, noisy_gates, noisy_gates_connection)
     noise.noisy_circuit(circuit)
     #plot_coupling_map(backend.coupling_map.size(), None, backend.coupling_map.get_edges(), filename="flamingo.png")
