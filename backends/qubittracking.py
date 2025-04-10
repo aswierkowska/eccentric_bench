@@ -1,5 +1,4 @@
 from .utils import get_backend
-from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import GenericBackendV2
 import rustworkx as rx
 

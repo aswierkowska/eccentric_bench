@@ -4,7 +4,6 @@ from .fake_apollo import FakeQuantinuumApolloBackend
 from .fake_flamingo import FakeIBMFlamingo
 from .fake_willow import FakeGoogleWillowBackend
 from .fake_aquila import FakeQueraAquilaBackend
-from qiskit.providers import Backend
 
 
 
