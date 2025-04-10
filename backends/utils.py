@@ -4,12 +4,9 @@ from .fake_apollo import FakeQuantinuumApolloBackend
 from .fake_flamingo import FakeIBMFlamingo
 from .fake_willow import FakeGoogleWillowBackend
 from .fake_aquila import FakeQueraAquilaBackend
+from qiskit.providers import Backend
 
-def get_neighbours():
-    pass
 
-def get_layout_postion():
-    pass
 
 def get_backend(backend: str, backend_size: int):
     backend_type = backend.split("_")[0]
