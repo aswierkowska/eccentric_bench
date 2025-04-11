@@ -3,6 +3,8 @@ from qiskit_qec.circuits import SurfaceCodeCircuit, CSSCodeCircuit
 from qiskit_qec.codes.hhc import HHC
 from .gross_code import get_gross_code
 from .color_code_stim import get_color_code
+from .bacon_shor import get_bacon_shot_code
+from .concat_steane import get_concat_steane_code
 
 def get_code(code_name: str, d: int, cycles: int):
     if code_name == "hh":
@@ -29,6 +31,18 @@ def get_code(code_name: str, d: int, cycles: int):
             return get_color_code(d, rounds=d)
         else:
             return get_color_code(d, rounds=cycles)
+    elif code_name == "bacon":
+        return get_bacon_shot_code(d)
+    elif 'steane' in code_name:
+        if code_name[-1] == '1':
+            m = 1
+        elif code_name[-1] == '2':
+            m = 2
+        elif code_name[-1] == '3':
+            m = 3
+        else:
+            raise ValueError("Steane code only supports m = 1, 2, 3")
+        return get_concat_steane_code(m)
 
 
 def get_max_d(code_name: str, n: int):
@@ -45,9 +59,24 @@ def get_max_d(code_name: str, n: int):
     elif code_name == "gross":
         return math.floor(n / 2)
     elif code_name == "color":
-        #TODO check actually which distance to put here
         d = int((math.sqrt(4*n) +1)/3)
         d = d - ((1 - d) % 2)
-        print("Distance for color code: ", d)
         return d
+    elif code_name == "bacon":
+        #TODO: check this
+        #assuming square lattice n = d^2
+        #actually it should be d = min(m,n) according to qecc zoo but we have no m,n structure
+        d = int(math.sqrt(n))
+        d = d - ((1 - d) % 2) 
+        return d
+    elif 'steane' in code_name:
+        if code_name[-1] == '1':
+            return 3
+        elif code_name[-1] == '2':
+            return 9
+        elif code_name[-1] == '3':
+            return 27
+        else:
+            ValueError("Steane code only supports m = 1, 2, 3")
+
     return 0
