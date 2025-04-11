@@ -13,6 +13,10 @@ import stim
 from qiskit_qec.circuits import StimCodeCircuit
 
 
+#########################################################################
+# Functions adapted from https://github.com/seokhyung-lee/color-code-stim
+#########################################################################
+
 class ColorCode:
     tanner_graph: ig.Graph
     circuit: stim.Circuit
@@ -888,6 +892,8 @@ class ColorCode:
             Round that the detector belongs to.
         """
         return self.detectors[detector_id]
+    
+#############################################################################################
 
 def get_color_code(d=5,rounds=5):
     colorcode = ColorCode(
