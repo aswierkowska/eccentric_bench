@@ -3,28 +3,28 @@ from .willow_noise import WillowNoise
 from .flamingo_noise import FlamingoNoise
 from .aquila_noise import AquilaNoise
 from .apollo_noise import ApolloNoise
-from backends import QubitTracking
+from backends import *
 
-def get_noise_model(name: str, p: float = None, qt: QubitTracking = None):
+def get_noise_model(error_type: str, p: float = None, qt: QubitTracking = None, backend: FakeIBMFlamingo = None):
     if p:
-        if name == "sd6":
+        if error_type == "sd6":
             return NoiseModel.SD6(p)
-        elif name == "pm3":
+        elif error_type == "pm3":
             return NoiseModel.PC3(p)
-        elif name == "em3_1":
+        elif error_type == "em3_1":
             return NoiseModel.EM3_v1(p)
-        elif name == "em3_2":
+        elif error_type == "em3_2":
             return NoiseModel.EM3_v2(p)
-        elif name == "si1000":
+        elif error_type == "si1000":
             return NoiseModel.SI1000(p)
-    # TODO: add qt everywhere for crosstalk
+    # TODO: add qt everywhere for
     if qt:
-        if name == "willow":
+        if error_type == "willow":
             return WillowNoise.get_noise()
-        elif name == "flamingo":
-            return FlamingoNoise.get_noise(qt)
-        elif name == "aquila":
+        elif error_type == "flamingo" and backend:
+            return FlamingoNoise.get_noise(qt, backend)
+        elif error_type == "aquila":
             return AquilaNoise.get_noise()
-        elif name == "apollo":
+        elif error_type == "apollo":
             return ApolloNoise.get_noise()
     raise NotImplementedError

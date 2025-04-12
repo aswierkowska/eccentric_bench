@@ -1,109 +1,188 @@
-import dataclasses
+from typing import Dict, Tuple, Optional, Set
 import stim
-from noise import *
-from backends import get_layout_postion, FakeIBMFlamingo, QubitTracking
+import math
+from .noise import *
+from backends import FakeIBMFlamingo, QubitTracking
 
 flamingo_err_prob = {
-    "P_CZ": 0,
-    "P_CZ_CROSSTALK": 0,
-    "P_CZ_LEAKAGE": 0,
-    "P_IDLE": 0,
-    "P_READOUT": 0,
-    "P_RESET": 0,
-    "P_SQ": 0,
-    "P_LEAKAGE": 0
+    "P_CZ": 0.0,
+    "P_CZ_CROSSTALK": 0.0,
+    "P_CZ_LEAKAGE": 0.0,
+    "P_IDLE": 0.0,
+    "P_READOUT": 0.0,
+    "P_RESET": 0.0,
+    "P_SQ": 0.0,
+    "P_LEAKAGE": 0.0
 }
 
-@dataclasses.dataclass(frozen=True)
+# TODO: fill in
+flamingo_gate_times = {
+    "CX": 0,
+    "CZ": 0,
+    "H": 0,
+    "M": 0,
+    "RESET": 0,
+    "SWAP": 0,
+}
+
 class FlamingoNoise(NoiseModel):
-    noisy_gates_connection: Dict[str, float]
-    backend: FakeIBMFlamingo
-    qt: QubitTracking
+    def __init__(
+        self,
+        idle: float,
+        measure_reset_idle: float,
+        noisy_gates: Dict[str, float],
+        noisy_gates_connection: Dict[str, float],
+        qt: QubitTracking,
+        backend: FakeIBMFlamingo,
+        any_clifford_1: Optional[float] = None,
+        any_clifford_2: Optional[float] = None,
+        use_correlated_parity_measurement_errors: bool = False
+    ):
+        self.idle = idle
+        self.measure_reset_idle = measure_reset_idle
+        self.noisy_gates = noisy_gates
+        self.noisy_gates_connection = noisy_gates_connection
+        self.qt = qt
+        self.backend = backend
+        self.any_clifford_1 = any_clifford_1
+        self.any_clifford_2 = any_clifford_2
+        self.use_correlated_parity_measurement_errors = use_correlated_parity_measurement_errors
 
     @staticmethod
     def get_noise(
-        noisy_gates: Dict[str, float], 
-        noisy_gates_connection: Dict[str, float],
-        backend: FakeIBMFlamingo,
-        qt: QubitTracking
+        qt: QubitTracking,
+        backend: FakeIBMFlamingo
     ) -> 'FlamingoNoise':
-        # Default to the predefined probabilities if no specific gates or connection is provided
-        if noisy_gates is None:
-            noisy_gates = {
-                "CX": flamingo_err_prob["P_CZ"],
-                "H": flamingo_err_prob["P_SQ"],
-                "M": flamingo_err_prob["P_READOUT"],
-            }
-
-        if noisy_gates_connection is None:
-            noisy_gates_connection = {
-                "CX": flamingo_err_prob["P_CZ"] + 0.3,
-            }
-
-        # Create a FlamingoNoise instance with the provided or default noisy gates and backend
         return FlamingoNoise(
-           idle=flamingo_err_prob["P_IDLE"],
+            idle=flamingo_err_prob["P_IDLE"],
             measure_reset_idle=flamingo_err_prob["P_RESET"],
             noisy_gates={
-                # TODO: should not be CX
                 "CX": flamingo_err_prob["P_CZ"],
                 "CZ": flamingo_err_prob["P_CZ"],
+                "SWAP": flamingo_err_prob["P_CZ"],
                 "CZ_CROSSTALK": flamingo_err_prob["P_CZ_CROSSTALK"],
                 "CZ_LEAKAGE": flamingo_err_prob["P_CZ_LEAKAGE"],
                 "R": flamingo_err_prob["P_RESET"],
-                # TODO: should not be H
                 "H": flamingo_err_prob["P_SQ"],
                 "M": flamingo_err_prob["P_READOUT"],
                 "MPP": flamingo_err_prob["P_READOUT"],
             },
-            noisy_gates_connection = {
+            noisy_gates_connection={
                 "CX": flamingo_err_prob["P_CZ"] + 0.3,
+                "CZ": flamingo_err_prob["P_CZ"] + 0.3,
+                "SWAP": flamingo_err_prob["P_CZ"] + 0.3,
             },
-            backend = backend,
-            qt = qt,
+            qt=qt,
+            backend=backend,
             use_correlated_parity_measurement_errors=True
         )
 
+    def update_swaps(self, op: stim.CircuitInstruction):
+        targets = op.targets_copy()
+        for i in range(0, len(targets), 2):
+            q1 = targets[i].qubit_value
+            q2 = targets[i+1].qubit_value
+            self.qt.swap_qubits(q1, q2)
+
+    def get_qubit_err_prob(self, qubit: int, gate_duration_ns: float) -> float:
+        qubit_properties = self.backend.qubit_properties(qubit)
+        t1 = qubit_properties.t1
+        t2 = qubit_properties.t2
+        t = gate_duration_ns
+        p_relax = 1 - math.exp(-t / t1)
+        p_dephase = 1 - math.exp(-t / t2)
+        return (p_relax + p_dephase - p_relax * p_dephase)
+
+    def get_gate_error(self, op: stim.CircuitInstruction) -> float:
+        name = op.name
+        if name in self.noisy_gates_connection and len(op.target_groups()[0]) >= 2:
+            logical_q1 = op.target_groups()[0][0].qubit_value
+            logical_q2 = op.target_groups()[0][1].qubit_value
+            phy_q1 = self.qt.get_layout_postion(logical_q1)
+            phy_q2 = self.qt.get_layout_postion(logical_q2)
+
+            if (phy_q1, phy_q2) in self.backend.get_remote_gates or (phy_q2, phy_q1) in self.backend.get_remote_gates:
+                return self.noisy_gates_connection[name]
+            
+        if name in self.noisy_gates:
+            return self.noisy_gates[name]
+        raise NotImplementedError(f"Gate error not defined for op: {repr(op)}")
 
 
-
-    def noisy_op(self, op: stim.CircuitInstruction, p: float, ancilla: int) -> Tuple[stim.Circuit, stim.Circuit, stim.Circuit]:
+    def noisy_op(self, op: stim.CircuitInstruction, base_p: float, ancilla: int) -> Tuple[stim.Circuit, stim.Circuit, stim.Circuit]:
         pre = stim.Circuit()
         mid = stim.Circuit()
         post = stim.Circuit()
         targets = op.targets_copy()
         args = op.gate_args_copy()
-        if p > 0:
-            if op.name in ANY_CLIFFORD_1_OPS:
-                post.append_operation("DEPOLARIZE1", targets, p)
-            elif op.name in ANY_CLIFFORD_2_OPS:
-                post.append_operation("DEPOLARIZE2", targets, p)
-            elif op.name in RESET_OPS or op.name in MEASURE_OPS:
-                if op.name in RESET_OPS:
-                    post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, p)
-                if op.name in MEASURE_OPS:
-                    pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, p)
-            elif op.name == "MPP":
-                assert len(targets) % 3 == 0 and all(t.is_combiner for t in targets[1::3]), repr(op)
-                assert args == [] or args == [0]
 
+        if op.name in ANY_CLIFFORD_1_OPS:
+            for t in targets:
+                q = t.value
+                base_p = self.get_gate_error(stim.CircuitInstruction(op.name, [t], args))
+                qubit_p = self.get_qubit_err_prob(q, flamingo_gate_times[op.name])
+                combined_p = 1 - (1 - base_p) * (1 - qubit_p)
+                if combined_p > 0:
+                    post.append_operation("DEPOLARIZE1", [q], combined_p)
+                mid.append_operation(op.name, [t], args)
+
+        elif op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS:
+            for i in range(0, len(targets), 2):
+                q1 = targets[i].value
+                q2 = targets[i+1].value
+                base_p = self.get_gate_error(stim.CircuitInstruction(op.name, [targets[i], targets[i+1]], args))
+                p1 = self.get_qubit_err_prob(q1, flamingo_gate_times[op.name])
+                p2 = self.get_qubit_err_prob(q2, flamingo_gate_times[op.name])
+                combined_p1 = 1 - (1 - base_p) * (1 - p1)
+                combined_p2 = 1 - (1 - base_p) * (1 - p2)
+                if combined_p1 > 0:
+                    post.append_operation("DEPOLARIZE1", [q1], combined_p1)
+                if combined_p2 > 0:
+                    post.append_operation("DEPOLARIZE1", [q2], combined_p2)
+                mid.append_operation(op.name, [targets[i], targets[i+1]], args)
+
+        elif op.name in RESET_OPS or op.name in MEASURE_OPS:
+            for t in targets:
+                q = t.value
+                base_p = self.get_gate_error(stim.CircuitInstruction(op.name, [t], args))
+                qubit_p = self.get_qubit_err_prob(q, flamingo_gate_times[op.name])
+                combined_p = 1 - (1 - base_p) * (1 - qubit_p)
+                if combined_p > 0:
+                    if op.name in RESET_OPS:
+                        post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], combined_p)
+                    if op.name in MEASURE_OPS:
+                        pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], combined_p)
+                mid.append_operation(op.name, [t], args)
+
+        elif op.name == "MPP":
+            assert len(targets) % 3 == 0 and all(t.is_combiner for t in targets[1::3]), repr(op)
+            assert args == [] or args == [0]
+            for k in range(0, len(targets), 3):
+                t1 = targets[k]
+                t2 = targets[k + 2]
+                mini_op = stim.CircuitInstruction(op.name, [t1, targets[k+1], t2], args)
+                base_p = self.get_gate_error(mini_op)
+                p1 = self.get_qubit_err_prob(t1.value)
+                p2 = self.get_qubit_err_prob(t2.value)
+                avg_qubit_p = (p1 + p2) / 2
+                combined_p = 1 - (1 - base_p) * (1 - avg_qubit_p)
                 if self.use_correlated_parity_measurement_errors:
-                    for k in range(0, len(targets), 3):
-                        mid += parity_measurement_with_correlated_measurement_noise(
-                            t1=targets[k],
-                            t2=targets[k + 2],
-                            ancilla=ancilla,
-                            mix_probability=p)
-                    return pre, mid, post
-
+                    mid += parity_measurement_with_correlated_measurement_noise(
+                        t1=t1,
+                        t2=t2,
+                        ancilla=ancilla,
+                        mix_probability=combined_p
+                    )
                 else:
-                    pre.append_operation("DEPOLARIZE2", [t.value for t in targets if not t.is_combiner], p)
-                    args = [p]
+                    pre.append_operation("DEPOLARIZE2", [t1.value, t2.value], combined_p)
+                mid.append_operation(op.name, [t1, targets[k+1], t2], args)
+            return pre, mid, post
 
-            else:
-                raise NotImplementedError(repr(op))
-        mid.append_operation(op.name, targets, args)
+        else:
+            raise NotImplementedError(repr(op))
+
         return pre, mid, post
+
 
     def noisy_circuit(self, circuit: stim.Circuit, *, qs: Optional[Set[int]] = None) -> stim.Circuit:
         result = stim.Circuit()
@@ -121,8 +200,6 @@ class FlamingoNoise(NoiseModel):
             nonlocal result
             if not current_moment_mid:
                 return
-
-            # Apply idle depolarization rules.
             idle_qubits = sorted(qs - used_qubits)
             if used_qubits and idle_qubits and self.idle > 0:
                 current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.idle)
@@ -130,7 +207,6 @@ class FlamingoNoise(NoiseModel):
             if measured_or_reset_qubits and idle_qubits and self.measure_reset_idle > 0:
                 current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.measure_reset_idle)
 
-            # Move current noisy moment into result.
             result += current_moment_pre
             result += current_moment_mid
             result += current_moment_post
@@ -152,62 +228,35 @@ class FlamingoNoise(NoiseModel):
 
                 p = None
 
-                if len(op.target_groups()[0]) > 1:
-                    logical_q1 = op.target_groups()[0][0].qubit_value
-                    logical_q2 = op.target_groups()[0][1].qubit_value
-                    phy_q1 = self.qt.get_layout_postion(logical_q1)
-                    phy_q2 = self.qt.get_layout_postion(logical_q2)
-                    if (phy_q1, phy_q2) in self.backend.get_remote_gates():
-                        p = self.noisy_gates_conn[op.name]
-
-                if p is None and op.name in self.noisy_gates:
+                if op.name in self.noisy_gates:
                     p = self.noisy_gates[op.name]
                 elif self.any_clifford_1 is not None and op.name in ANY_CLIFFORD_1_OPS:
                     p = self.any_clifford_1
-                elif self.any_clifford_2 is not None and op.name in ANY_CLIFFORD_2_OPS:
+                elif self.any_clifford_2 is not None and (op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS):
                     p = self.any_clifford_2
                 elif op.name in ANNOTATION_OPS:
                     p = 0
-                else:
+                if p == None:
                     raise NotImplementedError(repr(op))
+
                 pre, mid, post = self.noisy_op(op, p, ancilla)
+
+                if op.name in SWAP_OPS:
+                    self.update_swaps(op)
+
                 current_moment_pre += pre
                 current_moment_mid += mid
                 current_moment_post += post
 
-                # Ensure the circuit is not touching qubits multiple times per tick.
                 touched_qubits = {
-                    t.value
-                    for t in op.targets_copy()
+                    t.value for t in op.targets_copy()
                     if t.is_x_target or t.is_y_target or t.is_z_target or t.is_qubit_target
                 }
-                if op.name in ANNOTATION_OPS:
-                    touched_qubits.clear()
-                # Hack: turn off this assertion off for now since correlated errors are built into circuit.
-                #assert touched_qubits.isdisjoint(used_qubits), repr(current_moment_pre + current_moment_mid + current_moment_post)
-                used_qubits |= touched_qubits
+                
                 if op.name in MEASURE_OPS or op.name in RESET_OPS:
                     measured_or_reset_qubits |= touched_qubits
+                used_qubits |= touched_qubits
             else:
                 raise NotImplementedError(repr(op))
         flush()
-
         return result
-    
-if __name__ == "__main__":
-    circuit = stim.Circuit("""
-    H 0
-    CX 0 1
-    M 0 1
-    """)
-    noisy_gates={
-                "CX": flamingo_err_prob["P_CZ"],
-                "H": flamingo_err_prob["P_SQ"],
-                "M": flamingo_err_prob["P_READOUT"],
-    }
-    noisy_gates_connection={
-        "CX": flamingo_err_prob["P_CZ"] + 0.3,
-    }
-    noise = FlamingoNoise(0, 0, noisy_gates, noisy_gates_connection)
-    noise.noisy_circuit(circuit)
-    #plot_coupling_map(backend.coupling_map.size(), None, backend.coupling_map.get_edges(), filename="flamingo.png")

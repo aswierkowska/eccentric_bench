@@ -1,7 +1,6 @@
 #################################################################################################################
 # Adapted from: https://github.com/Strilanc/honeycomb_threshold/blob/main/src/noise.py
 #################################################################################################################
-import dataclasses
 from typing import Optional, Dict, Set, Tuple
 
 import stim
@@ -11,8 +10,9 @@ ANY_CLIFFORD_2_OPS = {"CX", "CY", "CZ", "XCX", "XCY", "XCZ", "YCX", "YCY", "YCZ"
 RESET_OPS = {"R", "RX", "RY"}
 MEASURE_OPS = {"M", "MX", "MY"}
 ANNOTATION_OPS = {"OBSERVABLE_INCLUDE", "DETECTOR", "SHIFT_COORDS", "QUBIT_COORDS", "TICK"}
+SWAP_OPS = {"SWAP"}
 
-@dataclasses.dataclass(frozen=True)
+#@dataclasses.dataclass(frozen=True)
 class NoiseModel:
     idle: float #idle should be either float or like a Dict to map qubits to their respective idle noise
     measure_reset_idle: float
