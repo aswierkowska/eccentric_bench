@@ -1,15 +1,18 @@
 from .utils import get_backend
 from qiskit.providers.fake_provider import GenericBackendV2
+from qiskit import QuantumCircuit, transpile
 import rustworkx as rx
 
 class QubitTracking:
-    def __init__(self, backend : GenericBackendV2):
+    def __init__(self, backend : GenericBackendV2, circuit: QuantumCircuit):
         self.backend = backend
         self.qubit_mapping = {}
         self.physical_qubits = backend.num_qubits
-        for i in range(self.physical_qubits):
-            self.qubit_mapping[i] = i
+        #for i in range(self.physical_qubits):
+        #    self.qubit_mapping[i] = i
+        self.qubit_mapping = dict(enumerate(circuit.layout.initial_index_layout()))
         
+
         self.coupling_map = backend.coupling_map
         self.coupling_map_graph = self.coupling_map.graph.to_undirected()
     
@@ -47,9 +50,20 @@ class QubitTracking:
 
 if __name__ == "__main__":
     # Example usage
+    qc = QuantumCircuit(4)
+    qc.h(2)
+    qc.cx(0, 1)
+    qc.cx(2, 0)
+    qc.cx(1, 2)
+    qc.cx(1, 3)
     num_qubits = 8
     backend = get_backend("custom_cube", num_qubits)
-    qubit_tracker = QubitTracking(backend)
+    qc = transpile(
+        qc,
+        backend=backend
+    )
+    qubit_tracker = QubitTracking(backend, qc)
+    print(qubit_tracker.qubit_mapping)
     qubit_tracker.swap_qubits(0, 1)
     qubit_tracker.swap_qubits(0, 2)
     print(qubit_tracker.qubit_mapping)

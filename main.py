@@ -10,14 +10,12 @@ from itertools import product
 from concurrent.futures import ProcessPoolExecutor
 from qiskit.compiler import transpile
 from qiskit_qec.utils import get_stim_circuits
-from backends import get_backend
+from backends import get_backend, QubitTracking
 from codes import get_code, get_max_d
 from noise import get_noise_model
 from decoders import decode
-from transpilers import translate, qiskit_stim_gates
+from transpilers import run_transpiler, translate
 from utils import save_experiment_metadata, save_results_to_csv, setup_experiment_logging
-
-
 
 def run_experiment(
     experiment_name,
@@ -28,6 +26,7 @@ def run_experiment(
     d,
     cycles,
     num_samples,
+    error_type,
     error_prob,
     layout_method=None,
     routing_method=None,
@@ -49,24 +48,14 @@ def run_experiment(
         if translating_method:
             code.circuit[state] = translate(code.circuit[state], translating_method)
         # TODO: either else here or sth
-        code.circuit[state] = transpile(
-                code.circuit[state],
-                basis_gates=qiskit_stim_gates,
-                optimization_level=0,
-                backend=backend,
-                layout_method=layout_method,
-                routing_method=routing_method,
-            )
+        code.circuit[state] = run_transpiler(code.circuit[state], backend_name, backend, layout_method, routing_method)
+        print("IN CORRECT 4")
+        qt = QubitTracking(backend, code.circuit[state])
         stim_circuit = get_stim_circuits(
             code.circuit[state], detectors=detectors, logicals=logicals
         )[0][0]
-
-        noise_model = get_noise_model("", error_prob)
+        noise_model = get_noise_model(error_type, error_prob, qt, backend)
         stim_circuit = noise_model.noisy_circuit(stim_circuit)
-        #if hasattr(backend, 'add_realistic_noise'): 
-        #    stim_circuit = backend.add_realistic_noise(stim_circuit)
-        #else:
-        #    stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
         logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
 
         result_data = {
@@ -110,7 +99,8 @@ if __name__ == "__main__":
         backends = experiment["backends"]
         codes = experiment["codes"]
         decoders = experiment["decoders"]
-        error_prob = experiment["error_probability"]
+        error_types = experiment["error_types"]
+        error_probabilities = experiment.get("error_probabilities", [None])
         cycles = experiment.get("cycles", None)
         layout_methods = experiment.get("layout_methods", [None])
         routing_methods = experiment.get("routing_methods", [None])
@@ -123,7 +113,7 @@ if __name__ == "__main__":
         with ProcessPoolExecutor() as executor:
             if "distances" in experiment:
                 distances = experiment["distances"]
-                parameter_combinations = product(backends, codes, decoders, distances, layout_methods, routing_methods, translating_methods)
+                parameter_combinations = product(backends, codes, decoders, error_types, error_probabilities, distances, layout_methods, routing_methods, translating_methods)
                 futures = [
                     executor.submit(
                         run_experiment,
@@ -135,17 +125,18 @@ if __name__ == "__main__":
                         d,
                         cycles,
                         num_samples,
+                        error_type,
                         error_prob,
                         layout_method,
                         routing_method,
                         translating_method
                     )
-                    for backend, code_name, decoder, d, layout_method, routing_method, translating_method in parameter_combinations
+                    for backend, code_name, decoder, error_type, error_prob, d, layout_method, routing_method, translating_method in parameter_combinations
                 ]
             elif "backends_sizes" in experiment:
                 backends_sizes = experiment["backends_sizes"]
                 parameter_combinations = product(
-                    backends, backends_sizes, codes, decoders, layout_methods, routing_methods, translating_methods
+                    backends, backends_sizes, codes, decoders, error_types, error_probabilities, layout_methods, routing_methods, translating_methods
                 )
                 futures = [
                     executor.submit(
@@ -158,15 +149,16 @@ if __name__ == "__main__":
                         None,
                         cycles,
                         num_samples,
+                        error_type,
                         error_prob,
                         layout_method,
                         routing_method,
                         translating_method
                     )
-                    for backend, backends_sizes, code_name, decoder, layout_method, routing_method, translating_method in parameter_combinations
+                    for backend, backends_sizes, code_name, decoder, error_type, error_prob, layout_method, routing_method, translating_method in parameter_combinations
                 ]
             else:
-                parameter_combinations = product(backends, codes, decoders, layout_methods, routing_methods, translating_methods)
+                parameter_combinations = product(backends, codes, decoders, error_types, error_probabilities, layout_methods, routing_methods, translating_methods)
                 futures = [
                     executor.submit(
                         run_experiment,
@@ -178,12 +170,13 @@ if __name__ == "__main__":
                         None,
                         cycles,
                         num_samples,
+                        error_type,
                         error_prob,
                         layout_method,
                         routing_method,
                         translating_method
                     )
-                    for backend, code_name, decoder, layout_method, routing_method, translating_method in parameter_combinations
+                    for backend, code_name, decoder, error_type, error_prob, layout_method, routing_method, translating_method in parameter_combinations
                 ]
             for future in futures:
                 future.result()

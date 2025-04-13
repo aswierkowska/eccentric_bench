@@ -26,6 +26,10 @@ class FakeIBMFlamingo(BackendV2):
         return None
     
     @property
+    def get_remote_gates(self):
+        return self._remote_gates
+    
+    @property
     def coupling_map(self):
         return self._coupling_map
     
@@ -75,9 +79,6 @@ class FakeIBMFlamingo(BackendV2):
         endpoints_new, map_large = self.DQCCouplingMap(map_interm, self.heavySquareHeronCouplingMap(), [[165, 18], [184, 37], [203, 56], [222, 75]])
         all_endpoints = endpoints + endpoints_new
         return all_endpoints, map_large
-    
-    def get_dqc_connections():
-        pass
 
     def run(self, circuit, **kwargs):
         raise NotImplementedError("This backend does not contain a run method")
@@ -85,5 +86,5 @@ class FakeIBMFlamingo(BackendV2):
 
 if __name__ == "__main__":
     backend = FakeIBMFlamingo()
-    print(backend.get_endpoints())
+    print(backend.get_remote_gates)
     #plot_coupling_map(backend.coupling_map.size(), None, backend.coupling_map.get_edges(), filename="flamingo.png")
