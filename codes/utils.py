@@ -32,7 +32,7 @@ def get_code(code_name: str, d: int, cycles: int):
         else:
             return get_color_code(d, rounds=cycles)
     elif code_name == "bacon":
-        return get_bacon_shot_code(d)
+        return get_bacon_shot_code(d, cycles)
     elif 'steane' in code_name:
         if code_name[-1] == '1':
             m = 1

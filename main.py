@@ -32,33 +32,33 @@ def run_experiment(
     routing_method=None,
     translating_method=None,
 ):
-    #try:
-    backend = get_backend(backend_name, backend_size)
-    if d == None:
-        d = get_max_d(code_name, backend.coupling_map.size())
-        if d < 3:
-            logging.info(
-                f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible"
-            )
-            return
-    code = get_code(code_name, d, cycles)
-    detectors, logicals = code.stim_detectors()
+    try:
+        backend = get_backend(backend_name, backend_size)
+        if d == None:
+            d = get_max_d(code_name, backend.coupling_map.size())
+            if d < 3:
+                logging.info(
+                    f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible"
+                )
+                return
+        code = get_code(code_name, d, cycles)
+        detectors, logicals = code.stim_detectors()
 
-    for state, qc in code.circuit.items():
-        if translating_method:
-            code.circuit[state] = translate(code.circuit[state], translating_method)
-        # TODO: either else here or sth
-        code.circuit[state] = run_transpiler(code.circuit[state], backend_name, backend, layout_method, routing_method)
-        print("IN CORRECT 4")
-        qt = QubitTracking(backend, code.circuit[state])
-        stim_circuit = get_stim_circuits(
-            code.circuit[state], detectors=detectors, logicals=logicals
-        )[0][0]
-        noise_model = get_noise_model(error_type, error_prob, qt, backend)
-        stim_circuit = noise_model.noisy_circuit(stim_circuit)
-        logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
+        for state, qc in code.circuit.items():
+            if translating_method:
+                code.circuit[state] = translate(code.circuit[state], translating_method)
+            # TODO: either else here or sth
+            code.circuit[state] = run_transpiler(code.circuit[state], backend_name, backend, layout_method, routing_method)
+            print("IN CORRECT 4")
+            qt = QubitTracking(backend, code.circuit[state])
+            stim_circuit = get_stim_circuits(
+                code.circuit[state], detectors=detectors, logicals=logicals
+            )[0][0]
+            noise_model = get_noise_model(error_type, error_prob, qt, backend)
+            stim_circuit = noise_model.noisy_circuit(stim_circuit)
+            logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
 
-        result_data = {
+            result_data = {
                 "backend": backend_name,
                 "backend_size": backend_size,
                 "code": code_name,
@@ -66,6 +66,7 @@ def run_experiment(
                 "distance": d,
                 "cycles": cycles if cycles else d,
                 "num_samples": num_samples,
+                "errot_type": error_type,
                 "error_probability": error_prob,
                 "logical_error_rate": logical_error_rate,
                 "layout_method": layout_method if layout_method else "N/A",
@@ -73,20 +74,20 @@ def run_experiment(
                 "translating_method": translating_method if translating_method else "N/A"
             }
 
-        save_results_to_csv(result_data, experiment_name)
+            save_results_to_csv(result_data, experiment_name)
 
-        if backend_size:
-            logging.info(
-                f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}, decoder {decoder}: {logical_error_rate:.6f}"
+            if backend_size:
+                logging.info(
+                    f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}, decoder {decoder}: {logical_error_rate:.6f}"
+                )
+            else:
+                logging.info(
+                    f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, decoder {decoder}: {logical_error_rate:.6f}"
+                )
+        except Exception as e:
+            logging.error(
+                f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}"
             )
-        else:
-            logging.info(
-                f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, decoder {decoder}: {logical_error_rate:.6f}"
-            )
-        #except Exception as e:
-        #    logging.error(
-        #        f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}"
-        #    )
 
 
 if __name__ == "__main__":
