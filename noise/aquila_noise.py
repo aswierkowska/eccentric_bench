@@ -12,7 +12,8 @@ aquila_err_prob = {
     "P_READOUT": 0,
     "P_RESET": 0,
     "P_SQ": 0,
-    "P_LEAKAGE": 0
+    "P_LEAKAGE": 0,
+    "P_SHUTTLING_SWAP": 0,
 }
 
 aquila_gate_times = {}
@@ -52,6 +53,8 @@ class AquilaNoise(NoiseModel):
                 "H": aquila_err_prob["P_SQ"],
                 "M": aquila_err_prob["P_READOUT"],
                 "MPP": aquila_err_prob["P_READOUT"],
+                 "SWAP": aquila_err_prob["P_CZ"],
+                "SHUTTLING_SWAP": aquila_err_prob["P_SHUTTLING_SWAP"],
             },
             noisy_gates_connection={
                 "CX": aquila_err_prob["P_CZ"] + 0.3,

@@ -1,2 +1,2 @@
-from .utils import get_backend, get_layout_postion, get_neighbors, FakeIBMFlamingo
+from .utils import get_backend, FakeIBMFlamingo
 from .qubittracking import QubitTracking

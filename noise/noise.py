@@ -10,7 +10,7 @@ ANY_CLIFFORD_2_OPS = {"CX", "CY", "CZ", "XCX", "XCY", "XCZ", "YCX", "YCY", "YCZ"
 RESET_OPS = {"R", "RX", "RY"}
 MEASURE_OPS = {"M", "MX", "MY"}
 ANNOTATION_OPS = {"OBSERVABLE_INCLUDE", "DETECTOR", "SHIFT_COORDS", "QUBIT_COORDS", "TICK"}
-SWAP_OPS = {"SWAP"}
+SWAP_OPS = {"SWAP", "SHUTTLING_SWAP"}
 
 #@dataclasses.dataclass(frozen=True)
 class NoiseModel:

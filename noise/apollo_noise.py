@@ -12,9 +12,11 @@ apollo_err_prob = {
     "P_READOUT": 0,
     "P_RESET": 0,
     "P_SQ": 0,
-    "P_LEAKAGE": 0
+    "P_LEAKAGE": 0,
+    "P_SHUTTLING_SWAP": 0,
 }
 
+# TODO: add SHUTTLING_SWAP time
 apollo_gate_times = {}
 
 class ApolloNoise(NoiseModel):
@@ -52,6 +54,8 @@ class ApolloNoise(NoiseModel):
                 "H": apollo_err_prob["P_SQ"],
                 "M": apollo_err_prob["P_READOUT"],
                 "MPP": apollo_err_prob["P_READOUT"],
+                "SWAP": apollo_err_prob["P_CZ"],
+                "SHUTTLING_SWAP": apollo_err_prob["P_SHUTTLING_SWAP"],
             },
             noisy_gates_connection={
                 "CX": apollo_err_prob["P_CZ"] + 0.3,
