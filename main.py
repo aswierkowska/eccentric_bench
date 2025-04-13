@@ -84,7 +84,7 @@ def run_experiment(
                 logging.info(
                     f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, decoder {decoder}: {logical_error_rate:.6f}"
                 )
-        except Exception as e:
+    except Exception as e:
             logging.error(
                 f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}"
             )
