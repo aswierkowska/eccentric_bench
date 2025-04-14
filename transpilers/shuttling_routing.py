@@ -76,11 +76,12 @@ class ShuttlingRouting(TransformationPass):
                     order = current_layout.reorder_bits(new_dag.qubits)
                     new_dag.compose(swap_layer, qubits=order)
                     current_layout.swap(physical_q0, physical_q1)
+                    if new_dag.depth() > 2000:
+                        raise RuntimeError("Aborting: DAG depth exploded — possible infinite swap loop")
                         
             order = current_layout.reorder_bits(new_dag.qubits)
             new_dag.compose(subdag, qubits=order)
-            if new_dag.depth() > 2000:
-                raise RuntimeError("Aborting: DAG depth exploded — possible infinite swap loop")
+
 
         if self.property_set["final_layout"] is None:
             self.property_set["final_layout"] = current_layout
