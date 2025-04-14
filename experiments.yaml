@@ -4,8 +4,7 @@ experiments:
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
     backends_sizes: [64, 125, 216, 343, 512]
     codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
-    #distances: [3]
-    cycles: [1]
+    cycles: 1
     error_types: ["sd6", "pm3", "em3_1"]
     error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
     decoders: ["bposd"] # mwpm
@@ -14,7 +13,7 @@ experiments:
     backends: ["custom_line", "custom_grid", "custom_cube", "custom_full"] # custom_line, custom_grid, custom_cube, custom_full
     backends_sizes: [512] #[64, 125, 216, 343, 512]
     codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
-    cycles: [1]
+    cycles: 1
     error_types: ["sd6", "pm3", "em3_1"]
     error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
     decoders: ["bposd"] # mwpm

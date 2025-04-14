@@ -36,12 +36,12 @@ def get_code(code_name: str, d: int, cycles: int):
             return get_bacon_shot_code(d)
         else:
             return get_bacon_shot_code(d, cycles)
-    elif 'steane' in code_name:
-        if code_name[-1] == '1':
+    elif code_name == 'steane':
+        if d == '3':
             m = 1
-        elif code_name[-1] == '2':
+        elif d == '9':
             m = 2
-        elif code_name[-1] == '3':
+        elif d == '27':
             m = 3
         else:
             raise ValueError("Steane code only supports m = 1, 2, 3")
@@ -72,14 +72,11 @@ def get_max_d(code_name: str, n: int):
         d = int(math.sqrt(n))
         d = d - ((1 - d) % 2) 
         return d
-    elif 'steane' in code_name:
-        if code_name[-1] == '1':
-            return 3
-        elif code_name[-1] == '2':
-            return 9
-        elif code_name[-1] == '3':
+    elif code_name == 'steane':
+        if n >= 686: # According to Stim file
             return 27
-        else:
-            ValueError("Steane code only supports m = 1, 2, 3")
-
+        elif n >= 98: # According to Stim file
+            return 9
+        elif n >= 13:
+            return 3
     return 0
