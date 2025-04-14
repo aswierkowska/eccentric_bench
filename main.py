@@ -53,12 +53,17 @@ def run_experiment(
             code.circuit[state] = run_transpiler(code.circuit[state], backend_name, backend, layout_method, routing_method)
             print("After transpiler")
             qt = QubitTracking(backend, code.circuit[state])
+            print("After QT")
             stim_circuit = get_stim_circuits(
                 code.circuit[state], detectors=detectors, logicals=logicals
             )[0][0]
+            print("After GET STIM CIRCUIT")
             noise_model = get_noise_model(error_type, error_prob, qt, backend)
+            print("After get_noise_model")
             stim_circuit = noise_model.noisy_circuit(stim_circuit)
+            print("After adding noise")
             logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
+            print("After decoding")
 
             result_data = {
                 "backend": backend_name,
