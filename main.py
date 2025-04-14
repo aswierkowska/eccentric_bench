@@ -49,7 +49,6 @@ def run_experiment(
                 code.circuit[state] = translate(code.circuit[state], translating_method)
             # TODO: either else here or sth
             code.circuit[state] = run_transpiler(code.circuit[state], backend_name, backend, layout_method, routing_method)
-            print("IN CORRECT 4")
             qt = QubitTracking(backend, code.circuit[state])
             stim_circuit = get_stim_circuits(
                 code.circuit[state], detectors=detectors, logicals=logicals

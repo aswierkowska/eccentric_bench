@@ -21,6 +21,22 @@ class NoiseModel:
     any_clifford_2: Optional[float] = None
     use_correlated_parity_measurement_errors: bool = False
 
+    def __init__(
+        self,
+        idle: float,
+        measure_reset_idle: float,
+        noisy_gates: Dict[str, float],
+        any_clifford_1: Optional[float] = None,
+        any_clifford_2: Optional[float] = None,
+        use_correlated_parity_measurement_errors: bool = False
+    ):
+        self.idle = idle
+        self.measure_reset_idle = measure_reset_idle
+        self.noisy_gates = noisy_gates
+        self.any_clifford_1 = any_clifford_1
+        self.any_clifford_2 = any_clifford_2
+        self.use_correlated_parity_measurement_errors = use_correlated_parity_measurement_errors
+
     @staticmethod
     def SD6(p: float) -> 'NoiseModel':
         return NoiseModel(

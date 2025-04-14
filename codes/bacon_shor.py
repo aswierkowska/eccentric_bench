@@ -41,7 +41,7 @@ def get_bacon_shot_code(d=5, cycles=1):
                 params=_gen_util.CircuitBuildParams(style='bacon_shor', rounds=cycles, diameter=d, custom={'b': 'X'}),
                 noise=None,
                 debug_out_dir=None,
-                convert_to_cz='auto',
+                convert_to_cz='auto'
             )
     #print(circuit)
     return StimCodeCircuit(stim_circuit=circuit)
