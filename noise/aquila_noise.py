@@ -17,6 +17,24 @@ aquila_err_prob = {
 }
 
 aquila_gate_times = {}
+"""
+flamingo_err_prob = {
+    "P_RESET": 0.0,
+    "P_SQ": 0.00025,
+    "P_TQ": 0.002,
+    "P_MEASUREMENT": 0.01,
+    "P_READOUT": 8.057e-3,
+    "P_IDLE": 0.0
+}
+
+# TODO: fill in
+flamingo_gate_times = {
+    "RESET": 0.0,
+    "SQ": 50,
+    "TQ": 70,
+    "M": 70,
+}
+"""
 
 class AquilaNoise(NoiseModel):
     def __init__(
@@ -24,7 +42,6 @@ class AquilaNoise(NoiseModel):
         idle: float,
         measure_reset_idle: float,
         noisy_gates: Dict[str, float],
-        noisy_gates_connection: Dict[str, float],
         qt: QubitTracking,
         any_clifford_1: Optional[float] = None,
         any_clifford_2: Optional[float] = None,
@@ -33,7 +50,6 @@ class AquilaNoise(NoiseModel):
         self.idle = idle
         self.measure_reset_idle = measure_reset_idle
         self.noisy_gates = noisy_gates
-        self.noisy_gates_connection = noisy_gates_connection
         self.qt = qt
         self.any_clifford_1 = any_clifford_1
         self.any_clifford_2 = any_clifford_2
@@ -55,9 +71,6 @@ class AquilaNoise(NoiseModel):
                 "MPP": aquila_err_prob["P_READOUT"],
                  "SWAP": aquila_err_prob["P_CZ"],
                 "SHUTTLING_SWAP": aquila_err_prob["P_SHUTTLING_SWAP"],
-            },
-            noisy_gates_connection={
-                "CX": aquila_err_prob["P_CZ"] + 0.3,
             },
             qt=qt,
             use_correlated_parity_measurement_errors=True
@@ -107,7 +120,10 @@ class AquilaNoise(NoiseModel):
                     post.append_operation("DEPOLARIZE1", [q1], combined_p1)
                 if combined_p2 > 0:
                     post.append_operation("DEPOLARIZE1", [q2], combined_p2)
-                mid.append_operation(op.name, [targets[i], targets[i+1]], args)
+                if op.name == "SHUTTLING_SWAP":
+                    mid.append_operation("SWAP", [targets[i], targets[i+1]], args)
+                else:
+                    mid.append_operation(op.name, [targets[i], targets[i+1]], args)
 
         elif op.name in RESET_OPS or op.name in MEASURE_OPS:
             for t in targets:

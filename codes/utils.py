@@ -19,7 +19,7 @@ def get_code(code_name: str, d: int, cycles: int):
         # TODO: should gross code accept parameter?
             return get_gross_code()
         else:
-            return get_color_code(rounds=cycles)
+            return get_gross_code(T=cycles)
     elif code_name == "surface":
         if cycles == None:
             code = SurfaceCodeCircuit(d=d, T=d)
@@ -37,11 +37,11 @@ def get_code(code_name: str, d: int, cycles: int):
         else:
             return get_bacon_shot_code(d, cycles)
     elif code_name == 'steane':
-        if d == '3':
+        if d == 3:
             m = 1
-        elif d == '9':
+        elif d == 9:
             m = 2
-        elif d == '27':
+        elif d == 27:
             m = 3
         else:
             raise ValueError("Steane code only supports m = 1, 2, 3")

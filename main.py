@@ -65,9 +65,9 @@ def run_experiment(
                 "distance": d,
                 "cycles": cycles if cycles else d,
                 "num_samples": num_samples,
-                "errot_type": error_type,
+                "error_type": error_type,
                 "error_probability": error_prob,
-                "logical_error_rate": logical_error_rate,
+                "logical_error_rate": f"{logical_error_rate:.6f}",
                 "layout_method": layout_method if layout_method else "N/A",
                 "routing_method": routing_method if routing_method else "N/A",
                 "translating_method": translating_method if translating_method else "N/A"

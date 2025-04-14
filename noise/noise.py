@@ -5,7 +5,7 @@ from typing import Optional, Dict, Set, Tuple
 
 import stim
 
-ANY_CLIFFORD_1_OPS = {"C_XYZ", "C_ZYX", "H", "H_YZ", "I"}
+ANY_CLIFFORD_1_OPS = {"C_XYZ", "C_ZYX", "H", "H_YZ", "I", "X"}
 ANY_CLIFFORD_2_OPS = {"CX", "CY", "CZ", "XCX", "XCY", "XCZ", "YCX", "YCY", "YCZ"}
 RESET_OPS = {"R", "RX", "RY"}
 MEASURE_OPS = {"M", "MX", "MY"}
@@ -116,8 +116,10 @@ class NoiseModel:
         if p > 0:
             if op.name in ANY_CLIFFORD_1_OPS:
                 post.append_operation("DEPOLARIZE1", targets, p)
-            elif op.name in ANY_CLIFFORD_2_OPS:
-                post.append_operation("DEPOLARIZE2", targets, p)
+            elif op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS:
+                for i in range(0, len(targets), 2):
+                    pair = [targets[i], targets[i+1]]
+                    post.append_operation("DEPOLARIZE2", pair, p)
             elif op.name in RESET_OPS or op.name in MEASURE_OPS:
                 if op.name in RESET_OPS:
                     post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, p)
@@ -194,7 +196,7 @@ class NoiseModel:
                     p = self.noisy_gates[op.name]
                 elif self.any_clifford_1 is not None and op.name in ANY_CLIFFORD_1_OPS:
                     p = self.any_clifford_1
-                elif self.any_clifford_2 is not None and op.name in ANY_CLIFFORD_2_OPS:
+                elif self.any_clifford_2 is not None and (op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS):
                     p = self.any_clifford_2
                 elif op.name in ANNOTATION_OPS:
                     p = 0

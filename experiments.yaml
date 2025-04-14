@@ -2,7 +2,7 @@ experiments:
   - name: "Topology_size"
     num_samples: 10000
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    backends_sizes: [64, 125, 216, 343, 512]
+    backends_sizes: [300, 350, 400, 450, 500]
     codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
     cycles: 1
     error_types: ["sd6", "pm3", "em3_1"]
