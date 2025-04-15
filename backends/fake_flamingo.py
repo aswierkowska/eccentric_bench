@@ -1,11 +1,9 @@
 import numpy as np
-from qiskit.transpiler import InstructionProperties, Target, CouplingMap
-from qiskit.circuit.library import RZGate, XGate, SXGate, CZGate, Measure, Reset
-# TODO: Delay
-from qiskit.circuit import Parameter
+from qiskit.transpiler import Target, CouplingMap
 from qiskit.providers import BackendV2, Options
 from qiskit.visualization import plot_coupling_map
 from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit.providers import QubitProperties
 
 class FakeIBMFlamingo(BackendV2):
     """Fake IBM Flamingo Backend."""
@@ -79,6 +77,24 @@ class FakeIBMFlamingo(BackendV2):
         endpoints_new, map_large = self.DQCCouplingMap(map_interm, self.heavySquareHeronCouplingMap(), [[165, 18], [184, 37], [203, 56], [222, 75]])
         all_endpoints = endpoints + endpoints_new
         return all_endpoints, map_large
+    
+    def addStateOfTheArtQubits(self):
+        qubit_props = []
+        
+        for i in range(self.num_qubits):
+            t1 = np.random.normal(190, 120, 1)
+            t1 = np.clip(t1, 50, 500)
+            t1 = t1 * 1e-6
+
+            t2 = np.random.normal(130, 120, 1)
+            t2 = np.clip(t2, 50, 650)
+            t2 = t2 * 1e-6
+
+            qubit_props.append(QubitProperties(t1=t1, t2=t2, frequency=5.0e9))
+
+        self.target.qubit_properties = qubit_props
+
+
 
     def run(self, circuit, **kwargs):
         raise NotImplementedError("This backend does not contain a run method")
