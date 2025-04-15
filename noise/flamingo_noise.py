@@ -15,7 +15,6 @@ flamingo_err_prob = {
     "P_IDLE": 0.0
 }
 
-# TODO: fill in
 flamingo_gate_times = {
     "SQ": 50,
     "TQ": 70,

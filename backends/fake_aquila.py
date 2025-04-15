@@ -34,6 +34,7 @@ class FakeQueraAquilaBackend(BackendV2):
         self.p_after_reset_flip_probability = 0.01  # Reset errors
         self.p_before_measure_flip_probability = 0.02 # Readout errors
         self.p_before_round_data_depolarization = 0.002  # Memory decoherence
+        self.addStateOfTheArtQubits()
 
     @property
     def target(self):

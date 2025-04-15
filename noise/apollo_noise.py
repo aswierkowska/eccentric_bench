@@ -11,13 +11,16 @@ apollo_err_prob = {
     "P_SHUTTLING_SWAP": 0,
 }
 
-# TODO: add SHUTTLING_SWAP time
+P_MEMORY_ERROR = 0.00223
+P_CROSSTALK = 0.00000066 # kinda negligable
+
+# TODO: add time -- t1 few minutes
 apollo_gate_times = {
     "RESET": 0.0,
-    "SQ": 50,
-    "TQ": 70,
-    "M": 70,
-    "SHUTTLING_SWAP": 00,
+    "SQ": 0,
+    "TQ": 0,
+    "M": 0,
+    "SHUTTLING_SWAP": 0,
 }
 
 
@@ -82,29 +85,28 @@ class ApolloNoise(NoiseModel):
         post = stim.Circuit()
         targets = op.targets_copy()
         args = op.gate_args_copy()
-
+        # TODO: should we also have X/Z gate error besides depolarization?
         if op.name in ANY_CLIFFORD_1_OPS:
             for t in targets:
                 q = t.value
-                qubit_p = self.get_qubit_err_prob(q, apollo_gate_times[op.name])
-                combined_p = 1 - (1 - base_p) * (1 - qubit_p)
-                if combined_p > 0:
-                    post.append_operation("DEPOLARIZE1", [q], combined_p)
+                #qubit_p = self.get_qubit_err_prob(q, apollo_gate_times[op.name])
+                #combined_p = 1 - (1 - base_p) * (1 - qubit_p)
+                if base_p > 0:
+                    post.append_operation("DEPOLARIZE1", [q], base_p)
                 mid.append_operation(op.name, [t], args)
 
         elif op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS:
             for i in range(0, len(targets), 2):
                 q1 = targets[i].value
                 q2 = targets[i+1].value
-                p1 = self.get_qubit_err_prob(q1, apollo_gate_times[op.name])
-                p2 = self.get_qubit_err_prob(q2, apollo_gate_times[op.name])
-                combined_p1 = 1 - (1 - base_p) * (1 - p1)
-                combined_p2 = 1 - (1 - base_p) * (1 - p2)
-                if combined_p1 > 0:
-                    post.append_operation("DEPOLARIZE1", [q1], combined_p1)
-                if combined_p2 > 0:
-                    post.append_operation("DEPOLARIZE1", [q2], combined_p2)
+                #p1 = self.get_qubit_err_prob(q1, apollo_gate_times[op.name])
+                #p2 = self.get_qubit_err_prob(q2, apollo_gate_times[op.name])
+                #combined_p1 = 1 - (1 - base_p) * (1 - p1)
+                #combined_p2 = 1 - (1 - base_p) * (1 - p2)
+                if base_p > 0:
+                    post.append_operation("DEPOLARIZE2", [q1, q2], base_p)
                 if op.name == "SHUTTLING_SWAP":
+                    post.append_operation("DEPOLARIZE2", [q1, q2], P_MEMORY_ERROR)
                     mid.append_operation("SWAP", [targets[i], targets[i+1]], args)
                 else:
                     mid.append_operation(op.name, [targets[i], targets[i+1]], args)
@@ -112,13 +114,13 @@ class ApolloNoise(NoiseModel):
         elif op.name in RESET_OPS or op.name in MEASURE_OPS:
             for t in targets:
                 q = t.value
-                qubit_p = self.get_qubit_err_prob(q, apollo_gate_times[op.name])
-                combined_p = 1 - (1 - base_p) * (1 - qubit_p)
-                if combined_p > 0:
+                #qubit_p = self.get_qubit_err_prob(q, apollo_gate_times[op.name])
+                #combined_p = 1 - (1 - base_p) * (1 - qubit_p)
+                if base_p > 0:
                     if op.name in RESET_OPS:
-                        post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], combined_p)
+                        post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], base_p)
                     if op.name in MEASURE_OPS:
-                        pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], combined_p)
+                        pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], base_p)
                 mid.append_operation(op.name, [t], args)
 
     def noisy_circuit(self, circuit: stim.Circuit, *, qs: Optional[Set[int]] = None) -> stim.Circuit:
