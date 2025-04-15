@@ -1,28 +1,25 @@
 from typing import Dict, Tuple, Optional, Set
 import stim
 import math
+import numpy as np
 from .noise import *
 from backends import FakeIBMFlamingo, QubitTracking
+from qiskit.providers import QubitProperties
 
 flamingo_err_prob = {
-    "P_CZ": 0.0,
-    "P_CZ_CROSSTALK": 0.0,
-    "P_CZ_LEAKAGE": 0.0,
-    "P_IDLE": 0.0,
-    "P_READOUT": 0.0,
     "P_RESET": 0.0,
-    "P_SQ": 0.0,
-    "P_LEAKAGE": 0.0
+    "P_SQ": 0.00025,
+    "P_TQ": 0.002,
+    "P_MEASUREMENT": 0.01,
+    "P_READOUT": 8.057e-3,
+    "P_IDLE": 0.0
 }
 
 # TODO: fill in
 flamingo_gate_times = {
-    "CX": 0,
-    "CZ": 0,
-    "H": 0,
-    "M": 0,
-    "RESET": 0,
-    "SWAP": 0,
+    "SQ": 50,
+    "TQ": 70,
+    "M": 70,
 }
 
 class FlamingoNoise(NoiseModel):
@@ -55,22 +52,20 @@ class FlamingoNoise(NoiseModel):
     ) -> 'FlamingoNoise':
         return FlamingoNoise(
             idle=flamingo_err_prob["P_IDLE"],
-            measure_reset_idle=flamingo_err_prob["P_RESET"],
+            measure_reset_idle=flamingo_err_prob["P_MEASURE"],
             noisy_gates={
-                "CX": flamingo_err_prob["P_CZ"],
-                "CZ": flamingo_err_prob["P_CZ"],
-                "SWAP": flamingo_err_prob["P_CZ"],
-                "CZ_CROSSTALK": flamingo_err_prob["P_CZ_CROSSTALK"],
-                "CZ_LEAKAGE": flamingo_err_prob["P_CZ_LEAKAGE"],
+                "CX": flamingo_err_prob["P_TQ"],
+                "CZ": flamingo_err_prob["P_TQ"],
+                "SWAP": flamingo_err_prob["P_TQ"],
                 "R": flamingo_err_prob["P_RESET"],
                 "H": flamingo_err_prob["P_SQ"],
-                "M": flamingo_err_prob["P_READOUT"],
+                "M": flamingo_err_prob["P_MEASUREMENT"],
                 "MPP": flamingo_err_prob["P_READOUT"],
             },
             noisy_gates_connection={
-                "CX": flamingo_err_prob["P_CZ"] + 0.3,
-                "CZ": flamingo_err_prob["P_CZ"] + 0.3,
-                "SWAP": flamingo_err_prob["P_CZ"] + 0.3,
+                "CX": 0.03,
+                "CZ": 0.03,
+                "SWAP": 0.03,
             },
             qt=qt,
             backend=backend,
@@ -92,8 +87,28 @@ class FlamingoNoise(NoiseModel):
         p_relax = 1 - math.exp(-t / t1)
         p_dephase = 1 - math.exp(-t / t2)
         return (p_relax + p_dephase - p_relax * p_dephase)
+    
+    def get_gate_time(self, op: stim.CircuitInstruction) -> float:
+        name = op.name
+        if name in self.noisy_gates_connection and len(op.target_groups()[0]) >= 2:
+            logical_q1 = op.target_groups()[0][0].qubit_value
+            logical_q2 = op.target_groups()[0][1].qubit_value
+            phy_q1 = self.qt.get_layout_postion(logical_q1)
+            phy_q2 = self.qt.get_layout_postion(logical_q2)
+
+            if (phy_q1, phy_q2) in self.backend.get_remote_gates or (phy_q2, phy_q1) in self.backend.get_remote_gates:
+                duration = 300
+                dt = 2.2222222222222221e-10 * 1e9
+                rounded_duration = round((duration * 1e-9) / dt) * dt
+                return rounded_duration
+    
+            
+        if name in flamingo_gate_times:
+            return flamingo_gate_times["TQ"]
+        raise NotImplementedError(f"Gate time not defined for op: {repr(op)}")
 
     def get_gate_error(self, op: stim.CircuitInstruction) -> float:
+        # TODO: follow this https://github.com/manosgior/HybridDQC/blob/main/backends/backend.py#L159
         name = op.name
         if name in self.noisy_gates_connection and len(op.target_groups()[0]) >= 2:
             logical_q1 = op.target_groups()[0][0].qubit_value
@@ -108,7 +123,6 @@ class FlamingoNoise(NoiseModel):
             return self.noisy_gates[name]
         raise NotImplementedError(f"Gate error not defined for op: {repr(op)}")
 
-
     def noisy_op(self, op: stim.CircuitInstruction, base_p: float, ancilla: int) -> Tuple[stim.Circuit, stim.Circuit, stim.Circuit]:
         pre = stim.Circuit()
         mid = stim.Circuit()
@@ -120,7 +134,7 @@ class FlamingoNoise(NoiseModel):
             for t in targets:
                 q = t.value
                 base_p = self.get_gate_error(stim.CircuitInstruction(op.name, [t], args))
-                qubit_p = self.get_qubit_err_prob(q, flamingo_gate_times[op.name])
+                qubit_p = self.get_qubit_err_prob(q, flamingo_gate_times["SQ"])
                 combined_p = 1 - (1 - base_p) * (1 - qubit_p)
                 if combined_p > 0:
                     post.append_operation("DEPOLARIZE1", [q], combined_p)
@@ -131,8 +145,8 @@ class FlamingoNoise(NoiseModel):
                 q1 = targets[i].value
                 q2 = targets[i+1].value
                 base_p = self.get_gate_error(stim.CircuitInstruction(op.name, [targets[i], targets[i+1]], args))
-                p1 = self.get_qubit_err_prob(q1, flamingo_gate_times[op.name])
-                p2 = self.get_qubit_err_prob(q2, flamingo_gate_times[op.name])
+                p1 = self.get_qubit_err_prob(q1, self.get_gate_time(op))
+                p2 = self.get_qubit_err_prob(q2, self.get_gate_time(op))
                 combined_p1 = 1 - (1 - base_p) * (1 - p1)
                 combined_p2 = 1 - (1 - base_p) * (1 - p2)
                 if combined_p1 > 0:
@@ -145,7 +159,7 @@ class FlamingoNoise(NoiseModel):
             for t in targets:
                 q = t.value
                 base_p = self.get_gate_error(stim.CircuitInstruction(op.name, [t], args))
-                qubit_p = self.get_qubit_err_prob(q, flamingo_gate_times[op.name])
+                qubit_p = self.get_qubit_err_prob(q, flamingo_gate_times["M"])
                 combined_p = 1 - (1 - base_p) * (1 - qubit_p)
                 if combined_p > 0:
                     if op.name in RESET_OPS:
@@ -155,6 +169,7 @@ class FlamingoNoise(NoiseModel):
                 mid.append_operation(op.name, [t], args)
 
         elif op.name == "MPP":
+            # TODO: CLEAN AND TEST
             assert len(targets) % 3 == 0 and all(t.is_combiner for t in targets[1::3]), repr(op)
             assert args == [] or args == [0]
             for k in range(0, len(targets), 3):

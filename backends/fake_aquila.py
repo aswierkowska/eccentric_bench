@@ -8,6 +8,7 @@ from qiskit.circuit.library import RZGate, XGate, SXGate, CZGate, Measure, Reset
 from qiskit.circuit import Parameter
 from qiskit.providers import BackendV2, Options
 from qiskit.visualization import plot_coupling_map
+from qiskit.providers import QubitProperties
 
 # TODO: can be taken from Braket
 
@@ -61,7 +62,16 @@ class FakeQueraAquilaBackend(BackendV2):
     @classmethod
     def _default_options(cls):
         return Options(shots=1024)
-  
+    
+    def addStateOfTheArtQubits(self):
+        qubit_props = []
+        
+        for i in range(self.num_qubits):
+            qubit_props.append(QubitProperties(t1=100, t2=50))
+
+        self.target.qubit_properties = qubit_props
+
+
     def run(self, circuit, **kwargs):
         raise NotImplementedError("This backend does not contain a run method")
     
