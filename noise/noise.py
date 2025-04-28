@@ -143,6 +143,7 @@ class NoiseModel:
                     args = [p]
 
             else:
+                print("BBBBBBBBBBBB")
                 raise NotImplementedError(repr(op))
         mid.append_operation(op.name, targets, args)
         return pre, mid, post
@@ -221,6 +222,7 @@ class NoiseModel:
                 if op.name in MEASURE_OPS or op.name in RESET_OPS:
                     measured_or_reset_qubits |= touched_qubits
             else:
+                print("AAAAAAAAAA")
                 raise NotImplementedError(repr(op))
         flush()
 

@@ -9,6 +9,9 @@ apollo_err_prob = {
     "P_TQ": 0.0001,
     "P_MEASUREMENT": 0.0001,
     "P_SHUTTLING_SWAP": 0,
+    "P_IDLE": None,
+    "P_RESET": None,
+    "P_READOUT": None,
 }
 
 P_MEMORY_ERROR = 0.00223
@@ -16,11 +19,14 @@ P_CROSSTALK = 0.00000066 # kinda negligable
 
 # TODO: add time -- t1 few minutes
 apollo_gate_times = {
+<<<<<<< HEAD
     "RESET": 0.0,
     "SQ": 0,
     "TQ": 0,
     "M": 0,
     "SHUTTLING_SWAP": 0,
+=======
+>>>>>>> 181f97c (WIP)
 }
 
 
@@ -60,7 +66,7 @@ class ApolloNoise(NoiseModel):
                 "SHUTTLING_SWAP": apollo_err_prob["P_SHUTTLING_SWAP"],
             },
             qt=qt,
-            use_correlated_parity_measurement_errors=True
+            use_correlated_parity_measurement_errors=True # TODO: should I be using that?
         )
 
     def update_swaps(self, op: stim.CircuitInstruction):

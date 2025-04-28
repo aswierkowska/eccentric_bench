@@ -16,9 +16,9 @@ flamingo_err_prob = {
 }
 
 flamingo_gate_times = {
-    "SQ": 50,
-    "TQ": 70,
-    "M": 70,
+    "SQ": 50 * 1e-9,
+    "TQ": 70 * 1e-9,
+    "M": 70 * 1e-9,
 }
 
 class FlamingoNoise(NoiseModel):
@@ -51,7 +51,7 @@ class FlamingoNoise(NoiseModel):
     ) -> 'FlamingoNoise':
         return FlamingoNoise(
             idle=flamingo_err_prob["P_IDLE"],
-            measure_reset_idle=flamingo_err_prob["P_MEASURE"],
+            measure_reset_idle=flamingo_err_prob["P_MEASUREMENT"],
             noisy_gates={
                 "CX": flamingo_err_prob["P_TQ"],
                 "CZ": flamingo_err_prob["P_TQ"],

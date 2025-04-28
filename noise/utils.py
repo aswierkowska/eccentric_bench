@@ -1,8 +1,8 @@
 from .noise import NoiseModel
 from .willow_noise import WillowNoise
 from .flamingo_noise import FlamingoNoise
-from .aquila_noise import AquilaNoise
 from .apollo_noise import ApolloNoise
+from .infleqtion_noise import InfleqtionNoise
 from backends import *
 
 def get_noise_model(error_type: str, p: float = None, qt: QubitTracking = None, backend: FakeIBMFlamingo = None):
@@ -20,11 +20,13 @@ def get_noise_model(error_type: str, p: float = None, qt: QubitTracking = None, 
     # TODO: add qt everywhere for
     if qt:
         if error_type == "willow":
-            return WillowNoise.get_noise()
+            return WillowNoise.get_noise(qt)
         elif error_type == "flamingo" and backend:
             return FlamingoNoise.get_noise(qt, backend)
-        elif error_type == "aquila":
-            return AquilaNoise.get_noise(qt)
+        elif error_type == "infleqtion":
+            return InfleqtionNoise.get_noise(qt)
+        #elif error_type == "aquila":
+        #    return AquilaNoise.get_noise(qt)
         elif error_type == "apollo":
             return ApolloNoise.get_noise(qt)
     raise NotImplementedError

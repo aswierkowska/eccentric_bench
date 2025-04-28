@@ -30,25 +30,15 @@ willow_err_prob = {
 
 
 class WillowNoise(NoiseModel):
-    def __init__(self, qt):
+    def __init__(self, qt, idle, measure_reset_idle, noisy_gates, noisy_gates_connection=None, use_correlated_parity_measurement_errors=False):
         super().__init__(
-            idle=willow_err_prob["P_IDLE"],
-            measure_reset_idle=willow_err_prob["P_RESET"],
-            noisy_gates={
-                # TODO There should not be CX
-                "CX": willow_err_prob["P_CZ"],
-                "CZ": willow_err_prob["P_CZ"],
-                "CZ_CROSSTALK": willow_err_prob["P_CZ_CROSSTALK"],
-                "CZ_LEAKAGE": willow_err_prob["P_CZ_LEAKAGE"],
-                "R": willow_err_prob["P_RESET"],
-                # TODO: Should not be H
-                "H": willow_err_prob["P_SQ"],
-                "M": willow_err_prob["P_READOUT"],
-                "MPP": willow_err_prob["P_READOUT"],
-            },
-            use_correlated_parity_measurement_errors=True
+            idle=idle,
+            measure_reset_idle=measure_reset_idle,
+            noisy_gates=noisy_gates,
+            use_correlated_parity_measurement_errors=use_correlated_parity_measurement_errors,
         )
         self.qt = qt
+
 
     @staticmethod
     def get_noise(qt) -> 'WillowNoise':
@@ -65,9 +55,6 @@ class WillowNoise(NoiseModel):
                 "H": willow_err_prob["P_SQ"],
                 "M": willow_err_prob["P_READOUT"],
                 "MPP": willow_err_prob["P_READOUT"],
-            },
-            noisy_gates_connection={
-                "CX": willow_err_prob["P_CZ"] + 0.3,
             },
             use_correlated_parity_measurement_errors=True
         )

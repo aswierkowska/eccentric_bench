@@ -1,22 +1,22 @@
 experiments:
-  - name: "Topology_size"
-    num_samples: 10000
-    backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    backends_sizes: [300, 350, 400, 450, 500]
-    codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
-    cycles: 1
-    error_types: ["sd6", "pm3", "em3_1"]
-    error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
-    decoders: ["bposd"] # mwpm
-  - name: "Topology_connectivity"
-    num_samples: 10000
-    backends: ["custom_line", "custom_grid", "custom_cube", "custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    backends_sizes: [512] #[64, 125, 216, 343, 512]
-    codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
-    cycles: 1
-    error_types: ["sd6", "pm3", "em3_1"]
-    error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
-    decoders: ["bposd"] # mwpm
+  #- name: "Topology_size"
+  #  num_samples: 10000
+  #  backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
+  #  backends_sizes: [300, 350, 400, 450, 500]
+  #  codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
+  #  cycles: 1
+  #  error_types: ["sd6", "pm3", "em3_1"]
+  #  error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
+  #  decoders: ["bposd"] # mwpm
+  #- name: "Topology_connectivity"
+  #  num_samples: 10000
+  #  backends: ["custom_line", "custom_grid", "custom_cube", "custom_full"] # custom_line, custom_grid, custom_cube, custom_full
+  #  backends_sizes: [512] #[64, 125, 216, 343, 512]
+  #  codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
+  #  cycles: 1
+  #  error_types: ["sd6", "pm3", "em3_1"]
+  #  error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
+  #  decoders: ["bposd"] # mwpm
 #  - name: "Basic"
 #    num_samples: 10000
 #    backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
@@ -37,9 +37,10 @@ experiments:
 #    decoders: ["bposd"] # mwpm
   - name: "Basic"
     num_samples: 1
-    backends: ["real_aquila"]
-    codes: ["surface"]
-    error_types: ["aquila"]
+    backends: ["custom_grid"]
+    backends_sizes: [125]
+    codes: ["steane"]
+    error_types: ["infleqtion", "willow", "apollo", "flamingo"]
     error_probabilities: [0.01]
     decoders: ["bposd"]
     #routing_methods: ["basic"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing

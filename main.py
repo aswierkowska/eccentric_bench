@@ -34,6 +34,7 @@ def run_experiment(
 ):
     try:
         backend = get_backend(backend_name, backend_size)
+        print("Got backend")
         if d == None:
             d = get_max_d(code_name, backend.coupling_map.size())
             if d < 3:
@@ -93,7 +94,7 @@ def run_experiment(
                 )
     except Exception as e:
             logging.error(
-                f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}"
+                f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}, error type {error_type}: {e}"
             )
 
 
