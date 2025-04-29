@@ -20,14 +20,11 @@ P_CROSSTALK = 0.00000066 # kinda negligable
 
 # TODO: add time -- t1 few minutes
 apollo_gate_times = {
-<<<<<<< HEAD
     "RESET": 0.0,
     "SQ": 0,
     "TQ": 0,
     "M": 0,
     "SHUTTLING_SWAP": 0,
-=======
->>>>>>> 181f97c (WIP)
 }
 
 P_CROSSTALK = 0.66e-6
@@ -60,11 +57,12 @@ class ApolloNoise(NoiseModel):
                 "CX": apollo_err_prob["P_TQ"],
                 "CZ": apollo_err_prob["P_TQ"],
                 "SWAP": apollo_err_prob["P_TQ"],
-                "R": apollo_err_prob["P_RESET"],
+                "R": apollo_err_prob["P_SQ"],
                 "H": apollo_err_prob["P_SQ"],
                 "M": apollo_err_prob["P_MEASUREMENT"],
                 "MPP": apollo_err_prob["P_READOUT"],
                 "SHUTTLING_SWAP": apollo_err_prob["P_SHUTTLING_SWAP"],
+                "RESET": apollo_err_prob["P_RESET"],
             },
             qt=qt,
             use_correlated_parity_measurement_errors=True # TODO: should I be using that?
@@ -133,21 +131,15 @@ class ApolloNoise(NoiseModel):
         elif op.name in RESET_OPS or op.name in MEASURE_OPS:
             for t in targets:
                 q = t.value
-                #qubit_p = self.get_qubit_err_prob(q, apollo_gate_times[op.name])
-                #combined_p = 1 - (1 - base_p) * (1 - qubit_p)
+                qubit_p = self.get_qubit_err_prob(q, apollo_gate_times[op.name])
+                combined_p = 1 - (1 - base_p) * (1 - qubit_p)
                 if base_p > 0:
                     if op.name in RESET_OPS:
-<<<<<<< HEAD
-                        post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], base_p)
-                    if op.name in MEASURE_OPS:
-                        pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], base_p)
-=======
                         self.add_crosstalk_error(op, post, 0.04567e-4) # TODO: taken from H2 rescale as rest 
                         post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], combined_p)
                     if op.name in MEASURE_OPS:
                         self.add_crosstalk_error(op, post, 0.03867e-4) # TODO: taken from H2 rescale as rest 
                         pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], combined_p)
->>>>>>> b4688b3 (Add crosstalk, fixes in noise)
                 mid.append_operation(op.name, [t], args)
 
     def noisy_circuit(self, circuit: stim.Circuit, *, qs: Optional[Set[int]] = None) -> stim.Circuit:

@@ -59,7 +59,7 @@ def get_max_d(code_name: str, n: int):
         elif n >= 376:
             return 13
         elif n >= 250: # TODO Arbitrary
-            return 11
+            return 11         
     elif code_name == "hh":
         # n = 5d^2 - 2d - 1 /2
         d = int((2 + math.sqrt(40 * n + 24)) / 10)

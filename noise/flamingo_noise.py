@@ -59,10 +59,11 @@ class FlamingoNoise(NoiseModel):
                 "CX": flamingo_err_prob["P_TQ"],
                 "CZ": flamingo_err_prob["P_TQ"],
                 "SWAP": flamingo_err_prob["P_TQ"],
-                "R": flamingo_err_prob["P_RESET"],
+                "R": flamingo_err_prob["P_SQ"],
                 "H": flamingo_err_prob["P_SQ"],
                 "M": flamingo_err_prob["P_MEASUREMENT"],
                 "MPP": flamingo_err_prob["P_READOUT"],
+                "RESET": flamingo_err_prob["P_RESET"]
             },
             noisy_gates_connection={
                 "CX": 0.03,
