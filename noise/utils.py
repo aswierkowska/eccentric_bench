@@ -23,8 +23,8 @@ def get_noise_model(error_type: str, p: float = None, qt: QubitTracking = None, 
             return WillowNoise.get_noise(qt)
         elif error_type == "flamingo" and backend:
             return FlamingoNoise.get_noise(qt, backend)
-        elif error_type == "infleqtion":
-            return InfleqtionNoise.get_noise(qt)
+        elif error_type == "infleqtion" and backend:
+            return InfleqtionNoise.get_noise(qt, backend)
         #elif error_type == "aquila":
         #    return AquilaNoise.get_noise(qt)
         elif error_type == "apollo":

@@ -1,5 +1,6 @@
 from typing import Dict, Tuple, Optional, Set
 import stim
+import random
 import math
 import numpy as np
 from .noise import *
@@ -20,6 +21,8 @@ flamingo_gate_times = {
     "TQ": 70 * 1e-9,
     "M": 70 * 1e-9,
 }
+
+P_CROSSTALK = 0.0
 
 class FlamingoNoise(NoiseModel):
     def __init__(
@@ -70,6 +73,18 @@ class FlamingoNoise(NoiseModel):
             backend=backend,
             use_correlated_parity_measurement_errors=True
         )
+    
+    def add_crosstalk_error(self, op: stim.CircuitInstruction, post: stim.Circuit):
+        targets = op.targets_copy()
+        for t in targets:
+            victims = self.qt.get_neighbours(t)
+            
+            for victim in victims:
+                if random.random() < P_CROSSTALK:
+                    if random.random() < 0.5:
+                        post.append_operation("X_ERROR", victim, P_CROSSTALK)
+                    else:
+                        post.append_operation("Z_ERROR", victim, P_CROSSTALK)
 
     def update_swaps(self, op: stim.CircuitInstruction):
         targets = op.targets_copy()
@@ -128,6 +143,8 @@ class FlamingoNoise(NoiseModel):
         post = stim.Circuit()
         targets = op.targets_copy()
         args = op.gate_args_copy()
+
+        self.add_crosstalk_error(op, post)
 
         if op.name in ANY_CLIFFORD_1_OPS:
             for t in targets:
@@ -249,7 +266,9 @@ class FlamingoNoise(NoiseModel):
                 elif self.any_clifford_2 is not None and (op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS):
                     p = self.any_clifford_2
                 elif op.name in ANNOTATION_OPS:
-                    p = 0
+                    flush()
+                    result.append_operation(op.name, op.targets_copy(), op.gate_args_copy())
+                    continue
                 if p == None:
                     raise NotImplementedError(repr(op))
 

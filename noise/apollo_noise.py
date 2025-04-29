@@ -1,5 +1,6 @@
 from typing import Dict, Tuple, Optional, Set
 import stim
+import random
 import math
 from .noise import *
 from backends import QubitTracking
@@ -9,9 +10,9 @@ apollo_err_prob = {
     "P_TQ": 0.0001,
     "P_MEASUREMENT": 0.0001,
     "P_SHUTTLING_SWAP": 0,
-    "P_IDLE": None,
-    "P_RESET": None,
-    "P_READOUT": None,
+    "P_IDLE": 0,
+    "P_RESET": 0,
+    "P_READOUT": 0,
 }
 
 P_MEMORY_ERROR = 0.00223
@@ -29,7 +30,7 @@ apollo_gate_times = {
 >>>>>>> 181f97c (WIP)
 }
 
-
+P_CROSSTALK = 0.66e-6
 
 class ApolloNoise(NoiseModel):
     def __init__(
@@ -68,6 +69,18 @@ class ApolloNoise(NoiseModel):
             qt=qt,
             use_correlated_parity_measurement_errors=True # TODO: should I be using that?
         )
+
+    def add_crosstalk_error(self, op: stim.CircuitInstruction, post: stim.Circuit, p: float):
+        targets = op.targets_copy()
+        for t in targets:
+            victims = self.qt.get_neighbours(t.value)
+            
+            for victim in victims:
+                if random.random() < P_CROSSTALK:
+                    if random.random() < 0.5:
+                        post.append_operation("X_ERROR", victim, P_CROSSTALK)
+                    else:
+                        post.append_operation("Z_ERROR", victim, P_CROSSTALK)
 
     def update_swaps(self, op: stim.CircuitInstruction):
         targets = op.targets_copy()
@@ -124,9 +137,17 @@ class ApolloNoise(NoiseModel):
                 #combined_p = 1 - (1 - base_p) * (1 - qubit_p)
                 if base_p > 0:
                     if op.name in RESET_OPS:
+<<<<<<< HEAD
                         post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], base_p)
                     if op.name in MEASURE_OPS:
                         pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], base_p)
+=======
+                        self.add_crosstalk_error(op, post, 0.04567e-4) # TODO: taken from H2 rescale as rest 
+                        post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], combined_p)
+                    if op.name in MEASURE_OPS:
+                        self.add_crosstalk_error(op, post, 0.03867e-4) # TODO: taken from H2 rescale as rest 
+                        pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], combined_p)
+>>>>>>> b4688b3 (Add crosstalk, fixes in noise)
                 mid.append_operation(op.name, [t], args)
 
     def noisy_circuit(self, circuit: stim.Circuit, *, qs: Optional[Set[int]] = None) -> stim.Circuit:
@@ -178,8 +199,11 @@ class ApolloNoise(NoiseModel):
                 elif self.any_clifford_2 is not None and op.name in ANY_CLIFFORD_2_OPS:
                     p = self.any_clifford_2
                 elif op.name in ANNOTATION_OPS:
-                    p = 0
+                    flush()
+                    result.append_operation(op.name, op.targets_copy(), op.gate_args_copy())
+                    continue
                 else:
+                    print("APOLLO 1")
                     raise NotImplementedError(repr(op))
                 
                 if op.name in SWAP_OPS:
@@ -198,6 +222,7 @@ class ApolloNoise(NoiseModel):
                     measured_or_reset_qubits |= touched_qubits
                 used_qubits |= touched_qubits
             else:
+                print("APOLLO 2")
                 raise NotImplementedError(repr(op))
         flush()
         return result

@@ -37,10 +37,10 @@ experiments:
 #    decoders: ["bposd"] # mwpm
   - name: "Basic"
     num_samples: 1
-    backends: ["custom_grid"]
+    backends: ["real_infleqtion"]
     backends_sizes: [125]
     codes: ["steane"]
-    error_types: ["infleqtion", "willow", "apollo", "flamingo"]
+    error_types: ["infleqtion"]#, "willow", "apollo", "flamingo"]
     error_probabilities: [0.01]
     decoders: ["bposd"]
     #routing_methods: ["basic"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing

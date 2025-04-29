@@ -22,6 +22,7 @@ class FakeInfleqtionBackend(BackendV2):
             self._coupling_map = CouplingMap.from_grid(12, 18)
         self._num_qubits = self._coupling_map.size()
         self._target = Target("Fake Infleqtion NA", num_qubits=self._num_qubits)
+        self.addStateOfTheArtQubits()
 
     @property
     def target(self):
