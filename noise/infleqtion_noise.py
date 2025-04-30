@@ -93,13 +93,10 @@ class InfleqtionNoise(NoiseModel):
             self.qt.swap_qubits(targets[i].qubit_value, targets[i+1].qubit_value)
 
     def get_qubit_err_prob(self, qubit: int, gate_duration_ns: float = 50) -> float:
-        print(type(self.backend))
         props = self.backend.qubit_properties(qubit)
-        print("UUU")
         t1 = props.t1
         t2 = props.t2
         t = gate_duration_ns
-        print(t1, t2)
         p_relax = 1 - math.exp(-t / t1)
         p_dephase = 1 - math.exp(-t / t2)
         return (p_relax + p_dephase - p_relax * p_dephase)
@@ -107,17 +104,13 @@ class InfleqtionNoise(NoiseModel):
     def noisy_op(self, op: stim.CircuitInstruction, base_p: float, ancilla: int) -> Tuple[stim.Circuit, stim.Circuit, stim.Circuit]:
         pre, mid, post = stim.Circuit(), stim.Circuit(), stim.Circuit()
         targets, args = op.targets_copy(), op.gate_args_copy()
-        print("AAA")
 
         if op.name in ANY_CLIFFORD_1_OPS:
             self.add_crosstalk_error(op, post, 1.5e-5)
-            print("BBB")
             for t in targets:
                 q = t.value
                 gate_time = na_gate_times.get(op.name, 50)
-                print("PRETEST")
                 p = self.get_qubit_err_prob(q, gate_time)
-                print("TEST")
                 combined_p = 1 - (1 - base_p) * (1 - p)
                 if combined_p > 0:
                     post.append_operation("DEPOLARIZE1", [q], combined_p)
@@ -125,7 +118,6 @@ class InfleqtionNoise(NoiseModel):
 
         elif op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS:
             self.add_crosstalk_error(op, post, 4.3e-5)
-            print("CCC")
             for i in range(0, len(targets), 2):
                 q1, q2 = targets[i].value, targets[i+1].value
                 gate_time = na_gate_times.get(op.name, 50)
@@ -138,7 +130,6 @@ class InfleqtionNoise(NoiseModel):
                 mid.append_operation("SWAP" if op.name == "SHUTTLING_SWAP" else op.name, [targets[i], targets[i+1]], args)
 
         elif op.name in RESET_OPS or op.name in MEASURE_OPS:
-            print("DDDD")
             for t in targets:
                 q = t.value
                 gate_time = na_gate_times.get(op.name, 50)
@@ -152,7 +143,6 @@ class InfleqtionNoise(NoiseModel):
                 mid.append_operation(op.name, [t], args)
 
         elif op.name == "MPP":
-            print("EEE")
             assert len(targets) % 3 == 0 and all(t.is_combiner for t in targets[1::3]), repr(op)
             for k in range(0, len(targets), 3):
                 t1, t2 = targets[k], targets[k+2]
@@ -172,7 +162,6 @@ class InfleqtionNoise(NoiseModel):
         return pre, mid, post
 
     def noisy_circuit(self, circuit: stim.Circuit, *, qs: Optional[Set[int]] = None) -> stim.Circuit:
-        print("IN NOISY_CIRCUIT")
         result = stim.Circuit()
         ancilla = circuit.num_qubits
         current_moment_pre, current_moment_mid, current_moment_post = stim.Circuit(), stim.Circuit(), stim.Circuit()
@@ -180,24 +169,15 @@ class InfleqtionNoise(NoiseModel):
         qs = qs or set(range(circuit.num_qubits))
 
         def flush():
-            print("FLUSH: entering")
             if not current_moment_mid:
-                print("FLUSH: nothing to do")
                 return
             idle_qs = sorted(qs - used_qubits)
-            print(f"FLUSH: idle_qs (general): {idle_qs}")
-            print(f"self.idle = {self.idle}")
-            print(f"used_qubits = {used_qubits}")
             if used_qubits and idle_qs and self.idle > 0:
-                print("FLUSH: appending idle depol")
                 current_moment_post.append_operation("DEPOLARIZE1", idle_qs, self.idle)
             if measured_or_reset_qubits:
                 idle_qs = sorted(qs - measured_or_reset_qubits)
-                print(f"FLUSH: idle_qs (after measure/reset): {idle_qs}")
                 if idle_qs and self.measure_reset_idle > 0:
-                    print("FLUSH: appending measure/reset depol")
                     current_moment_post.append_operation("DEPOLARIZE1", idle_qs, self.measure_reset_idle)
-            print("FLUSH: appending current moment to result")
             nonlocal result
             result += current_moment_pre + current_moment_mid + current_moment_post
             current_moment_pre.clear()
@@ -205,25 +185,16 @@ class InfleqtionNoise(NoiseModel):
             current_moment_post.clear()
             used_qubits.clear()
             measured_or_reset_qubits.clear()
-            print("FLUSH: done")
         
-        print("BEFORE LOOP")
         for i, op in enumerate(circuit):
-            print(i, len(circuit))
             if isinstance(op, stim.CircuitRepeatBlock):
-                print("LOLKOLO")
                 flush()
                 result += self.noisy_circuit(op.body_copy(), qs=qs) * op.repeat_count
             elif isinstance(op, stim.CircuitInstruction):
-                print("POPOPOP")
                 if op.name == "TICK":
-                    print("SSSSSSS")
                     flush()
-                    print("IIII")
                     result.append_operation("TICK", [])
-                    print("VVVVVVVVV")
                     continue
-                print("@@@")
                 if op.name in self.noisy_gates:
                     p = self.noisy_gates[op.name]
                 elif self.any_clifford_1 and op.name in ANY_CLIFFORD_1_OPS:
@@ -236,33 +207,23 @@ class InfleqtionNoise(NoiseModel):
                     continue
                 else:
                     raise NotImplementedError(repr(op))
-                print("HERE")
 
                 if op.name in SWAP_OPS:
                     self.update_swaps(op)
-                print("UPDATED SWAPS")
                 pre, mid, post = self.noisy_op(op, p, ancilla)
-                print("HERE 1")
                 current_moment_pre += pre
                 current_moment_mid += mid
                 current_moment_post += post
-                print("HERE 2")
                 touched = {t.value for t in op.targets_copy() if t.is_qubit_target}
-                print("HERE 3")
                 if op.name in MEASURE_OPS or op.name in RESET_OPS:
                     measured_or_reset_qubits |= touched
-                print("HERE 4")
                 used_qubits |= touched
             else:
                 raise NotImplementedError(repr(op))
-            print("ENDISH? ", op.name)
-        print("ESCAPE")
         flush()
-        print("END")
         return result
 
 
-# Quick test
 if __name__ == "__main__":
     circuit = stim.Circuit("H 0\nCX 0 1\nM 0 1")
     qt = QubitTracking(num_qubits=2)
