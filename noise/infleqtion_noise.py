@@ -48,6 +48,7 @@ class InfleqtionNoise(NoiseModel):
         self.any_clifford_1 = any_clifford_1
         self.any_clifford_2 = any_clifford_2
         self.use_correlated_parity_measurement_errors = use_correlated_parity_measurement_errors
+        self.crosstalk_prob = 1.5e-5
 
     def __repr__(self):
         return f"InfleqtionNoise(idle={self.idle}, measure_reset_idle={self.measure_reset_idle}, gates={list(self.noisy_gates.keys())})"
@@ -75,22 +76,20 @@ class InfleqtionNoise(NoiseModel):
             use_correlated_parity_measurement_errors=True
         )
 
-    def add_crosstalk_error(self, op: stim.CircuitInstruction, post: stim.Circuit, p: float):
-        targets = op.targets_copy()
-        for t in targets:
-            victims = self.qt.get_neighbours(t.value)
-            
-            for victim in victims:
-                if random.random() < p:
-                    if random.random() < 0.5:
-                        post.append_operation("X_ERROR", victim, p)
-                    else:
-                        post.append_operation("Z_ERROR", victim, p)
+    def add_crosstalk_errors_for_moment(self, used_qubits: Set[int], post: stim.Circuit, p: float):
+        already_noised = set()
+        for q in used_qubits:
+            for neighbor in self.qt.get_neighbours(q):
+                if neighbor in used_qubits and neighbor not in already_noised:
+                    if random.random() < p:
+                        noise_op = "X_ERROR" if random.random() < 0.5 else "Z_ERROR"
+                        post.append_operation(noise_op, [stim.target_qubit(neighbor)], 1.0)
+                        already_noised.add(neighbor)
 
     def update_swaps(self, op: stim.CircuitInstruction):
         targets = op.targets_copy()
         for i in range(0, len(targets), 2):
-            self.qt.swap_qubits(targets[i].qubit_value, targets[i+1].qubit_value)
+            self.qt.swap_qubits(targets[i].qubit_value, targets[i + 1].qubit_value)
 
     def get_qubit_err_prob(self, qubit: int, gate_duration_ns: float = 50) -> float:
         props = self.backend.qubit_properties(qubit)
@@ -106,7 +105,6 @@ class InfleqtionNoise(NoiseModel):
         targets, args = op.targets_copy(), op.gate_args_copy()
 
         if op.name in ANY_CLIFFORD_1_OPS:
-            self.add_crosstalk_error(op, post, 1.5e-5)
             for t in targets:
                 q = t.value
                 gate_time = na_gate_times.get(op.name, 50)
@@ -117,9 +115,8 @@ class InfleqtionNoise(NoiseModel):
                 mid.append_operation(op.name, [t], args)
 
         elif op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS:
-            self.add_crosstalk_error(op, post, 4.3e-5)
             for i in range(0, len(targets), 2):
-                q1, q2 = targets[i].value, targets[i+1].value
+                q1, q2 = targets[i].value, targets[i + 1].value
                 gate_time = na_gate_times.get(op.name, 50)
                 p1 = self.get_qubit_err_prob(q1, gate_time)
                 p2 = self.get_qubit_err_prob(q2, gate_time)
@@ -127,7 +124,7 @@ class InfleqtionNoise(NoiseModel):
                 cp2 = 1 - (1 - base_p) * (1 - p2)
                 if cp1 > 0: post.append_operation("DEPOLARIZE1", [q1], cp1)
                 if cp2 > 0: post.append_operation("DEPOLARIZE1", [q2], cp2)
-                mid.append_operation("SWAP" if op.name == "SHUTTLING_SWAP" else op.name, [targets[i], targets[i+1]], args)
+                mid.append_operation("SWAP" if op.name == "SHUTTLING_SWAP" else op.name, [targets[i], targets[i + 1]], args)
 
         elif op.name in RESET_OPS or op.name in MEASURE_OPS:
             for t in targets:
@@ -145,8 +142,8 @@ class InfleqtionNoise(NoiseModel):
         elif op.name == "MPP":
             assert len(targets) % 3 == 0 and all(t.is_combiner for t in targets[1::3]), repr(op)
             for k in range(0, len(targets), 3):
-                t1, t2 = targets[k], targets[k+2]
-                base_p = self.get_gate_error(stim.CircuitInstruction(op.name, [t1, targets[k+1], t2], args))
+                t1, t2 = targets[k], targets[k + 2]
+                base_p = self.get_gate_error(stim.CircuitInstruction(op.name, [t1, targets[k + 1], t2], args))
                 p1 = self.get_qubit_err_prob(t1.value)
                 p2 = self.get_qubit_err_prob(t2.value)
                 cp = 1 - (1 - base_p) * (1 - (p1 + p2) / 2)
@@ -154,7 +151,7 @@ class InfleqtionNoise(NoiseModel):
                     mid += parity_measurement_with_correlated_measurement_noise(t1=t1, t2=t2, ancilla=ancilla, mix_probability=cp)
                 else:
                     pre.append_operation("DEPOLARIZE2", [t1.value, t2.value], cp)
-                mid.append_operation(op.name, [t1, targets[k+1], t2], args)
+                mid.append_operation(op.name, [t1, targets[k + 1], t2], args)
 
         else:
             raise NotImplementedError(repr(op))
@@ -169,23 +166,33 @@ class InfleqtionNoise(NoiseModel):
         qs = qs or set(range(circuit.num_qubits))
 
         def flush():
+            nonlocal result
             if not current_moment_mid:
                 return
-            idle_qs = sorted(qs - used_qubits)
-            if used_qubits and idle_qs and self.idle > 0:
-                current_moment_post.append_operation("DEPOLARIZE1", idle_qs, self.idle)
-            if measured_or_reset_qubits:
-                idle_qs = sorted(qs - measured_or_reset_qubits)
-                if idle_qs and self.measure_reset_idle > 0:
-                    current_moment_post.append_operation("DEPOLARIZE1", idle_qs, self.measure_reset_idle)
-            nonlocal result
-            result += current_moment_pre + current_moment_mid + current_moment_post
+
+            # Apply idle depolarization rules.
+            idle_qubits = sorted(qs - used_qubits)
+            if used_qubits and idle_qubits and self.idle > 0:
+                current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.idle)
+            idle_qubits = sorted(qs - measured_or_reset_qubits)
+            if measured_or_reset_qubits and idle_qubits and self.measure_reset_idle > 0:
+                current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.measure_reset_idle)
+
+            if self.crosstalk_prob > 0:
+                self.add_crosstalk_errors_for_moment(used_qubits, current_moment_post, self.crosstalk_prob)
+
+            # Move current noisy moment into result.
+            result += current_moment_pre
+            result += current_moment_mid
+            result += current_moment_post
+            used_qubits.clear()
             current_moment_pre.clear()
             current_moment_mid.clear()
             current_moment_post.clear()
-            used_qubits.clear()
             measured_or_reset_qubits.clear()
-        
+
+
+
         for i, op in enumerate(circuit):
             if isinstance(op, stim.CircuitRepeatBlock):
                 flush()
@@ -210,6 +217,7 @@ class InfleqtionNoise(NoiseModel):
 
                 if op.name in SWAP_OPS:
                     self.update_swaps(op)
+
                 pre, mid, post = self.noisy_op(op, p, ancilla)
                 current_moment_pre += pre
                 current_moment_mid += mid
@@ -220,6 +228,7 @@ class InfleqtionNoise(NoiseModel):
                 used_qubits |= touched
             else:
                 raise NotImplementedError(repr(op))
+
         flush()
         return result
 

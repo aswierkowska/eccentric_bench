@@ -46,6 +46,7 @@ class FlamingoNoise(NoiseModel):
         self.any_clifford_1 = any_clifford_1
         self.any_clifford_2 = any_clifford_2
         self.use_correlated_parity_measurement_errors = use_correlated_parity_measurement_errors
+        self.crosstalk_prob = 0.0 # TODO: set value
 
     @staticmethod
     def get_noise(
@@ -75,17 +76,15 @@ class FlamingoNoise(NoiseModel):
             use_correlated_parity_measurement_errors=True
         )
     
-    def add_crosstalk_error(self, op: stim.CircuitInstruction, post: stim.Circuit):
-        targets = op.targets_copy()
-        for t in targets:
-            victims = self.qt.get_neighbours(t)
-            
-            for victim in victims:
-                if random.random() < P_CROSSTALK:
-                    if random.random() < 0.5:
-                        post.append_operation("X_ERROR", victim, P_CROSSTALK)
-                    else:
-                        post.append_operation("Z_ERROR", victim, P_CROSSTALK)
+    def add_crosstalk_errors_for_moment(self, used_qubits: Set[int], post: stim.Circuit, p: float):
+        already_noised = set()
+        for q in used_qubits:
+            for neighbor in self.qt.get_neighbours(q):
+                if neighbor in used_qubits and neighbor not in already_noised:
+                    if random.random() < p:
+                        noise_op = "X_ERROR" if random.random() < 0.5 else "Z_ERROR"
+                        post.append_operation(noise_op, [stim.target_qubit(neighbor)], 1.0)
+                        already_noised.add(neighbor)
 
     def update_swaps(self, op: stim.CircuitInstruction):
         targets = op.targets_copy()
@@ -144,8 +143,6 @@ class FlamingoNoise(NoiseModel):
         post = stim.Circuit()
         targets = op.targets_copy()
         args = op.gate_args_copy()
-
-        self.add_crosstalk_error(op, post)
 
         if op.name in ANY_CLIFFORD_1_OPS:
             for t in targets:
@@ -238,6 +235,9 @@ class FlamingoNoise(NoiseModel):
             idle_qubits = sorted(qs - measured_or_reset_qubits)
             if measured_or_reset_qubits and idle_qubits and self.measure_reset_idle > 0:
                 current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.measure_reset_idle)
+
+            if self.crosstalk_prob > 0:
+                self.add_crosstalk_errors_for_moment(used_qubits, current_moment_post, self.crosstalk_prob)
 
             result += current_moment_pre
             result += current_moment_mid
