@@ -19,7 +19,7 @@ experiments:
     num_samples: 10000
     backends: ["custom_full"]
     backends_sizes: [700]
-    codes: ["steane3"]
+    codes: ["steane1"]
     error_probability: 0.0001
     decoders: ["bposd"]
   #- name: "Basic"

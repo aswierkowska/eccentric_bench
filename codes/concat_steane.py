@@ -105,7 +105,7 @@ def build_big_concat_steane_circuit():
         circuit += stim.Circuit(f"{string}\n")
         string = ""
     #Z
-    for ordering, i in zip(orderings, range(343,514)):
+    for ordering, i in zip(orderings, range(514,686)):
         string = "CX "
         for j in ordering:
             string += str(j) + " " + str(i) + " "
@@ -138,17 +138,106 @@ def build_big_concat_steane_circuit():
 
     return circuit
 
+def star_shaped_ordering_m1():
+    """Provides the star shaped measurement order.
+    This ordering generates a distinguishable fault set up to weight 4 fault combinations.
+    """
+
+    orderings = []
+
+    # weight 4 stabilizer generatrs
+    orderings.append([0, 1, 2, 6])
+    orderings.append([2, 3, 4, 6])
+    orderings.append([4, 5, 0, 6])
+
+    return orderings
+
+def build_steane_circuit(cycles=1):
+    circuit = stim.Circuit()
+    orderings = star_shaped_ordering_m1()
+    
+    for ordering in orderings:
+        #MPP for each of the entries
+        string = "MPP "
+        for j in ordering:
+            string += "X" +str(j)+"*"
+        #remove last element of string
+        string = string[:-1]
+        string += "\n"
+        circuit += stim.Circuit(f"{string}")
+        string = ""
+
+    for i in range(7, 10):
+        circuit += stim.Circuit(f"RX {i}\n")
+    
+    for i in range(10, 14): #Want to reset 685 as well because last ancilla
+        circuit += stim.Circuit(f"R {i}\n")
+
+    for c in range(cycles):
+        #X
+        for ordering, i in zip(orderings, range(7,10)):
+            string = "CX "
+            for j in ordering:
+                string += str(i) + " " + str(j) + " "
+            circuit += stim.Circuit(f"{string}\n")
+            string = ""
+        #Z
+        for ordering, i in zip(orderings, range(10,13)):
+            string = "CX "
+            for j in ordering:
+                string += str(j) + " " + str(i) + " "
+            circuit += stim.Circuit(f"{string}\n")
+            string = ""
+        
+        #last ancilla
+        string = "CX "
+        for i in range(7):
+            string += str(13) + " " + str(i) + " "
+        circuit += stim.Circuit(f"{string}\n")
+        string = ""
+
+        #add measurements
+        for i in range(7, 10):
+            circuit += stim.Circuit(f"MRX {i}\n")
+        
+        for i in range(10, 14): #Want to reset 685 as well because last ancilla
+            circuit += stim.Circuit(f"MR {i}\n")
+
+        if c == 0:
+            for i in range(7,1, -1):
+                a = 0-i
+                #a = 0-i
+                circuit += stim.Circuit(f"DETECTOR rec[{a}]\n")
+            circuit += stim.Circuit("OBSERVABLE_INCLUDE(0) rec[-1]\n")
+        
+        if c > 0:
+            for i in range(7,1, -1):
+                a = 0-i
+                b = 0-i-c*7
+                #a = 0-i
+                #b = 0-i-o
+                circuit += stim.Circuit(f"DETECTOR rec[{a}] rec[{b}]\n")
+            circuit += stim.Circuit("OBSERVABLE_INCLUDE(0) rec[-1]\n")
+    #Add observable
+
+
+    return circuit
+
 def get_concat_steane_code(m):
     #read whaterver.stim file and make stim circuit out of it
     if m==2:
         circuit = stim.Circuit.from_file("codes/concat_steane_own.stim")
     elif m==1:
-        circuit = stim.Circuit.from_file("codes/gidney.stim")
+        #circuit = stim.Circuit.from_file("codes/gidney.stim")
+        circuit = stim.Circuit.from_file("codes/test_multiple_cycles_steane.stim")
     elif m==3:
         circuit = stim.Circuit.from_file("codes/concat_3.stim")
     return StimCodeCircuit(stim_circuit=circuit)
 
 
 if __name__ == "__main__":
-    circuit = build_big_concat_steane_circuit()
+    #circuit = build_big_concat_steane_circuit()
     #circuit = get_concat_steane_code(3)
+    circuit = build_steane_circuit(2)
+    print(circuit)
+    # stim diagram --in your_circuit_file.stim --type detslice-with-ops-svg --tick 0:5 --filter_coords D5 > output_image.svg
