@@ -50,16 +50,34 @@ def get_code(code_name: str, d: int, cycles: int):
 
 def get_max_d(code_name: str, n: int):
     if code_name == "surface":
-        # d**2 data qubits + d**2 - 1 ancilla qubits
-        # TODO: tmp solution
-        #d = math.floor(math.sqrt((n + 1) / 2))
-        #d = d - ((1 - d) % 2)
-        if n >= 494:
-            return 15
-        elif n >= 376:
-            return 13
-        elif n >= 250: # TODO Arbitrary
-            return 11         
+        if n < 26:
+            raise 1 #Note that a Error will be logged in the main.py
+
+        d = int((-3 + math.isqrt(9 + 8*(n+1))) // 4)
+        return d
+        
+        #Either remove or keep for sanity checks n = 2d^2 + 3d - 1
+        #if n >= 944:
+        #    return 21
+        #elif n >= 778:
+        #    return 19
+        #elif n >= 628:
+        #    return 17
+        #elif n >= 494:
+        #    return 15
+        #elif n >= 376:
+        #    return 13
+        #elif n >= 274:
+        #    return 11
+        #elif n >= 188:
+        #    return 9
+        #elif n >= 118:
+        #   return 7
+        #elif n >= 64:
+        #    return 5
+        #elif n >= 26:
+        #    return 3 
+        
     elif code_name == "hh":
         # n = 5d^2 - 2d - 1 /2
         d = int((2 + math.sqrt(40 * n + 24)) / 10)
