@@ -39,6 +39,7 @@ experiments:
     num_samples: 100
     backends: ["custom_full"]
     backends_sizes: [1000]
+    distances: [1]
     cycles: 1
     codes: ["surface"]
     error_types: ["sd6"] #, "willow", "apollo", "flamingo"]

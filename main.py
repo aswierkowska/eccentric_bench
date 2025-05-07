@@ -33,6 +33,7 @@ def run_experiment(
     translating_method=None,
 ):
     try:
+        print("Starting experiment")
         backend = get_backend(backend_name, backend_size)
         print("Got backend")
         if d == None:
@@ -121,6 +122,8 @@ if __name__ == "__main__":
         # TODO: better handling case if distances and backends_sizes are both set
 
         with ProcessPoolExecutor() as executor:
+            if "backends_sizes" in experiment and "distances" in experiment:
+                raise ValueError("Cannot set both backends_sizes and distances in the same experiment")
             if "distances" in experiment:
                 distances = experiment["distances"]
                 parameter_combinations = product(backends, codes, decoders, error_types, error_probabilities, distances, layout_methods, routing_methods, translating_methods)
