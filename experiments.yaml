@@ -35,15 +35,6 @@ experiments:
 #    error_types: ["sd6", "pm3", "em3_1"]
 #    error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
 #    decoders: ["bposd"] # mwpm
-  - name: "Basic"
-    num_samples: 100
-    backends: ["real_flamingo"] # custom_line, custom_grid, custom_cube, custom_full
-    #backends_sizes: [64] #[64, 125, 216, 343, 512]
-    codes: ["color", "steane"]
-    cycles: 1
-    error_types: ["real_flamingo"]
-    #error_probabilities: [0.01] 
-    decoders: ["bposd"] # mwpm
     #routing_methods: ["basic"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
     #layout_methods: ["default"] # default, dense, trivial, sabre per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
     # BUG: https://github.com/Qiskit/qiskit/issues/13152
