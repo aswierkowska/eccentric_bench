@@ -1,32 +1,55 @@
 experiments:
-#  - name: "Topology_size"
+  #- name: "Topology_size"
+  #  num_samples: 10000
+  #  backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
+  #  backends_sizes: [300, 350, 400, 450, 500]
+  #  codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
+  #  cycles: 1
+  #  error_types: ["sd6", "pm3", "em3_1"]
+  #  error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
+  #  decoders: ["bposd"] # mwpm
+  #- name: "Topology_connectivity"
+  #  num_samples: 10000
+  #  backends: ["custom_line", "custom_grid", "custom_cube", "custom_full"] # custom_line, custom_grid, custom_cube, custom_full
+  #  backends_sizes: [512] #[64, 125, 216, 343, 512]
+  #  codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
+  #  cycles: 1
+  #  error_types: ["sd6", "pm3", "em3_1"]
+  #  error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
+  #  decoders: ["bposd"] # mwpm
+#  - name: "Basic"
 #    num_samples: 10000
-#    backends: ["custom_cube"] # custom_line, custom_grid, custom_cube, custom_full
+#    backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
 #    backends_sizes: [64, 125, 216, 343, 512]
-#    codes: ["surface", "hh"]
-#    #distances: [3]
-#    error_probability: 0.0015
-#    decoders: ["bposd", "mwpm"] # mwpm
+#    codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
+#    cycles: 1
+#    error_types: ["sd6", "pm3", "em3_1"]
+#    error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
+#    decoders: ["bposd"] # mwpm
 #  - name: "Topology_connectivity"
 #    num_samples: 10000
 #    backends: ["custom_line", "custom_grid", "custom_cube", "custom_full"] # custom_line, custom_grid, custom_cube, custom_full
 #    backends_sizes: [512] #[64, 125, 216, 343, 512]
-#    codes: ["surface", "hh"]
-#    #distances: [3]
-#    error_probability: 0.0015
-#    decoders: ["bposd", "mwpm"] # mwpm
+#    codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
+#    cycles: 1
+#    error_types: ["sd6", "pm3", "em3_1"]
+#    error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
+#    decoders: ["bposd"] # mwpm
   - name: "Basic"
-    num_samples: 10000
+    num_samples: 100
     backends: ["custom_full"]
-    backends_sizes: [700]
-    codes: ["steane3"]
-    error_probability: 0.0001
+    backends_sizes: [1000]
+    distances: [1]
+    cycles: 1
+    codes: ["surface"]
+    error_types: ["sd6"] #, "willow", "apollo", "flamingo"]
+    error_probabilities: [0.01]
     decoders: ["bposd"]
     #routing_methods: ["basic"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
     #layout_methods: ["default"] # default, dense, trivial, sabre per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
     # BUG: https://github.com/Qiskit/qiskit/issues/13152
     #translating_methods: ["translator"] #default translator synthesis according to https://github.com/Qiskit/qiskit/blob/stable/2.0/qiskit/compiler/transpiler.py#L141
-    translating_methods: ["qiskit"] # qiskit bqskit tket
+    #   translating_methods: ["qiskit"] # qiskit bqskit tket
   #  cycles: 1
   #- name: "Basic"
   #  num_samples: 100

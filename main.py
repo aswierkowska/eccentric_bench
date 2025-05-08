@@ -10,14 +10,12 @@ from itertools import product
 from concurrent.futures import ProcessPoolExecutor
 from qiskit.compiler import transpile
 from qiskit_qec.utils import get_stim_circuits
-from backends import get_backend
+from backends import get_backend, QubitTracking
 from codes import get_code, get_max_d
 from noise import get_noise_model
 from decoders import decode
-from transpilers import translate, qiskit_stim_gates
+from transpilers import run_transpiler, translate
 from utils import save_experiment_metadata, save_results_to_csv, setup_experiment_logging
-
-
 
 def run_experiment(
     experiment_name,
@@ -28,48 +26,49 @@ def run_experiment(
     d,
     cycles,
     num_samples,
+    error_type,
     error_prob,
     layout_method=None,
     routing_method=None,
     translating_method=None,
 ):
-    #try:
-    backend = get_backend(backend_name, backend_size)
-    if d == None:
-        d = get_max_d(code_name, backend.coupling_map.size())
-        if d < 3:
-            logging.info(
-                f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible"
-            )
-            return
-    code = get_code(code_name, d, cycles)
-    detectors, logicals = code.stim_detectors()
+    try:
+        print("Starting experiment")
+        backend = get_backend(backend_name, backend_size)
+        print("Got backend")
+        if d == None:
+            d = get_max_d(code_name, backend.coupling_map.size())
+            if d < 3:
+                logging.info(
+                    f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible"
+                )
+                return
+        code = get_code(code_name, d, cycles)
+        detectors, logicals = code.stim_detectors()
 
-    for state, qc in code.circuit.items():
-        if translating_method:
-            code.circuit[state] = translate(code.circuit[state], translating_method)
-        # TODO: either else here or sth
-        code.circuit[state] = transpile(
-                code.circuit[state],
-                basis_gates=qiskit_stim_gates,
-                optimization_level=0,
-                backend=backend,
-                layout_method=layout_method,
-                routing_method=routing_method,
-            )
-        stim_circuit = get_stim_circuits(
-            code.circuit[state], detectors=detectors, logicals=logicals
-        )[0][0]
+        for state, qc in code.circuit.items():
+            print("Before translating")
+            if translating_method:
+                code.circuit[state] = translate(code.circuit[state], translating_method)
+            # TODO: either else here or sth
+            print("Before transpiler")
+            code.circuit[state] = run_transpiler(code.circuit[state], backend_name, backend, layout_method, routing_method)
+            print("After transpiler")
+            qt = QubitTracking(backend, code.circuit[state])
+            print("After QT")
+            stim_circuit = get_stim_circuits(
+                code.circuit[state], detectors=detectors, logicals=logicals
+            )[0][0]
+            print("After GET STIM CIRCUIT")
+            noise_model = get_noise_model(error_type, error_prob, qt, backend)
+            print("After get_noise_model")
+            stim_circuit = noise_model.noisy_circuit(stim_circuit)
+            print(stim_circuit)
+            print("After adding noise")
+            logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
+            print("After decoding")
 
-        noise_model = get_noise_model("", error_prob)
-        stim_circuit = noise_model.noisy_circuit(stim_circuit)
-        #if hasattr(backend, 'add_realistic_noise'): 
-        #    stim_circuit = backend.add_realistic_noise(stim_circuit)
-        #else:
-        #    stim_circuit = add_stim_noise(stim_circuit, error_prob, error_prob, error_prob, error_prob)
-        logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
-
-        result_data = {
+            result_data = {
                 "backend": backend_name,
                 "backend_size": backend_size,
                 "code": code_name,
@@ -77,27 +76,28 @@ def run_experiment(
                 "distance": d,
                 "cycles": cycles if cycles else d,
                 "num_samples": num_samples,
+                "error_type": error_type,
                 "error_probability": error_prob,
-                "logical_error_rate": logical_error_rate,
+                "logical_error_rate": f"{logical_error_rate:.6f}",
                 "layout_method": layout_method if layout_method else "N/A",
                 "routing_method": routing_method if routing_method else "N/A",
                 "translating_method": translating_method if translating_method else "N/A"
             }
 
-        save_results_to_csv(result_data, experiment_name)
+            save_results_to_csv(result_data, experiment_name)
 
-        if backend_size:
-            logging.info(
-                f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}, decoder {decoder}: {logical_error_rate:.6f}"
+            if backend_size:
+                logging.info(
+                    f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}, decoder {decoder}: {logical_error_rate:.6f}"
+                )
+            else:
+                logging.info(
+                    f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, decoder {decoder}: {logical_error_rate:.6f}"
+                )
+    except Exception as e:
+            logging.error(
+                f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}, error type {error_type}: {e}"
             )
-        else:
-            logging.info(
-                f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, decoder {decoder}: {logical_error_rate:.6f}"
-            )
-        #except Exception as e:
-        #    logging.error(
-        #        f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}"
-        #    )
 
 
 if __name__ == "__main__":
@@ -110,7 +110,8 @@ if __name__ == "__main__":
         backends = experiment["backends"]
         codes = experiment["codes"]
         decoders = experiment["decoders"]
-        error_prob = experiment["error_probability"]
+        error_types = experiment["error_types"]
+        error_probabilities = experiment.get("error_probabilities", [None])
         cycles = experiment.get("cycles", None)
         layout_methods = experiment.get("layout_methods", [None])
         routing_methods = experiment.get("routing_methods", [None])
@@ -121,9 +122,11 @@ if __name__ == "__main__":
         # TODO: better handling case if distances and backends_sizes are both set
 
         with ProcessPoolExecutor() as executor:
+            if "backends_sizes" in experiment and "distances" in experiment:
+                raise ValueError("Cannot set both backends_sizes and distances in the same experiment")
             if "distances" in experiment:
                 distances = experiment["distances"]
-                parameter_combinations = product(backends, codes, decoders, distances, layout_methods, routing_methods, translating_methods)
+                parameter_combinations = product(backends, codes, decoders, error_types, error_probabilities, distances, layout_methods, routing_methods, translating_methods)
                 futures = [
                     executor.submit(
                         run_experiment,
@@ -135,17 +138,18 @@ if __name__ == "__main__":
                         d,
                         cycles,
                         num_samples,
+                        error_type,
                         error_prob,
                         layout_method,
                         routing_method,
                         translating_method
                     )
-                    for backend, code_name, decoder, d, layout_method, routing_method, translating_method in parameter_combinations
+                    for backend, code_name, decoder, error_type, error_prob, d, layout_method, routing_method, translating_method in parameter_combinations
                 ]
             elif "backends_sizes" in experiment:
                 backends_sizes = experiment["backends_sizes"]
                 parameter_combinations = product(
-                    backends, backends_sizes, codes, decoders, layout_methods, routing_methods, translating_methods
+                    backends, backends_sizes, codes, decoders, error_types, error_probabilities, layout_methods, routing_methods, translating_methods
                 )
                 futures = [
                     executor.submit(
@@ -158,15 +162,16 @@ if __name__ == "__main__":
                         None,
                         cycles,
                         num_samples,
+                        error_type,
                         error_prob,
                         layout_method,
                         routing_method,
                         translating_method
                     )
-                    for backend, backends_sizes, code_name, decoder, layout_method, routing_method, translating_method in parameter_combinations
+                    for backend, backends_sizes, code_name, decoder, error_type, error_prob, layout_method, routing_method, translating_method in parameter_combinations
                 ]
             else:
-                parameter_combinations = product(backends, codes, decoders, layout_methods, routing_methods, translating_methods)
+                parameter_combinations = product(backends, codes, decoders, error_types, error_probabilities, layout_methods, routing_methods, translating_methods)
                 futures = [
                     executor.submit(
                         run_experiment,
@@ -178,12 +183,13 @@ if __name__ == "__main__":
                         None,
                         cycles,
                         num_samples,
+                        error_type,
                         error_prob,
                         layout_method,
                         routing_method,
                         translating_method
                     )
-                    for backend, code_name, decoder, layout_method, routing_method, translating_method in parameter_combinations
+                    for backend, code_name, decoder, error_type, error_prob, layout_method, routing_method, translating_method in parameter_combinations
                 ]
             for future in futures:
                 future.result()

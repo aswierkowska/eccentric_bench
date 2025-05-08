@@ -1,5 +1,5 @@
 import subprocess
-
+import logging
 import stim
 import pymatching
 import numpy as np
@@ -30,17 +30,21 @@ def decode(code_name: str, circuit: stim.Circuit, num_shots: int, decoder: str) 
         return num_errors / num_shots
     elif decoder == "bposd":
         # TODO: adjust BP-OSD
-        if code_name == "gross":
-            return modified_bposd_decoder(dem, 12, 100)
-        else:
-            matcher = BPOSD(dem, max_bp_iters=1000, bp_method="minimum_sum_log", osd_method="osd_cs", osd_order=10)
-            predictions = matcher.decode_batch(detection_events)
-            num_errors = 0
-            for shot in range(num_shots):
-                actual_for_shot = observable_flips[shot]
-                predicted_for_shot = predictions[shot]
-                if not np.array_equal(actual_for_shot, predicted_for_shot):
-                    num_errors += 1
-            return num_errors / num_shots
+        try:
+            if code_name == "gross":
+                return modified_bposd_decoder(dem, 12, 100)
+            else:
+                matcher = BPOSD(dem, max_bp_iters=1000, bp_method="minimum_sum_log", osd_method="osd_cs", osd_order=10)
+                predictions = matcher.decode_batch(detection_events)
+                num_errors = 0
+                for shot in range(num_shots):
+                    actual_for_shot = observable_flips[shot]
+                    predicted_for_shot = predictions[shot]
+                    if not np.array_equal(actual_for_shot, predicted_for_shot):
+                        num_errors += 1
+                return num_errors / num_shots
+        except Exception as e:
+            logging.error("BP-OSD failed\n")
+            return 0
     else:
         raise NotImplementedError
