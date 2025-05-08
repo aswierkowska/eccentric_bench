@@ -1,3 +1,9 @@
+from qiskit.providers import BackendV2
+from backends import QubitTracking
+
+import random
+import math
+
 #################################################################################################################
 # Adapted from: https://github.com/Strilanc/honeycomb_threshold/blob/main/src/noise.py
 #################################################################################################################
@@ -10,12 +16,13 @@ ANY_CLIFFORD_2_OPS = {"CX", "CY", "CZ", "XCX", "XCY", "XCZ", "YCX", "YCY", "YCZ"
 RESET_OPS = {"R", "RX", "RY"}
 MEASURE_OPS = {"M", "MX", "MY"}
 ANNOTATION_OPS = {"OBSERVABLE_INCLUDE", "DETECTOR", "SHIFT_COORDS", "QUBIT_COORDS", "TICK"}
-SWAP_OPS = {"SWAP", "SHUTTLING_SWAP"}
+SWAP_OPS = {"SWAP", "SHUTTLING_SWAP"} # TODO: is shuttling_swap still needed?
 
 #@dataclasses.dataclass(frozen=True)
 class NoiseModel:
     idle: float #idle should be either float or like a Dict to map qubits to their respective idle noise
     measure_reset_idle: float
+    crosstalk_gates: Dict[str, float]
     noisy_gates: Dict[str, float]
     any_clifford_1: Optional[float] = None
     any_clifford_2: Optional[float] = None
@@ -25,14 +32,20 @@ class NoiseModel:
         self,
         idle: float,
         measure_reset_idle: float,
+        crosstalk_gates: Dict[str, float],
         noisy_gates: Dict[str, float],
+        qt: Optional[QubitTracking] = None,
+        backend: Optional[BackendV2] = None,
         any_clifford_1: Optional[float] = None,
         any_clifford_2: Optional[float] = None,
         use_correlated_parity_measurement_errors: bool = False
     ):
         self.idle = idle
         self.measure_reset_idle = measure_reset_idle
+        self.crosstalk_gates = crosstalk_gates
         self.noisy_gates = noisy_gates
+        self.backend = backend
+        self.qt = qt
         self.any_clifford_1 = any_clifford_1
         self.any_clifford_2 = any_clifford_2
         self.use_correlated_parity_measurement_errors = use_correlated_parity_measurement_errors
@@ -106,6 +119,42 @@ class NoiseModel:
                 "M": 5 * p,
             },
         )
+    
+    def update_swaps(self, op: stim.CircuitInstruction):
+        targets = op.targets_copy()
+        for i in range(0, len(targets), 2):
+            q1 = targets[i].qubit_value
+            q2 = targets[i+1].qubit_value
+            self.qt.swap_qubits(q1, q2)
+
+    # TODO: overlaps with idle errors?
+    def get_qubit_err_prob(self, qubit: int, gate_duration_ns: float) -> float:
+        qubit_properties = self.backend.qubit_properties(qubit)
+        t1 = qubit_properties.t1
+        t2 = qubit_properties.t2
+        t = gate_duration_ns
+        p_relax = 1 - math.exp(-t / t1)
+        p_dephase = 1 - math.exp(-t / t2)
+        return (p_relax + p_dephase - p_relax * p_dephase)
+
+    # TODO: FIX
+    def add_crosstalk_errors_for_moment(self, touched_qubits: Set[int], post: stim.Circuit, gate: str):
+        p = 0
+        if gate in self.crosstalk_gates:
+            p = self.crosstalk_gates[gate]
+        elif gate in ANY_CLIFFORD_1_OPS and "SQ" in self.crosstalk_gates:
+            p = self.crosstalk_gates["SQ"]
+        elif gate in ANY_CLIFFORD_2_OPS and "TQ" in self.crosstalk_gates:
+            p = self.crosstalk_gates["TQ"]
+        
+        already_noised = set()
+        for q in touched_qubits:
+            for neighbor in self.qt.get_neighbours(q):
+                if neighbor in touched_qubits and neighbor not in already_noised:
+                    if random.random() < p:
+                        noise_op = "X_ERROR" if random.random() < 0.5 else "Z_ERROR"
+                        post.append_operation(noise_op, [stim.target_qubit(neighbor)], 1.0)
+                        already_noised.add(neighbor)
 
     def noisy_op(self, op: stim.CircuitInstruction, p: float, ancilla: int) -> Tuple[stim.Circuit, stim.Circuit, stim.Circuit]:
         pre = stim.Circuit()
@@ -116,6 +165,7 @@ class NoiseModel:
         if p > 0:
             if op.name in ANY_CLIFFORD_1_OPS:
                 post.append_operation("DEPOLARIZE1", targets, p)
+            # TODO: modified by adding SWAP_OPS
             elif op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS:
                 for i in range(0, len(targets), 2):
                     pair = [targets[i], targets[i+1]]
@@ -164,6 +214,7 @@ class NoiseModel:
             if not current_moment_mid:
                 return
 
+            # TODO: this kinda covers what qt is for
             # Apply idle depolarization rules.
             idle_qubits = sorted(qs - used_qubits)
             if used_qubits and idle_qubits and self.idle > 0:
@@ -200,8 +251,16 @@ class NoiseModel:
                     p = self.any_clifford_2
                 elif op.name in ANNOTATION_OPS:
                     p = 0
+                    # TODO: Modified not to enter noisy_op in case it's just annotation
+                    # flush()
+                    # result.append_operation(op.name, op.targets_copy(), op.gate_args_copy())
+                    # continue
                 else:
                     raise NotImplementedError(repr(op))
+                
+                if op.name in SWAP_OPS:
+                    self.update_swaps(op)
+
                 pre, mid, post = self.noisy_op(op, p, ancilla)
                 current_moment_pre += pre
                 current_moment_mid += mid
@@ -217,6 +276,10 @@ class NoiseModel:
                     touched_qubits.clear()
                 # Hack: turn off this assertion off for now since correlated errors are built into circuit.
                 #assert touched_qubits.isdisjoint(used_qubits), repr(current_moment_pre + current_moment_mid + current_moment_post)
+                
+                # Modification
+                self.add_crosstalk_errors_for_moment(touched_qubits, post, op.name)
+                
                 used_qubits |= touched_qubits
                 if op.name in MEASURE_OPS or op.name in RESET_OPS:
                     measured_or_reset_qubits |= touched_qubits
