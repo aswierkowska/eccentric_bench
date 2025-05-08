@@ -1,8 +1,8 @@
 import qiskit
 import stim
+import stim_gate_list
 
 import os
-
 
 def count_total_gates_qiskit(circuit: qiskit.QuantumCircuit):
     """
@@ -20,6 +20,10 @@ def count_swaps_qiskit(circuit: qiskit.QuantumCircuit):
     if "swap" in gates:
         return gates["swap"]
     return 0
+
+def detailed_gate_count_qiskit(circuit: qiskit.QuantumCircuit):
+    """Returns a dictionary with the number of gates in a Qiskit circuit."""
+    return circuit.count_ops()
 
 def count_total_gates_stim(circuit: stim.Circuit):
     """
@@ -46,7 +50,7 @@ def count_total_gates_stim(circuit: stim.Circuit):
         if line.startswith("}"):
             repeating = False
             repeat_cycles = 0
-        if line.startswith("H ") or line.startswith("S ") or line.startswith("T ") or line.startswith("X ") or line.startswith("Y ") or line.startswith("Z "):
+        if line.startswith("H ") or line.startswith("S ") or line.startswith("X ") or line.startswith("Y ") or line.startswith("Z "):
             #seperate the line by space
             l = line.split(" ")
             count += int(len(l)-1) * max(1, repeat_cycles*repeating)
@@ -59,6 +63,58 @@ def count_total_gates_stim(circuit: stim.Circuit):
     os.remove("circuit.txt")     
     
     return count
+
+def detailed_gate_count_stim(circuit: stim.Circuit):
+    gates = {}
+    with open("circuit.txt", "w") as f:
+        f.write(str(circuit))
+    #read circuit from file
+    with open("circuit.txt", "r") as f:
+        circuit_str = f.readlines()
+    
+    repeat_cycles = 0
+    repeating = False
+    for line in circuit_str:
+        line = line.strip()
+
+        if line.startswith("REPEAT"):
+            #seperate the line by space
+            l = line.split(" ")
+            repeat_cycles = int(l[1])
+            repeating = True
+        if line.startswith("}"):
+            repeating = False
+            repeat_cycles = 0
+
+        if line.startswith("H ") or line.startswith("S ") or line.startswith("X ") or line.startswith("Y ") or line.startswith("Z "):
+            #seperate the line by space
+            l = line.split(" ")
+            gate = l[0]
+            if gate not in gates:
+                gates[gate] = 0
+            gates[gate] += int(len(l)-1) * max(1, repeat_cycles*repeating)
+        elif line.startswith("CX ") or line.startswith("CZ "):
+            #seperate the line by space
+            l = line.split(" ")
+            gate = l[0]
+            if gate not in gates:
+                gates[gate] = 0
+            gates[gate] += int((int((len(l)-1)) * max(1, repeat_cycles*repeating))/2)
+        else: # uncommon gates
+            l = line.split(" ")
+            if l[0] in stim_gate_list.SINGLE_QUBIT_GATES:
+                if l[0] not in gates:
+                    gates[l[0]] = 0
+                gates[l[0]] += int(len(l)-1) * max(1, repeat_cycles*repeating)
+            elif l[0] in stim_gate_list.TWO_QUBIT_GATES:
+                if l[0] not in gates:
+                    gates[l[0]] = 0
+                gates[gate] += int((int((len(l)-1)) * max(1, repeat_cycles*repeating))/2)
+
+
+    #os.remove("circuit.txt")
+    return gates
+
 
 def tableau_fidelity(t1: stim.Tableau, t2: stim.Tableau) -> float:
     """Function by Craig Gidney
@@ -128,8 +184,8 @@ if __name__ == "__main__":
     # Example usage for stim
     stim_circuit = stim.Circuit.generated(
         "surface_code:rotated_memory_z",
-        rounds=4,
+        rounds=3,
         distance=3
     )
-    print("Total gates in stim circuit:", count_total_gates_stim(stim_circuit))
-    print(stim.Tableau.from_circuit(stim_circuit, ignore_measurement=True, ignore_reset=True))    
+
+    print("detailed gate count stim: ", detailed_gate_count_stim(stim_circuit))
