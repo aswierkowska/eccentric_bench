@@ -55,23 +55,74 @@ def count_total_gates_stim(circuit: stim.Circuit):
             #seperate the line by space
             l = line.split(" ")
             count += int((int((len(l)-1)) * max(1, repeat_cycles*repeating))/2)
-            
+
     os.remove("circuit.txt")     
     
     return count
 
-def stabilizer_fidelity():
-    return None
+def tableau_fidelity(t1: stim.Tableau, t2: stim.Tableau) -> float:
+    """Function by Craig Gidney
+        soruce: https://quantumcomputing.stackexchange.com/questions/38826/how-do-i-efficiently-compute-the-fidelity-between-two-stabilizer-tableau-states
+    
+    """
+    t3 = t2**-1 * t1
+    sim = stim.TableauSimulator()
+    sim.set_inverse_tableau(t3)
+
+    p = 1
+    for q in range(len(t3)):
+        e = sim.peek_z(q)
+        if e == -1:
+            return 0
+        if e == 0:
+            p *= 0.5
+            sim.postselect_z(q, desired_value=False)
+
+    return p
+
+def stabilizer_fidelity(starting_circuit, transpiled_circuit):
+    #check if stim type otherwise value error for now
+    if type(starting_circuit) == qiskit.QuantumCircuit or type(transpiled_circuit) == qiskit.QuantumCircuit:
+        raise ValueError("Stabilizer fidelity only works for stim circuits")
+    
+    tableau_1 = stim.Tableau.from_circuit(starting_circuit, ignore_measurement=True, ignore_reset=True)
+    tableau_2 = stim.Tableau.from_circuit(transpiled_circuit, ignore_measurement=True, ignore_reset=True)
+    fidelity = tableau_fidelity(tableau_1, tableau_2)
+    return fidelity
+
+
+def get_resource_overhead(starting_circuit, transpiled_circuit):
+    if type(starting_circuit) == qiskit.QuantumCircuit:
+        starting_gates = count_total_gates_qiskit(starting_circuit)
+    elif type(starting_circuit) == stim.Circuit:
+        starting_gates = count_total_gates_stim(starting_circuit)
+    else:
+        raise ValueError("Unsupported circuit type")
+
+    if type(transpiled_circuit) == qiskit.QuantumCircuit:
+        transpiled_gates = count_total_gates_qiskit(transpiled_circuit)
+    elif type(transpiled_circuit) == stim.Circuit:
+        transpiled_gates = count_total_gates_stim(transpiled_circuit)
+    else:
+        raise ValueError("Unsupported circuit type")
+
+    gate_diff = transpiled_gates - starting_gates
+
+    return gate_diff
+
+def get_error_supression_factor_logical(logical_error_rate_low, logical_error_rate_high):
+    big_lamda  = logical_error_rate_low/logical_error_rate_high if logical_error_rate_high != 0 else -1
+    return big_lamda
+
+def get_error_supression_factor_physical(physical_error_threshold, physical_error_rate):
+    big_lamda = physical_error_threshold/physical_error_rate if physical_error_rate != 0 else -1
+    return big_lamda
+
+
 
 def get_threshold_error_rate():
+    #TODO: implement this function  
     return None
-
-def get_resource_overhead():
-    return None
-
-def get_error_supression_factor():
-    return None
-
 
 if __name__ == "__main__":
     # Example usage for stim
@@ -81,3 +132,4 @@ if __name__ == "__main__":
         distance=3
     )
     print("Total gates in stim circuit:", count_total_gates_stim(stim_circuit))
+    print(stim.Tableau.from_circuit(stim_circuit, ignore_measurement=True, ignore_reset=True))    
