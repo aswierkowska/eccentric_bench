@@ -137,24 +137,24 @@ class NoiseModel:
         p_dephase = 1 - math.exp(-t / t2)
         return (p_relax + p_dephase - p_relax * p_dephase)
 
-    # TODO: FIX
-    def add_crosstalk_errors_for_moment(self, touched_qubits: Set[int], post: stim.Circuit, gate: str):
-        p = 0
-        if gate in self.crosstalk_gates:
-            p = self.crosstalk_gates[gate]
-        elif gate in ANY_CLIFFORD_1_OPS and "SQ" in self.crosstalk_gates:
-            p = self.crosstalk_gates["SQ"]
-        elif gate in ANY_CLIFFORD_2_OPS and "TQ" in self.crosstalk_gates:
-            p = self.crosstalk_gates["TQ"]
-        
+
+    def add_crosstalk_errors_for_moment(self, touched_qubits: set[int], post: stim.Circuit, gate: str):
+        p = self.crosstalk_gates.get(gate, 0)
+        if gate in ANY_CLIFFORD_1_OPS:
+            p = self.crosstalk_gates.get("SQ", p)
+        elif gate in ANY_CLIFFORD_2_OPS:
+            p = self.crosstalk_gates.get("TQ", p)
+
         already_noised = set()
         for q in touched_qubits:
             for neighbor in self.qt.get_neighbours(q):
-                if neighbor in touched_qubits and neighbor not in already_noised:
+                if neighbor in touched_qubits and (neighbor, q) not in already_noised and (q, neighbor) not in already_noised:
                     if random.random() < p:
                         noise_op = "X_ERROR" if random.random() < 0.5 else "Z_ERROR"
                         post.append_operation(noise_op, [stim.target_qubit(neighbor)], 1.0)
-                        already_noised.add(neighbor)
+                        already_noised.add((q, neighbor))
+                        already_noised.add((neighbor, q))
+                        
 
     def noisy_op(self, op: stim.CircuitInstruction, p: float, ancilla: int) -> Tuple[stim.Circuit, stim.Circuit, stim.Circuit]:
         pre = stim.Circuit()
