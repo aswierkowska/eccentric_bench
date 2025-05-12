@@ -51,7 +51,7 @@ def run_experiment(
                 code.circuit[state] = translate(code.circuit[state], translating_method)
             # TODO: either else here or sth
             print("Before transpiler")
-            code.circuit[state] = run_transpiler(code.circuit[state], backend_name, backend, layout_method, routing_method)
+            code.circuit[state] = run_transpiler(code.circuit[state], backend, layout_method, routing_method)
             print("After transpiler")
             qt = QubitTracking(backend, code.circuit[state])
             print("After QT")

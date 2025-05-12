@@ -8,6 +8,7 @@ apollo_err_prob = {
     "P_TQ": 0.0001,
     "P_MEASUREMENT": 0.0001,
     "P_SHUTTLING_SWAP": 0,
+    "P_SWAP": 0,
     "P_IDLE": 0,
     "P_RESET": 0,
     "P_READOUT": 0,
@@ -22,6 +23,7 @@ apollo_gate_times = {
     "TQ": 0,
     "M": 0,
     "SHUTTLING_SWAP": 0,
+    "SWAP": 0,
 }
 
 P_CROSSTALK = 0.66e-6

@@ -41,6 +41,10 @@ class VarianceBackend(BackendV2):
         return self._qubit_positions
     
     @property
+    def get_remote_gates(self):
+        return []
+
+    @property
     def num_qubits(self):
         return self._num_qubits
     

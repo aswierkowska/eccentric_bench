@@ -23,6 +23,7 @@ class FakeInfleqtionBackend(BackendV2):
         self._num_qubits = self._coupling_map.size()
         self._target = Target("Fake Infleqtion NA", num_qubits=self._num_qubits)
         self.addStateOfTheArtQubits()
+        self._remote_gates = self.add_shuttling_connections()
 
     @property
     def target(self):
@@ -39,6 +40,10 @@ class FakeInfleqtionBackend(BackendV2):
     @property
     def qubit_positions(self):
         return self._qubit_positions
+    
+    @property
+    def get_remote_gates(self):
+        return self._remote_gates
     
     @property
     def num_qubits(self):
@@ -63,6 +68,13 @@ class FakeInfleqtionBackend(BackendV2):
 
         self.target.qubit_properties = qubit_props
 
+    def add_shuttling_connections(self):
+        existing_edges = set(self._coupling_map.get_edges())
+        all_pairs = {(q1, q2) for q1 in range(self.num_qubits) for q2 in range(q1 + 1, self.num_qubits)}
+        new_edges = all_pairs - existing_edges
+        for edge in new_edges:
+            self._coupling_map.add_edge(edge[0], edge[1])
+        return list(new_edges)
 
     def run(self, circuit, **kwargs):
         raise NotImplementedError("This backend does not contain a run method")
@@ -70,3 +82,4 @@ class FakeInfleqtionBackend(BackendV2):
 if __name__ == "__main__":
     backend = FakeInfleqtionBackend()
     plot_coupling_map(backend.coupling_map.size(), None, backend.coupling_map.get_edges(), filename="infleqtion.png")
+    print(backend.coupling_map)

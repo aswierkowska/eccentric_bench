@@ -4,6 +4,7 @@ from qiskit.providers import BackendV2, Options
 from qiskit.visualization import plot_coupling_map
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit.providers import QubitProperties
+from qiskit_ibm_runtime.fake_provider import FakeKyiv
 
 class FakeIBMFlamingo(BackendV2):
     """Fake IBM Flamingo Backend."""
@@ -46,8 +47,7 @@ class FakeIBMFlamingo(BackendV2):
     
 
     def heavySquareHeronCouplingMap(self):
-        service = QiskitRuntimeService(instance="ibm-q/open/main")
-        backend = service.backend("ibm_kyiv")
+        backend = FakeKyiv()
 
         base_coupling_map = backend.coupling_map
 

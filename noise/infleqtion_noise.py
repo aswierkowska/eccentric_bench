@@ -12,7 +12,8 @@ na_err_prob = {
     "P_RESET": 0, # Specific numerical preparation error rate not quantified
     "P_SQ": 0.00098, # Derived from local RZ gate fidelity of 99.902(8)%
     "P_LEAKAGE": 0.009, # State-averaged atom loss probability of 0.9(3)% during NDSSR 
-    "P_SHUTTLING_SWAP": 0.0
+    "P_SHUTTLING_SWAP": 0.0,
+    "P_SWAP": 0.0
 }
 
 na_gate_times = {
