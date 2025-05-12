@@ -1,6 +1,8 @@
 from .utils import get_backend
+from .fake_infleqtion import FakeInfleqtionBackend
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit import QuantumCircuit, transpile
+from math import sqrt
 import rustworkx as rx
 
 class QubitTracking:
@@ -45,6 +47,20 @@ class QubitTracking:
             return physical_qubit
         except KeyError:
             raise ValueError(f"Logical qubit {logical_qubit} not found in mapping.")
+        
+    def get_euclidian_distance(self, logical_qubit_1: int, logical_qubit_2: int):
+        if hasattr(self.backend, 'rows') and hasattr(self.backend, 'columns'):
+            q1 = self.get_layout_postion(logical_qubit_1)
+            q2 = self.get_layout_postion(logical_qubit_2)
+            
+            x1, y1 = divmod(q1, self.backend.columns)
+            x2, y2 = divmod(q2, self.backend.columns)
+            distance = sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+            return distance
+        else:
+            return 1
+
         
     
 

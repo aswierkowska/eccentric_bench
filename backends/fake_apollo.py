@@ -13,7 +13,9 @@ class FakeQuantinuumApolloBackend(BackendV2):
         super().__init__(name="FakeQuantinuumApollo", backend_version=2)
         # if 192 probably 12 x 16
         # then 1000s could be 1728 (36*48) or 3072 (48*64)
-        self._coupling_map = CouplingMap.from_grid(36, 48)
+        self.rows = 36
+        self.columns = 48
+        self._coupling_map = CouplingMap.from_grid(self.rows, self.columns)
         self._num_qubits = self._coupling_map.size()
         self._target = Target("Fake Continuum Apollo", num_qubits=self._num_qubits)
         self._remote_gates = self.add_shuttling_connections()
