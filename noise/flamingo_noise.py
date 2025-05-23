@@ -1,116 +1,31 @@
-from typing import Dict, Tuple, Optional, Set
-import stim
-import random
-import math
-import numpy as np
 from .noise import *
 from backends import FakeIBMFlamingo, QubitTracking
-from qiskit.providers import QubitProperties
 
-flamingo_err_prob = {
-    "P_RESET": 0.0,
-    "P_SQ": 0.00025,
-    "P_TQ": 0.002,
-    "P_MEASUREMENT": 0.01,
-    "P_READOUT": 8.057e-3,
-    "P_IDLE": 0.0
-}
-
-flamingo_gate_times = {
-    "SQ": 50 * 1e-9,
-    "TQ": 70 * 1e-9,
-    "M": 70 * 1e-9,
-}
-
-P_CROSSTALK = 0.0
 
 class FlamingoNoise(NoiseModel):
-    def __init__(
-        self,
-        idle: float,
-        measure_reset_idle: float,
-        noisy_gates: Dict[str, float],
-        noisy_gates_connection: Dict[str, float],
-        qt: QubitTracking,
-        backend: FakeIBMFlamingo,
-        any_clifford_1: Optional[float] = None,
-        any_clifford_2: Optional[float] = None,
-        use_correlated_parity_measurement_errors: bool = False
-    ):
-        self.idle = idle
-        self.measure_reset_idle = measure_reset_idle
-        self.noisy_gates = noisy_gates
-        self.noisy_gates_connection = noisy_gates_connection
-        self.qt = qt
-        self.backend = backend
-        self.any_clifford_1 = any_clifford_1
-        self.any_clifford_2 = any_clifford_2
-        self.use_correlated_parity_measurement_errors = use_correlated_parity_measurement_errors
-        self.crosstalk_prob = 0.0 # TODO: set value
 
     @staticmethod
     def get_noise(
         qt: QubitTracking,
         backend: FakeIBMFlamingo
-    ) -> 'FlamingoNoise':
-        return FlamingoNoise(
-            idle=flamingo_err_prob["P_IDLE"],
-            measure_reset_idle=flamingo_err_prob["P_MEASUREMENT"],
-            noisy_gates={
-                "CX": flamingo_err_prob["P_TQ"],
-                "CZ": flamingo_err_prob["P_TQ"],
-                "SWAP": flamingo_err_prob["P_TQ"],
-                "R": flamingo_err_prob["P_SQ"],
-                "H": flamingo_err_prob["P_SQ"],
-                "M": flamingo_err_prob["P_MEASUREMENT"],
-                "MPP": flamingo_err_prob["P_READOUT"],
-                "RESET": flamingo_err_prob["P_RESET"]
-            },
-            noisy_gates_connection={
-                "CX": 0.03,
-                "CZ": 0.03,
-                "SWAP": 0.03,
+    ) -> 'NoiseModel':
+        return NoiseModel(
+            sq=0.00025,
+            tq=0.002,
+            measure=0.01,
+            remote=0.03,
+            gate_times={
+                # TODO: what is reset gate time?
+                "SQ": 50 * 1e-9,
+                "TQ": 70 * 1e-9,
+                "M": 70 * 1e-9,
+                "REMOTE": round((300 * 1e-9) / (2.2222222222222221e-10 * 1e9)) * (2.2222222222222221e-10 * 1e9),
             },
             qt=qt,
-            backend=backend,
-            use_correlated_parity_measurement_errors=True
+            backend=backend
         )
-    
-    def get_gate_time(self, op: stim.CircuitInstruction) -> float:
-        name = op.name
-        if name in self.noisy_gates_connection and len(op.target_groups()[0]) >= 2:
-            logical_q1 = op.target_groups()[0][0].qubit_value
-            logical_q2 = op.target_groups()[0][1].qubit_value
-            phy_q1 = self.qt.get_layout_postion(logical_q1)
-            phy_q2 = self.qt.get_layout_postion(logical_q2)
 
-            if (phy_q1, phy_q2) in self.backend.get_remote_gates or (phy_q2, phy_q1) in self.backend.get_remote_gates:
-                duration = 300
-                dt = 2.2222222222222221e-10 * 1e9
-                rounded_duration = round((duration * 1e-9) / dt) * dt
-                return rounded_duration
-    
-            
-        if name in flamingo_gate_times:
-            return flamingo_gate_times["TQ"]
-        raise NotImplementedError(f"Gate time not defined for op: {repr(op)}")
-
-    def get_gate_error(self, op: stim.CircuitInstruction) -> float:
-        # TODO: follow this https://github.com/manosgior/HybridDQC/blob/main/backends/backend.py#L159
-        name = op.name
-        if name in self.noisy_gates_connection and len(op.target_groups()[0]) >= 2:
-            logical_q1 = op.target_groups()[0][0].qubit_value
-            logical_q2 = op.target_groups()[0][1].qubit_value
-            phy_q1 = self.qt.get_layout_postion(logical_q1)
-            phy_q2 = self.qt.get_layout_postion(logical_q2)
-
-            if (phy_q1, phy_q2) in self.backend.get_remote_gates or (phy_q2, phy_q1) in self.backend.get_remote_gates:
-                return self.noisy_gates_connection[name]
-            
-        if name in self.noisy_gates:
-            return self.noisy_gates[name]
-        raise NotImplementedError(f"Gate error not defined for op: {repr(op)}")
-
+    """
     def noisy_op(self, op: stim.CircuitInstruction, base_p: float, ancilla: int) -> Tuple[stim.Circuit, stim.Circuit, stim.Circuit]:
         pre = stim.Circuit()
         mid = stim.Circuit()
@@ -185,3 +100,4 @@ class FlamingoNoise(NoiseModel):
             raise NotImplementedError(repr(op))
 
         return pre, mid, post
+    """
