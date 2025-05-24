@@ -1,6 +1,4 @@
 import math
-from qiskit_qec.circuits import SurfaceCodeCircuit, CSSCodeCircuit
-from qiskit_qec.codes.hhc import HHC
 from .gross_code import get_gross_code
 from .color_code_stim import get_color_code
 from .bacon_shor import get_bacon_shot_code

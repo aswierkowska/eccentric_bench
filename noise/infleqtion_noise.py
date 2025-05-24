@@ -18,6 +18,7 @@ class InfleqtionNoise(NoiseModel):
                 "TQ": 4.16e-7,
                 "M": 6.0e-3,
                 "R": 4.1e-6,
+                "REMOTE": 0, # TODO ADD
             },
             qt=qt,
             backend=backend
