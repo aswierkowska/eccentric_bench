@@ -75,7 +75,6 @@ def get_max_d(code_name: str, n: int):
         #    return 5
         #elif n >= 26:
         #    return 3 
-        
     elif code_name == "hh":
         # n = 5d^2 - 2d - 1 /2
         d = int((2 + math.sqrt(40 * n + 24)) / 10)
