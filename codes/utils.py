@@ -1,19 +1,17 @@
 import math
-from qiskit_qec.circuits import SurfaceCodeCircuit, CSSCodeCircuit
-from qiskit_qec.codes.hhc import HHC
 from .gross_code import get_gross_code
 from .color_code_stim import get_color_code
 from .bacon_shor import get_bacon_shot_code
 from .concat_steane import get_concat_steane_code
+from .surface_code import get_surface_code
+from .hh_code import get_hh_code
 
 def get_code(code_name: str, d: int, cycles: int):
     if code_name == "hh":
-        code = HHC(d)
         if cycles == None:
-            css_code = CSSCodeCircuit(code, T=d)
+            return get_hh_code(d, None)
         else:
-            css_code = CSSCodeCircuit(code, T=cycles)
-        return css_code
+             return get_hh_code(d, cycles)
     elif code_name == "gross":
         if cycles == None:
         # TODO: should gross code accept parameter?
@@ -22,9 +20,9 @@ def get_code(code_name: str, d: int, cycles: int):
             return get_gross_code(T=cycles)
     elif code_name == "surface":
         if cycles == None:
-            code = SurfaceCodeCircuit(d=d, T=d)
+            code = get_surface_code(d=d, T=d)
         else:
-            code = SurfaceCodeCircuit(d=d, T=cycles)
+            code = get_surface_code(d=d, T=cycles)
         return code
     elif code_name == "color":
         if cycles == None:
@@ -51,9 +49,15 @@ def get_code(code_name: str, d: int, cycles: int):
 def get_max_d(code_name: str, n: int):
     if code_name == "surface":
         # d**2 data qubits + d**2 - 1 ancilla qubits
-        d = math.floor(math.sqrt((n + 1) / 2))
-        d = d - ((1 - d) % 2)
-        return d
+        # TODO: tmp solution
+        #d = math.floor(math.sqrt((n + 1) / 2))
+        #d = d - ((1 - d) % 2)
+        if n >= 494:
+            return 15
+        elif n >= 376:
+            return 13
+        elif n >= 250: # TODO Arbitrary
+            return 11         
     elif code_name == "hh":
         # n = 5d^2 - 2d - 1 /2
         d = int((2 + math.sqrt(40 * n + 24)) / 10)
