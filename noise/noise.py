@@ -30,8 +30,8 @@ class NoiseModel:
         measure: Optional[float] = 0,
         shuttle: Optional[float] = 0,
         remote: Optional[float] = 0,
-        noisy_gates: Dict[str, float] = None,
-        gate_times: Optional[Dict[str, float]] = None,
+        noisy_gates: Dict[str, float] = {},
+        gate_times: Optional[Dict[str, float]] = {},
         qt: Optional[QubitTracking] = None,
         backend: Optional[BackendV2] = None,
         use_correlated_parity_measurement_errors: bool = False
@@ -52,11 +52,11 @@ class NoiseModel:
         self.use_correlated_parity_measurement_errors = use_correlated_parity_measurement_errors
 
     
-    def add_qubit_error(self, circuit: stim.Circuit, qubits: List[int], gate_duration_ns: float) -> None:
+    def add_qubit_error(self, circuit: stim.Circuit, qubits: List[stim.GateTarget], gate_duration: float) -> None:
         if self.backend == None:
             return
         for qubit in qubits:
-            qubit_properties = self.backend.qubit_properties(qubit)
+            qubit_properties = self.backend.qubit_properties(qubit.value)
             t1 = qubit_properties.t1
             t2 = qubit_properties.t2
             try:
@@ -64,9 +64,9 @@ class NoiseModel:
             except ZeroDivisionError:
                 T_phi = float('inf')
 
-            p_x = 0.25 * (1 - np.exp(-gate_duration_ns / t1))
-            p_y = 0.25 * (1 - np.exp(-gate_duration_ns / t1))
-            p_z = 0.5 * (1 - np.exp(-gate_duration_ns / T_phi)) if T_phi != float('inf') else 0.0
+            p_x = 0.25 * (1 - np.exp(-gate_duration / t1))
+            p_y = 0.25 * (1 - np.exp(-gate_duration / t1))
+            p_z = 0.5 * (1 - np.exp(-gate_duration / T_phi)) if T_phi != float('inf') else 0.0
 
             p_x = min(max(p_x, 0.0), 1.0)
             p_y = min(max(p_y, 0.0), 1.0)
@@ -96,19 +96,17 @@ class NoiseModel:
             return False
         phy_q1 = self.qt.get_layout_postion(pair[0])
         phy_q2 = self.qt.get_layout_postion(pair[1])
-
         if (phy_q1, phy_q2) in self.backend.get_remote_gates or (phy_q2, phy_q1) in self.backend.get_remote_gates:
             return True
         else:
             return False
 
     def get_gate_time(self, op: stim.CircuitInstruction, pair: Optional[List[int]] = None) -> Union[float, None]:
-        if self.gate_times == None:
+        if self.gate_times == {}:
             return
         
-        name = op.name
         if pair:
-            if self.backend and self.is_remote(op):
+            if self.backend and self.is_remote(pair):
                 if self.backend.name == "FakeQuantinuumApollo" or self.backend.name == "FakeInfleqtion":
                     return self.gate_times["REMOTE"] * self.qt.get_euclidian_distance(pair[0], pair[1])
                 else:
@@ -116,7 +114,7 @@ class NoiseModel:
             else:
                 return self.gate_times["TQ"]
                    
-        if name in SQ_OPS:
+        if op.name in SQ_OPS:
             return self.gate_times["SQ"]
         elif op.name in RESET_OPS:
             return self.gate_times["R"]
@@ -134,11 +132,10 @@ class NoiseModel:
 
         if op.name in SQ_OPS:
             if op.name in self.noisy_gates:
-                p = self.noisy_gates[op.name]
-            else:
-                p = self.sq
-            post.append_operation("DEPOLARIZE1", targets, p)
-            #self.add_qubit_error(post, targets, self.get_gate_time(op))
+                post.append_operation("DEPOLARIZE1", targets, self.noisy_gates[op.name])
+            elif self.sq != 0:
+                post.append_operation("DEPOLARIZE1", targets, self.sq)
+            self.add_qubit_error(post, targets, self.get_gate_time(op))
         elif op.name in TQ_OPS or op.name in SWAP_OPS:
             if op.name in self.noisy_gates:
                 p = self.noisy_gates[op.name]
@@ -146,20 +143,19 @@ class NoiseModel:
                 p = self.tq
             for i in range(0, len(targets), 2):
                 pair = [targets[i].value, targets[i+1].value]
-                #if self.leakage > 0:
-                #    self.add_leakage_errors(post, pair)
-                #if self.is_remote(pair):
-                #    post.append_operation("DEPOLARIZE2", pair, self.remote)
-                #else:
-                post.append_operation("DEPOLARIZE2", pair, p)
-                #self.add_qubit_error(post, targets, self.get_gate_time(op, pair))
+                if self.leakage > 0:
+                    self.add_leakage_errors(post, pair)
+                if self.is_remote(pair):
+                    post.append_operation("DEPOLARIZE2", pair, self.remote)
+                else:
+                    post.append_operation("DEPOLARIZE2", pair, p)
+                self.add_qubit_error(post, targets, self.get_gate_time(op, pair))
         elif op.name in RESET_OPS:
             if op.name in self.noisy_gates:
-                p = self.noisy_gates[op.name]
-            else:
-                p = self.reset
-            post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, p)
-            #self.add_qubit_error(post, targets, self.get_gate_time(op))
+                post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, self.noisy_gates[op.name])
+            elif self.reset != 0:
+                post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, self.reset)
+            self.add_qubit_error(post, targets, self.get_gate_time(op))
         elif op.name in MEASURE_OPS:
             if op.name in self.noisy_gates:
                 p = self.noisy_gates[op.name]
@@ -187,7 +183,6 @@ class NoiseModel:
             else:
                 pre.append_operation("DEPOLARIZE2", [t.value for t in targets if not t.is_combiner], p)
                 args = [p]
-
         mid.append_operation(op.name, targets, args)
         return pre, mid, post
 
@@ -240,8 +235,8 @@ class NoiseModel:
                     result.append_operation("TICK", [])
                     continue
                 
-                #if op.name in SWAP_OPS:
-                #    self.qt.update_stim_swaps(op)
+                if op.name in SWAP_OPS:
+                    self.qt.update_stim_swaps(op)
 
                 pre, mid, post = self.noisy_op(op, ancilla)
                 current_moment_pre += pre
@@ -256,8 +251,8 @@ class NoiseModel:
                 if op.name in ANNOTATION_OPS:
                     touched_qubits.clear()
                 
-                #if self.crosstalk > 0:
-                #    self.add_crosstalk_errors(touched_qubits, post)
+                if self.crosstalk > 0:
+                    self.add_crosstalk_errors(touched_qubits, post)
                 
                 used_qubits |= touched_qubits
                 if op.name in MEASURE_OPS:
@@ -267,7 +262,6 @@ class NoiseModel:
             else:
                 raise NotImplementedError(repr(op))
         flush()
-
         return result
 
 

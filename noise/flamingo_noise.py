@@ -20,6 +20,7 @@ class FlamingoNoise(NoiseModel):
                 "TQ": 70 * 1e-9,
                 "M": 70 * 1e-9,
                 "REMOTE": round((300 * 1e-9) / (2.2222222222222221e-10 * 1e9)) * (2.2222222222222221e-10 * 1e9),
+                "R": 1.2942222222222222e-06
             },
             qt=qt,
             backend=backend
