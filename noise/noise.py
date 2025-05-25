@@ -138,7 +138,7 @@ class NoiseModel:
             else:
                 p = self.sq
             post.append_operation("DEPOLARIZE1", targets, p)
-            self.add_qubit_error(post, targets, self.get_gate_time(op))
+            #self.add_qubit_error(post, targets, self.get_gate_time(op))
         elif op.name in TQ_OPS or op.name in SWAP_OPS:
             if op.name in self.noisy_gates:
                 p = self.noisy_gates[op.name]
@@ -146,27 +146,27 @@ class NoiseModel:
                 p = self.tq
             for i in range(0, len(targets), 2):
                 pair = [targets[i].value, targets[i+1].value]
-                if self.leakage > 0:
-                    self.add_leakage_errors(post, pair)
-                if self.is_remote(pair):
-                    post.append_operation("DEPOLARIZE2", pair, self.remote)
-                else:
-                    post.append_operation("DEPOLARIZE2", pair, p)
-                self.add_qubit_error(post, targets, self.get_gate_time(op, pair))
+                #if self.leakage > 0:
+                #    self.add_leakage_errors(post, pair)
+                #if self.is_remote(pair):
+                #    post.append_operation("DEPOLARIZE2", pair, self.remote)
+                #else:
+                post.append_operation("DEPOLARIZE2", pair, p)
+                #self.add_qubit_error(post, targets, self.get_gate_time(op, pair))
         elif op.name in RESET_OPS:
             if op.name in self.noisy_gates:
                 p = self.noisy_gates[op.name]
             else:
                 p = self.reset
             post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, p)
-            self.add_qubit_error(post, targets, self.get_gate_time(op))
+            #self.add_qubit_error(post, targets, self.get_gate_time(op))
         elif op.name in MEASURE_OPS:
             if op.name in self.noisy_gates:
                 p = self.noisy_gates[op.name]
             else:
                 p = self.measure
             pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, p)
-            self.add_qubit_error(post, targets, self.get_gate_time(op))
+            #self.add_qubit_error(post, targets, self.get_gate_time(op))
         elif op.name == "MPP":
             assert len(targets) % 3 == 0 and all(t.is_combiner for t in targets[1::3]), repr(op)
             assert args == [] or args == [0]
@@ -240,8 +240,8 @@ class NoiseModel:
                     result.append_operation("TICK", [])
                     continue
                 
-                if op.name in SWAP_OPS:
-                    self.qt.update_stim_swaps(op)
+                #if op.name in SWAP_OPS:
+                #    self.qt.update_stim_swaps(op)
 
                 pre, mid, post = self.noisy_op(op, ancilla)
                 current_moment_pre += pre
@@ -256,8 +256,8 @@ class NoiseModel:
                 if op.name in ANNOTATION_OPS:
                     touched_qubits.clear()
                 
-                if self.crosstalk > 0:
-                    self.add_crosstalk_errors(touched_qubits, post)
+                #if self.crosstalk > 0:
+                #    self.add_crosstalk_errors(touched_qubits, post)
                 
                 used_qubits |= touched_qubits
                 if op.name in MEASURE_OPS:

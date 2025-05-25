@@ -62,7 +62,8 @@ def run_experiment(
             noise_model = get_noise_model(error_type, error_prob, qt, backend)
             print("After get_noise_model")
             stim_circuit = noise_model.noisy_circuit(stim_circuit)
-            print(stim_circuit)
+            #fname = code_name + ".stim"
+            #stim_circuit.to_file(fname)
             print("After adding noise")
             logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
             print("After decoding")
