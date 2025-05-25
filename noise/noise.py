@@ -5,7 +5,7 @@ import random
 import numpy as np
 
 #################################################################################################################
-# Adapted from: https://github.com/Strilanc/honeycomb_threshold/blob/main/src/noise.py
+# Based on: https://github.com/Strilanc/honeycomb_threshold/blob/main/src/noise.py
 #################################################################################################################
 from typing import Optional, Dict, Set, Tuple, List, Union
 

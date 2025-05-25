@@ -1,3 +1,7 @@
+#################################################################################################################
+# Taken from: https://github.com/Strilanc/honeycomb_threshold/blob/main/src/noise.py
+#################################################################################################################
+
 import dataclasses
 from typing import Optional, Dict, Set, Tuple
 
