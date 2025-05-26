@@ -59,7 +59,7 @@ def run_experiment(
                 code.circuit[state], detectors=detectors, logicals=logicals
             )[0][0]
             print("After GET STIM CIRCUIT")
-            noise_model = get_noise_model(error_type, error_prob, qt, backend)
+            noise_model = get_noise_model(error_type, qt, error_prob, backend)
             print("After get_noise_model")
             stim_circuit = noise_model.noisy_circuit(stim_circuit)
             #fname = code_name + ".stim"
