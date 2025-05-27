@@ -36,13 +36,14 @@ experiments:
 #    error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
 #    decoders: ["bposd"] # mwpm
   - name: "Basic"
-    num_samples: 1
-    backends: ["real_infleqtion"]
-    backends_sizes: [125]
+    num_samples: 100
+    backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
+    backends_sizes: [40] #[64, 125, 216, 343, 512]
     codes: ["steane"]
-    error_types: ["infleqtion"]#, "willow", "apollo", "flamingo"]
-    error_probabilities: [0.01]
-    decoders: ["bposd"]
+    cycles: 5
+    error_types: ["sd6"]
+    error_probabilities: [0.001]
+    decoders: ["mwpm"] # mwpm
     #routing_methods: ["basic"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
     #layout_methods: ["default"] # default, dense, trivial, sabre per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
     # BUG: https://github.com/Qiskit/qiskit/issues/13152

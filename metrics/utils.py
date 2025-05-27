@@ -111,7 +111,6 @@ def detailed_gate_count_stim(circuit: stim.Circuit):
                     gates[l[0]] = 0
                 gates[gate] += int((int((len(l)-1)) * max(1, repeat_cycles*repeating))/2)
 
-
     #os.remove("circuit.txt")
     return gates
 
@@ -147,7 +146,7 @@ def stabilizer_fidelity(starting_circuit, transpiled_circuit):
     return fidelity
 
 
-def get_resource_overhead(starting_circuit, transpiled_circuit):
+def get_resource_overhead_total_gates(starting_circuit, transpiled_circuit):
     if type(starting_circuit) == qiskit.QuantumCircuit:
         starting_gates = count_total_gates_qiskit(starting_circuit)
     elif type(starting_circuit) == stim.Circuit:
