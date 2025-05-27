@@ -1,30 +1,30 @@
 experiments:
-  - name: "Topology_size_25.05"
+  - name: "Topology_size_26.05_20:48"
     num_samples: 1000
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
     backends_sizes: [300, 350, 400, 450, 500]
     codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
     cycles: 3
-    error_types: ["sd6"]
-    error_probabilities: [0.01, 0.015, 0.02] 
+    error_types: ["sd6", "pc3", "em3_1", "em3_2"]
+    error_probabilities: [0.01, 0.05, 0.015] 
     decoders: ["bposd"] # mwpm
-  - name: "Topology_connectivity_25.05"
+  - name: "Topology_connectivity_26.05_20:48"
     num_samples: 1000
     backends: ["custom_line", "custom_grid", "custom_cube", "custom_full"] # custom_line, custom_grid, custom_cube, custom_full
     backends_sizes: [729] #[64, 125, 216, 343, 512]
     codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
     cycles: 3
-    error_types: ["sd6"]
-    error_probabilities: [0.01, 0.015, 0.02] 
+    error_types: ["sd6", "pc3", "em3_1", "em3_2"]
+    error_probabilities: [0.01, 0.05, 0.015] 
     decoders: ["bposd"] # mwpm
-  - name: "Real_topology_25.05"
+  - name: "Real_topology_26.05_20:48"
     num_samples: 1000
     backends: ["real_willow", "real_flamingo", "real_infleqtion", "real_apollo"] # custom_line, custom_grid, custom_cube, custom_full
-    #backends_sizes: [729] 
+    backends_sizes: [729] 
     codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
     cycles: 3
-    error_types: ["sd6"]
-    error_probabilities: [0.01, 0.015, 0.02] 
+    error_types: ["sd6", "pc3", "em3_1", "em3_2"]
+    error_probabilities: [0.01, 0.05, 0.015] 
     decoders: ["bposd"] # mwpm
 #  - name: "Basic"
 #    num_samples: 10000
