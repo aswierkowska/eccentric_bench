@@ -1,6 +1,8 @@
 import stim 
 from qiskit_qec.circuits import StimCodeCircuit
 
+from .steane_circuit_parts import concat_steane_end, concat_steane_round, concat_steane_start
+
 import traceback
 
 def star_shaped_ordering_m1():
@@ -334,11 +336,19 @@ OBSERVABLE_INCLUDE(0) rec[-1]''')
 
     return circuit
 
+def concat_steane_multiple_cycles(rounds=1):
+    circuit = stim.Circuit(concat_steane_start)
+    for i in range(rounds-1):
+        circuit += stim.Circuit(concat_steane_round)
+    circuit += stim.Circuit(concat_steane_end)
+    return circuit
+
 
 def get_concat_steane_code(m, rounds=1):
     #read whaterver.stim file and make stim circuit out of it
     if m==2:
-        circuit = stim.Circuit.from_file("codes/concat_steane_own.stim")
+        #circuit = stim.Circuit.from_file("codes/concat-steane_multiple_cycles.stim")
+        circuit = concat_steane_multiple_cycles(rounds)
     elif m==1:
         #circuit = stim.Circuit.from_file("codes/multiple_rounds.stim")
         circuit = multiple_round_steane_code_own(rounds)

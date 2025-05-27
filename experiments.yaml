@@ -38,7 +38,7 @@ experiments:
   - name: "Basic"
     num_samples: 100
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    backends_sizes: [40] #[64, 125, 216, 343, 512]
+    backends_sizes: [100] #[64, 125, 216, 343, 512]
     codes: ["steane"]
     cycles: 5
     error_types: ["sd6"]
