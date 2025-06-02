@@ -16,6 +16,10 @@ def decode(code_name: str, circuit: stim.Circuit, num_shots: int, decoder: str) 
     detection_events, observable_flips = sampler.sample(
         num_shots, separate_observables=True
     )
+
+    if not np.any(observable_flips):
+	    return 0
+
     
     dem = circuit.detector_error_model(approximate_disjoint_errors=True) # TODO do we need those: decompose_errors=True, approximate_disjoint_errors=True
     if decoder == "mwpm":
@@ -44,7 +48,7 @@ def decode(code_name: str, circuit: stim.Circuit, num_shots: int, decoder: str) 
                         num_errors += 1
                 return num_errors / num_shots
         except Exception as e:
-            logging.error("BP-OSD failed\n")
-            return 0
+            logging.error(f'BP-OSD failed: {e}\n')
+            return -1
     else:
         raise NotImplementedError
