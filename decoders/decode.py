@@ -109,7 +109,7 @@ def decode(code_name: str, circuit: stim.Circuit, num_shots: int, decoder: str) 
     elif decoder == "bposd":
         # TODO: adjust BP-OSD
         try:
-            if code_name == "gross":
+            if code_name != "":
                 dem = circuit.detector_error_model()
                 chk, obs, priors, col_dict = dem_to_check_matrices(dem, return_col_dict=True)
                 num_row, num_col = chk.shape
