@@ -18,6 +18,8 @@ def get_noise_model(error_type: str, qt: QubitTracking, p: float = None, backend
             return ArtificialNoise.EM3_v2(p, qt)
         elif error_type == "si1000":
             return ArtificialNoise.SI1000(p, qt)
+        elif error_type == "constant":
+            return ArtificialNoise.constant(p, qt)
     if error_type == "real_willow":
         return WillowNoise.get_noise(qt)
     elif error_type == "real_flamingo" and backend:
