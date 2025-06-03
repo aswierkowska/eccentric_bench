@@ -98,3 +98,16 @@ class ArtificialNoise(NoiseModel):
                 "M": 5 * p,
             },
         )
+    
+    @staticmethod
+    def constant(p: float, qt) -> 'NoiseModel':
+        """Inspired by superconducting device."""
+        return NoiseModel(
+            sq=p,
+            tq=p,
+            idle=p,
+            measure=p,
+            reset=p,
+            qt=qt,
+        )
+

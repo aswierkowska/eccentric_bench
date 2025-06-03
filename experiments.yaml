@@ -17,14 +17,14 @@ experiments:
     #error_types: ["si1000"]
     #error_probabilities: [0.01, 0.005, 0.015] 
     #decoders: ["bposd"] # mwpm
-  - name: "Topology_connectivity_31.05_20:45"
-    num_samples: 1000
-    backends: ["custom_line", "custom_grid", "custom_cube", "custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    backends_sizes: [729] #[64, 125, 216, 343, 512]
-    codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
-    cycles: 3
-    error_types: ["sd6", "pc3", "em3_1", "em3_2"]
-    error_probabilities: [0.01, 0.05, 0.015] 
+  - name: "gross_test"
+    num_samples: 10000
+    backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
+    backends_sizes: [400] #[64, 125, 216, 343, 512]
+    codes: ["gross"]
+    cycles: 12
+    error_types: ["constant"]
+    error_probabilities: [0.004] 
     decoders: ["bposd"] # mwpm
     #  - name: "Real_topology_26.05_20:48"
     #num_samples: 1000
