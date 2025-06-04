@@ -130,7 +130,7 @@ def build_big_concat_steane_circuit(rounds=1):
 
     
     #Z
-    for ordering, i in zip(orderings, range(514,686)):
+    for ordering, i in zip(orderings, range(514,685)):
         string = "CX "
         for j in ordering:
             string += str(j) + " " + str(i) + " "
@@ -165,13 +165,13 @@ def build_big_concat_steane_circuit(rounds=1):
     #last ancilla
     string = "CX "
     for i in range(343):
-        string += str(686) + " " + str(i) + " "
+        string += str(685) + " " + str(i) + " "
     circuit += stim.Circuit(f"{string}\n")
     string = ""
 
     circuit += stim.Circuit("TICK")
 
-    circuit += stim.Circuit("MR 686\n")
+    circuit += stim.Circuit("MR 685\n")
 
     #Add observable
     circuit += stim.Circuit("OBSERVABLE_INCLUDE(0) rec[-1]\n")
@@ -196,7 +196,7 @@ def add_multiple_cycles_to_big_code(circuit, orderings, rounds):
 
         
         #Z
-        for ordering, i in zip(orderings, range(514,686)):
+        for ordering, i in zip(orderings, range(514,685)):
             string = "CX "
             for j in ordering:
                 string += str(j) + " " + str(i) + " "

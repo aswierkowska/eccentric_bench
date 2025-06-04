@@ -40,7 +40,7 @@ experiments:
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
     backends_sizes: [700] #[64, 125, 216, 343, 512]
     codes: ["steane"]
-    cycles: 3
+    cycles: 0
     error_types: ["sd6"]
     error_probabilities: [0.001]
     decoders: ["bposd"] # mwpm
