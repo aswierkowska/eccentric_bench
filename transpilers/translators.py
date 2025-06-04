@@ -59,6 +59,42 @@ tket_stim_gates = [
     #OpType.Rz
 ]
 
+#TODO: do we want to add ID?
+qiskit_ibm_heron = [
+    "x",
+    "sx",
+    "rzz",
+    "rz",
+    "rx",
+    'cz',
+    'measure',
+    'reset',
+    'barrier',
+]
+
+bqskit_ibm_heron = [
+    XGate(),
+    SXGate(),
+    RZZGate(),
+    RZGate(),
+    RXGate(),
+    CZGate(),
+    Reset(),
+
+]
+
+tket_ibm_heron = [
+    OpType.X,
+    OpType.SX,
+    OpType.ZZPhase, #same as RZZ
+    OpType.Rz,
+    OpType.Rx,
+    OpType.CZ,
+    OpType.Measure,
+    OpType.Reset,
+    OpType.Barrier,
+]
+
 
 def translate(circuit, translating_method, gate_set=None):
     if translating_method == "qiskit":
