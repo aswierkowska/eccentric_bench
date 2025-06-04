@@ -95,6 +95,40 @@ tket_ibm_heron = [
     OpType.Barrier,
 ]
 
+#qiskit has no fixed zz gate
+qiskit_h2 = [
+    "rx",
+    "ry",
+    "rz",
+    "rzz",
+    "reset",
+    "measure",
+    "barrier",
+]
+
+bqskit_h2 = [
+    RXGate(),
+    RYGate(),
+    RZGate(),
+    ZZGate(),
+    RZZGate(),
+    Reset(),
+]
+
+
+
+#CARE SU(4) is not available as a gate
+tket_h2 =[
+    OpType.Rx,
+    OpType.Ry,
+    OpType.Rz,
+    OpType.ZZPhase,
+    OpType.ZZMax,
+    OpType.Measure,
+    OpType.Reset,
+    OpType.Barrier,
+]
+
 
 def translate(circuit, translating_method, gate_set=None):
     if translating_method == "qiskit":
