@@ -96,11 +96,14 @@ tket_ibm_heron = [
 ]
 
 #qiskit has no fixed zz gate
+#added rxx and ryy gates to simulate SU(4)
 qiskit_h2 = [
     "rx",
     "ry",
     "rz",
     "rzz",
+    'rxx',
+    "ryy"
     "reset",
     "measure",
     "barrier",
@@ -112,18 +115,20 @@ bqskit_h2 = [
     RZGate(),
     ZZGate(),
     RZZGate(),
+    RXXGate(),
+    RYYGate(),
     Reset(),
 ]
 
 
 
-#CARE SU(4) is not available as a gate
 tket_h2 =[
     OpType.Rx,
     OpType.Ry,
     OpType.Rz,
     OpType.ZZPhase,
     OpType.ZZMax,
+    OpType.TK2,
     OpType.Measure,
     OpType.Reset,
     OpType.Barrier,
