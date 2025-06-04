@@ -66,7 +66,7 @@ def run_experiment(
             noise_model = get_noise_model(error_type, error_prob, qt, backend)
             print("After get_noise_model")
             stim_circuit = noise_model.noisy_circuit(stim_circuit)
-            print(stim_circuit)
+            #print(stim_circuit)
 
             #stim_circuit = stim.Circuit.from_file("codes/multiple_rounds.stim")
             print("After adding noise")

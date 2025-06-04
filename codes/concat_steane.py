@@ -1,7 +1,7 @@
 import stim 
 from qiskit_qec.circuits import StimCodeCircuit
 
-from .steane_circuit_parts import concat_steane_end, concat_steane_round, concat_steane_start
+#from .steane_circuit_parts import concat_steane_end, concat_steane_round, concat_steane_start
 
 import traceback
 
@@ -97,7 +97,7 @@ def star_shaped_ordering_m3():
 
     return orderings
 
-def build_big_concat_steane_circuit():
+def build_big_concat_steane_circuit(rounds=1):
     circuit = stim.Circuit()
     #first encoding of the circuit
     orderings = star_shaped_ordering_m3()
@@ -111,6 +111,7 @@ def build_big_concat_steane_circuit():
         string += "\n"
         circuit += stim.Circuit(f"{string}")
         string = ""
+        circuit += stim.Circuit("TICK")
 
     for i in range(343, 514):
         circuit += stim.Circuit(f"RX {i}\n")
@@ -125,39 +126,102 @@ def build_big_concat_steane_circuit():
             string += str(i) + " " + str(j) + " "
         circuit += stim.Circuit(f"{string}\n")
         string = ""
+    circuit += stim.Circuit("TICK")
+
+    
     #Z
-    for ordering, i in zip(orderings, range(343,514)):
+    for ordering, i in zip(orderings, range(514,686)):
         string = "CX "
         for j in ordering:
             string += str(j) + " " + str(i) + " "
         circuit += stim.Circuit(f"{string}\n")
         string = ""
+    circuit += stim.Circuit("TICK")
+
     
-    #last ancilla
-    string = "CX "
-    for i in range(343):
-        string += str(685) + " " + str(i) + " "
-    circuit += stim.Circuit(f"{string}\n")
-    string = ""
 
     #add measurements
     for i in range(343, 514):
         circuit += stim.Circuit(f"MRX {i}\n")
+
+    circuit += stim.Circuit("TICK")
     
-    for i in range(514, 686): #Want to reset 685 as well because last ancilla
+    for i in range(514, 685): #Want to reset 685 as well because last ancilla
         circuit += stim.Circuit(f"MR {i}\n")
 
-    #now we need to apply detectors first 171 detectors from -2 to -172
-    for i in range(172,1, -1):
-        circuit += stim.Circuit(f"DETECTOR rec[{0-i}]\n")
+    circuit += stim.Circuit("TICK")
     
-    for i in range(343,172, -1):
+    for i in range(342,171, -1):
         circuit += stim.Circuit(f"DETECTOR rec[{0-i}] rec[{0-i-171}]\n")
-    
+
+    for i in range(171,0, -1):
+        circuit += stim.Circuit(f"DETECTOR rec[{0-i}]\n")
+
+    circuit += stim.Circuit("TICK")
+
+
+    circuit = add_multiple_cycles_to_big_code(circuit, orderings, rounds)
+
+    #last ancilla
+    string = "CX "
+    for i in range(343):
+        string += str(686) + " " + str(i) + " "
+    circuit += stim.Circuit(f"{string}\n")
+    string = ""
+
+    circuit += stim.Circuit("TICK")
+
+    circuit += stim.Circuit("MR 686\n")
+
     #Add observable
     circuit += stim.Circuit("OBSERVABLE_INCLUDE(0) rec[-1]\n")
 
+    with open("codes/concat_3_new.stim", "w") as f:
+        print("Hello")
+        f.write(str(circuit))
+
     return circuit
+
+def add_multiple_cycles_to_big_code(circuit, orderings, rounds):
+    for r in range(rounds):
+        #X
+        for ordering, i in zip(orderings, range(343,514)):
+            string = "CX "
+            for j in ordering:
+                string += str(i) + " " + str(j) + " "
+            circuit += stim.Circuit(f"{string}\n")
+            string = ""
+        circuit += stim.Circuit("TICK")
+
+
+        
+        #Z
+        for ordering, i in zip(orderings, range(514,686)):
+            string = "CX "
+            for j in ordering:
+                string += str(j) + " " + str(i) + " "
+            circuit += stim.Circuit(f"{string}\n")
+            string = ""
+        circuit += stim.Circuit("TICK")
+
+        #add measurements
+        for i in range(343, 514):
+            circuit += stim.Circuit(f"MRX {i}\n")
+
+        circuit += stim.Circuit("TICK")
+        
+        for i in range(514, 685): #Want to reset 685 as well because last ancilla
+            circuit += stim.Circuit(f"MR {i}\n")
+
+        circuit += stim.Circuit("TICK")
+
+        for i in range(342,0, -1):
+            circuit += stim.Circuit(f"DETECTOR rec[{0-i}] rec[{0-i-342}]\n")
+
+    
+    return circuit
+
+
 
 def multiple_round_steane_code(rounds):
     circuit = stim.Circuit()
@@ -353,7 +417,9 @@ def get_concat_steane_code(m, rounds=1):
         #circuit = stim.Circuit.from_file("codes/multiple_rounds.stim")
         circuit = multiple_round_steane_code_own(rounds)
     elif m==3:
-        circuit = stim.Circuit.from_file("codes/concat_3.stim")
+        #build_big_concat_steane_circuit()
+        #circuit = stim.Circuit.from_file("codes/concat_3_new.stim")
+        circuit = build_big_concat_steane_circuit(rounds)
     
     print(circuit)
     try: 
@@ -370,5 +436,6 @@ if __name__ == "__main__":
     #circuit = build_big_concat_steane_circuit()
     #circuit = get_concat_steane_code(3)
 
-    circuit = multiple_round_steane_code_own(2)
-    print(circuit)
+    #circuit = multiple_round_steane_code_own(2)
+    #print(circuit)
+    circuit = build_big_concat_steane_circuit(1)
