@@ -101,3 +101,24 @@ def get_max_d(code_name: str, n: int):
         elif n >= 13:
             return 3
     return 0
+
+
+def get_min_n(code_name: str, d: int):
+    if code_name == "surface":
+        return 2 * d * d + 3 * d - 1
+    elif code_name == "hh":
+        return int(math.ceil((5 * d * d - 2 * d - 1) / 2))
+    elif code_name == "gross":
+        return 288
+    elif code_name == "color":
+        return int(math.ceil((3*d - 1)**2 / 4))
+    elif code_name == "bacon":
+        return d * d #this is only partially true d*d is for sure the lower bound but code actually might require more qubits
+    elif code_name == 'steane':
+        if d == 3:
+            return 13
+        elif d == 9:
+            return 98
+        elif d == 27:
+            return 686
+    return 0

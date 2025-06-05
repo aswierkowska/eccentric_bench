@@ -20,8 +20,9 @@ experiments:
   - name: "gross_test"
     num_samples: 10000
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    backends_sizes: [400] #[64, 125, 216, 343, 512]
+    #backends_sizes: [400] #[64, 125, 216, 343, 512]
     codes: ["gross"]
+    distance: 3
     cycles: 12
     error_types: ["constant"]
     error_probabilities: [0.004] 
