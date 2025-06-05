@@ -116,7 +116,7 @@ def get_min_n(code_name: str, d: int):
         return d * d #this is only partially true d*d is for sure the lower bound but code actually might require more qubits
     elif code_name == 'steane':
         if d == 3:
-            return 13
+            return 14
         elif d == 9:
             return 98
         elif d == 27:
