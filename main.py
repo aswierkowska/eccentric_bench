@@ -1,5 +1,6 @@
 import sys
 import os
+import stim
 
 sys.path.append(os.path.join(os.getcwd(), "external/qiskit_qec/src"))
 
@@ -48,6 +49,10 @@ def run_experiment(
 
         for state, qc in code.circuit.items():
             print("Before translating")
+            #tmp_stim_circuit = get_stim_circuits(
+            #    code.circuit[state], detectors=detectors, logicals=logicals
+            #)[0][0]
+            #tmp_stim_circuit.to_file(f'our_gross_qiskit_{state}.stim')
             if translating_method:
                 code.circuit[state] = translate(code.circuit[state], translating_method)
             # TODO: either else here or sth
@@ -59,15 +64,24 @@ def run_experiment(
             stim_circuit = get_stim_circuits(
                 code.circuit[state], detectors=detectors, logicals=logicals
             )[0][0]
+            #stim_circuit.to_file(f'our_gross_transpiled_{state}.stim')
             print("After GET STIM CIRCUIT")
             noise_model = get_noise_model(error_type, qt, error_prob, backend)
             print("After get_noise_model")
             stim_circuit = noise_model.noisy_circuit(stim_circuit)
+            #stim_circuit.to_file(f'our_gross_noist_{state}.stim')
             #fname = code_name + ".stim"
             #stim_circuit.to_file(fname)
             print("After adding noise")
+
+            # TODO let's put the og code with 0.004 error here
+            #stim_circuit = stim.Circuit.from_file("gdg_original_gross.stim")
+            print("before decoding")
             logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
             print("After decoding")
+
+            if logical_error_rate == None:
+                exit(1)
 
             result_data = {
                 "backend": backend_name,

@@ -81,3 +81,33 @@ class ArtificialNoise(NoiseModel):
                 "M": 5 * p,
             },
         )
+    
+    @staticmethod
+    def modSI1000(p: float, qt) -> 'NoiseModel':
+        """Inspired by superconducting device."""
+        return NoiseModel(
+            sq=p / 10,
+            tq = p,
+            idle=p / 10,
+            measure=2 * p,
+            reset=2 * p,
+            qt=qt,
+            noisy_gates={
+                "CZ": p,
+                "R": 2 * p,
+                "M": 5 * p,
+            },
+        )
+    
+    @staticmethod
+    def constant(p: float, qt) -> 'NoiseModel':
+        """Inspired by superconducting device."""
+        return NoiseModel(
+            sq=p,
+            tq=p,
+            idle=p,
+            measure=p,
+            reset=p,
+            qt=qt,
+        )
+
