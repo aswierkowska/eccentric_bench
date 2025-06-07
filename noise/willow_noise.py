@@ -13,5 +13,6 @@ class WillowNoise(NoiseModel):
             leakage=2.5e-4,
             reset=1.5e-3,
             measure=0.8e-2, # In the paper: readout
-            qt=qt
+            qt=qt,
+            use_correlated_parity_measurement_errors=True
         )

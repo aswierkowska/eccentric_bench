@@ -2,6 +2,7 @@ from qiskit.providers import BackendV2
 from backends import QubitTracking
 
 import random
+random.seed(123)
 import numpy as np
 
 #################################################################################################################
@@ -59,10 +60,12 @@ class NoiseModel:
             qubit_properties = self.backend.qubit_properties(qubit.value)
             t1 = qubit_properties.t1
             t2 = qubit_properties.t2
-            try:
+
+            # Safety check
+            if t1 <= 0 or t2 <= 0 or (1 / t2 <= 1 / (2 * t1)):
+                T_phi = float("inf")
+            else:
                 T_phi = 1 / (1 / t2 - 1 / (2 * t1))
-            except ZeroDivisionError:
-                T_phi = float('inf')
 
             p_x = 0.25 * (1 - np.exp(-gate_duration / t1))
             p_y = 0.25 * (1 - np.exp(-gate_duration / t1))

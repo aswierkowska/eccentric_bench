@@ -22,5 +22,6 @@ class ApolloNoise(NoiseModel):
             crosstalk=0.66e-6,
             measure=0.0001,
             qt=qt,
+            use_correlated_parity_measurement_errors=True
             # backend seems unnecessary as t1 is a few minutes
         )
