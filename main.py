@@ -17,6 +17,7 @@ from noise import get_noise_model
 from decoders import decode
 from transpilers import run_transpiler, translate
 from utils import save_experiment_metadata, save_results_to_csv, setup_experiment_logging
+import stim
 
 def run_experiment(
     experiment_name,
@@ -39,11 +40,14 @@ def run_experiment(
         print("Got backend")
         if d == None:
             d = get_max_d(code_name, backend.coupling_map.size())
+            print(f"Max distance for {code_name} on backend {backend_name} is {d}")
             if d < 3:
+                print("Are we here?")
                 logging.info(
                     f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible"
                 )
                 return
+              
         print("Got distance")
         code = get_code(code_name, d, cycles)
         print("Got code")
@@ -55,9 +59,10 @@ def run_experiment(
             #    code.circuit[state], detectors=detectors, logicals=logicals
             #)[0][0]
             #tmp_stim_circuit.to_file(f'our_gross_qiskit_{state}.stim')
+
             if translating_method:
                 code.circuit[state] = translate(code.circuit[state], translating_method)
-            # TODO: either else here or sth
+             #TODO: either else here or sth
             print("Before transpiler")
             code.circuit[state] = run_transpiler(code.circuit[state], backend, layout_method, routing_method)
             print("After transpiler")
@@ -71,9 +76,6 @@ def run_experiment(
             noise_model = get_noise_model(error_type, qt, error_prob, backend)
             print("After get_noise_model")
             stim_circuit = noise_model.noisy_circuit(stim_circuit)
-            #stim_circuit.to_file(f'our_gross_noist_{state}.stim')
-            #fname = code_name + ".stim"
-            #stim_circuit.to_file(fname)
             print("After adding noise")
 
             # TODO let's put the og code with 0.004 error here
@@ -103,6 +105,7 @@ def run_experiment(
 
             save_results_to_csv(result_data, experiment_name)
 
+
             if backend_size:
                 logging.info(
                     f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}, error type {error_type}, decoder {decoder}: {logical_error_rate:.6f}"
@@ -111,6 +114,7 @@ def run_experiment(
                 logging.info(
                     f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, error type {error_type}, decoder {decoder}: {logical_error_rate:.6f}"
                 )
+
     except Exception as e:
             logging.error(
                 f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}, error type {error_type}: {e}"
