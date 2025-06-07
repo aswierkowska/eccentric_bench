@@ -4,6 +4,7 @@ from qiskit.providers import BackendV2, Options
 from qiskit.visualization import plot_coupling_map
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit.providers import QubitProperties
+from qiskit_ibm_runtime.fake_provider import FakeKyiv
 
 class FakeIBMFlamingo(BackendV2):
     """Fake IBM Flamingo Backend."""
@@ -15,6 +16,7 @@ class FakeIBMFlamingo(BackendV2):
         self._num_qubits = self._coupling_map.size()
         self._target = Target("Fake IBM Flamingo", num_qubits=self._num_qubits) # TODO: hardware limitations
         self.addStateOfTheArtQubits()
+        self.gate_set = ["id", "sx", "x", "rz", "rzz", "cz", "rx"]
 
     @property
     def target(self):
@@ -46,8 +48,7 @@ class FakeIBMFlamingo(BackendV2):
     
 
     def heavySquareHeronCouplingMap(self):
-        service = QiskitRuntimeService(instance="ibm-q/open/main")
-        backend = service.backend("ibm_kyiv")
+        backend = FakeKyiv()
 
         base_coupling_map = backend.coupling_map
 

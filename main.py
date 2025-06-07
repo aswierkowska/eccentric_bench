@@ -52,7 +52,7 @@ def run_experiment(
                 code.circuit[state] = translate(code.circuit[state], translating_method)
             # TODO: either else here or sth
             print("Before transpiler")
-            code.circuit[state] = run_transpiler(code.circuit[state], backend_name, backend, layout_method, routing_method)
+            code.circuit[state] = run_transpiler(code.circuit[state], backend, layout_method, routing_method)
             print("After transpiler")
             qt = QubitTracking(backend, code.circuit[state])
             print("After QT")
@@ -60,10 +60,11 @@ def run_experiment(
                 code.circuit[state], detectors=detectors, logicals=logicals
             )[0][0]
             print("After GET STIM CIRCUIT")
-            noise_model = get_noise_model(error_type, error_prob, qt, backend)
+            noise_model = get_noise_model(error_type, qt, error_prob, backend)
             print("After get_noise_model")
             stim_circuit = noise_model.noisy_circuit(stim_circuit)
-            print(stim_circuit)
+            #fname = code_name + ".stim"
+            #stim_circuit.to_file(fname)
             print("After adding noise")
             logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
             print("After decoding")
@@ -88,11 +89,11 @@ def run_experiment(
 
             if backend_size:
                 logging.info(
-                    f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}, decoder {decoder}: {logical_error_rate:.6f}"
+                    f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name} {backend_size}, error type {error_type}, decoder {decoder}: {logical_error_rate:.6f}"
                 )
             else:
                 logging.info(
-                    f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, decoder {decoder}: {logical_error_rate:.6f}"
+                    f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}, error type {error_type}, decoder {decoder}: {logical_error_rate:.6f}"
                 )
     except Exception as e:
             logging.error(

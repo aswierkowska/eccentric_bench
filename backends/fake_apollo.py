@@ -13,9 +13,12 @@ class FakeQuantinuumApolloBackend(BackendV2):
         super().__init__(name="FakeQuantinuumApollo", backend_version=2)
         # if 192 probably 12 x 16
         # then 1000s could be 1728 (36*48) or 3072 (48*64)
-        self._coupling_map = CouplingMap.from_grid(36, 48)
+        self.rows = 36
+        self.columns = 48
+        self._coupling_map = CouplingMap.from_grid(self.rows, self.columns)
         self._num_qubits = self._coupling_map.size()
         self._target = Target("Fake Continuum Apollo", num_qubits=self._num_qubits)
+        self._remote_gates = self.add_shuttling_connections()
 
     @property
     def target(self):
@@ -34,6 +37,10 @@ class FakeQuantinuumApolloBackend(BackendV2):
         return self._qubit_positions
     
     @property
+    def get_remote_gates(self):
+        return self._remote_gates
+    
+    @property
     def num_qubits(self):
         return self._num_qubits
     
@@ -45,9 +52,19 @@ class FakeQuantinuumApolloBackend(BackendV2):
     def _default_options(cls):
         return Options(shots=1024)
   
+    def add_shuttling_connections(self):
+        existing_edges = set(self._coupling_map.get_edges())
+        all_pairs = {(q1, q2) for q1 in range(self.num_qubits) for q2 in range(q1 + 1, self.num_qubits)}
+        new_edges = all_pairs - existing_edges
+        for edge in new_edges:
+            self._coupling_map.add_edge(edge[0], edge[1])
+        return list(new_edges)
+
+
     def run(self, circuit, **kwargs):
         raise NotImplementedError("This backend does not contain a run method")
 
 if __name__ == "__main__":
     backend = FakeQuantinuumApolloBackend()
-    plot_coupling_map(backend.coupling_map.size(), None, backend.coupling_map.get_edges(), filename="apollo.png")
+    #plot_coupling_map(backend.coupling_map.size(), None, backend.coupling_map.get_edges(), filename="apollo.png")
+    print(backend.get_remote_gates)

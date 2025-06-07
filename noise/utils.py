@@ -1,32 +1,31 @@
-from .noise import NoiseModel
 from .willow_noise import WillowNoise
 from .flamingo_noise import FlamingoNoise
 from .apollo_noise import ApolloNoise
 from .infleqtion_noise import InfleqtionNoise
+from .artificial_noise import ArtificialNoise
 from backends import *
+from typing import Union
 
-def get_noise_model(error_type: str, p: float = None, qt: QubitTracking = None, backend: FakeIBMFlamingo = None):
+def get_noise_model(error_type: str, qt: QubitTracking, p: float = None, backend: Union[FakeIBMFlamingo, FakeInfleqtionBackend] = None):
     if p:
         if error_type == "sd6":
-            return NoiseModel.SD6(p)
+            return ArtificialNoise.SD6(p, qt)
         elif error_type == "pm3":
-            return NoiseModel.PC3(p)
+            return ArtificialNoise.PC3(p, qt)
         elif error_type == "em3_1":
-            return NoiseModel.EM3_v1(p)
+            return ArtificialNoise.EM3_v1(p, qt)
         elif error_type == "em3_2":
-            return NoiseModel.EM3_v2(p)
+            return ArtificialNoise.EM3_v2(p, qt)
         elif error_type == "si1000":
-            return NoiseModel.SI1000(p)
-    # TODO: add qt everywhere for
-    if qt:
-        if error_type == "willow":
-            return WillowNoise.get_noise(qt)
-        elif error_type == "flamingo" and backend:
-            return FlamingoNoise.get_noise(qt, backend)
-        elif error_type == "infleqtion" and backend:
-            return InfleqtionNoise.get_noise(qt, backend)
-        #elif error_type == "aquila":
-        #    return AquilaNoise.get_noise(qt)
-        elif error_type == "apollo":
-            return ApolloNoise.get_noise(qt)
+            return ArtificialNoise.SI1000(p, qt)
+    if error_type == "real_willow":
+        return WillowNoise.get_noise(qt)
+    elif error_type == "real_flamingo" and backend:
+        return FlamingoNoise.get_noise(qt, backend)
+    elif error_type == "real_infleqtion" and backend:
+        return InfleqtionNoise.get_noise(qt, backend)
+    #elif error_type == "aquila":
+    #    return AquilaNoise.get_noise(qt)
+    elif error_type == "real_apollo":
+        return ApolloNoise.get_noise(qt)
     raise NotImplementedError

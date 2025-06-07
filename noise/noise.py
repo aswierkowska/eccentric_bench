@@ -1,149 +1,188 @@
+from qiskit.providers import BackendV2
+from backends import QubitTracking
+
+import random
+import numpy as np
+
 #################################################################################################################
-# Adapted from: https://github.com/Strilanc/honeycomb_threshold/blob/main/src/noise.py
+# Based on: https://github.com/Strilanc/honeycomb_threshold/blob/main/src/noise.py
 #################################################################################################################
-from typing import Optional, Dict, Set, Tuple
+from typing import Optional, Dict, Set, Tuple, List, Union
 
 import stim
 
-ANY_CLIFFORD_1_OPS = {"C_XYZ", "C_ZYX", "H", "H_YZ", "I", "X"}
-ANY_CLIFFORD_2_OPS = {"CX", "CY", "CZ", "XCX", "XCY", "XCZ", "YCX", "YCY", "YCZ"}
+SQ_OPS = {"C_XYZ", "C_ZYX", "H", "H_YZ", "I", "X"}
+TQ_OPS = {"CX", "CY", "CZ", "XCX", "XCY", "XCZ", "YCX", "YCY", "YCZ"}
 RESET_OPS = {"R", "RX", "RY"}
 MEASURE_OPS = {"M", "MX", "MY"}
 ANNOTATION_OPS = {"OBSERVABLE_INCLUDE", "DETECTOR", "SHIFT_COORDS", "QUBIT_COORDS", "TICK"}
-SWAP_OPS = {"SWAP", "SHUTTLING_SWAP"}
+SWAP_OPS = {"SWAP"}
 
-#@dataclasses.dataclass(frozen=True)
 class NoiseModel:
-    idle: float #idle should be either float or like a Dict to map qubits to their respective idle noise
-    measure_reset_idle: float
-    noisy_gates: Dict[str, float]
-    any_clifford_1: Optional[float] = None
-    any_clifford_2: Optional[float] = None
-    use_correlated_parity_measurement_errors: bool = False
-
     def __init__(
         self,
-        idle: float,
-        measure_reset_idle: float,
-        noisy_gates: Dict[str, float],
-        any_clifford_1: Optional[float] = None,
-        any_clifford_2: Optional[float] = None,
+        sq: Optional[float] = 0,
+        tq: Optional[float] = 0,
+        idle: Optional[float] = 0,
+        crosstalk: Optional[float] = 0,
+        leakage: Optional[float] = 0,
+        reset: Optional[float] = 0,
+        measure: Optional[float] = 0,
+        shuttle: Optional[float] = 0,
+        remote: Optional[float] = 0,
+        noisy_gates: Dict[str, float] = {},
+        gate_times: Optional[Dict[str, float]] = {},
+        qt: Optional[QubitTracking] = None,
+        backend: Optional[BackendV2] = None,
         use_correlated_parity_measurement_errors: bool = False
     ):
+        self.sq = sq
+        self.tq = tq
         self.idle = idle
-        self.measure_reset_idle = measure_reset_idle
+        self.crosstalk = crosstalk
+        self.leakage = leakage
+        self.reset = reset
+        self.measure = measure
+        self.shuttle = shuttle
+        self.remote = remote
         self.noisy_gates = noisy_gates
-        self.any_clifford_1 = any_clifford_1
-        self.any_clifford_2 = any_clifford_2
+        self.gate_times = gate_times
+        self.qt = qt
+        self.backend = backend
         self.use_correlated_parity_measurement_errors = use_correlated_parity_measurement_errors
 
-    @staticmethod
-    def SD6(p: float) -> 'NoiseModel':
-        return NoiseModel(
-            any_clifford_1=p,
-            idle=p,
-            measure_reset_idle=0,
-            noisy_gates={
-                "CX": p,
-                "R": p,
-                "M": p,
-            },
-        )
+    
+    def add_qubit_error(self, circuit: stim.Circuit, qubits: List[stim.GateTarget], gate_duration: float) -> None:
+        if self.backend == None:
+            return
+        for qubit in qubits:
+            qubit_properties = self.backend.qubit_properties(qubit.value)
+            t1 = qubit_properties.t1
+            t2 = qubit_properties.t2
+            try:
+                T_phi = 1 / (1 / t2 - 1 / (2 * t1))
+            except ZeroDivisionError:
+                T_phi = float('inf')
 
-    @staticmethod
-    def PC3(p: float) -> 'NoiseModel':
-        return NoiseModel(
-            any_clifford_1=p,
-            any_clifford_2=p,
-            idle=p,
-            measure_reset_idle=0,
-            noisy_gates={
-                "R": p,
-                "M": p,
-            },
-        )
+            p_x = 0.25 * (1 - np.exp(-gate_duration / t1))
+            p_y = 0.25 * (1 - np.exp(-gate_duration / t1))
+            p_z = 0.5 * (1 - np.exp(-gate_duration / T_phi)) if T_phi != float('inf') else 0.0
 
-    @staticmethod
-    def EM3_v1(p: float) -> 'NoiseModel':
-        """EM3 but with measurement flip errors independent of measurement target depolarization error."""
-        return NoiseModel(
-            idle=p,
-            measure_reset_idle=0,
-            any_clifford_1=p,
-            noisy_gates={
-                "R": p,
-                "M": p,
-                "MPP": p,
-            },
-        )
+            p_x = min(max(p_x, 0.0), 1.0)
+            p_y = min(max(p_y, 0.0), 1.0)
+            p_z = min(max(p_z, 0.0), 1.0)
 
-    @staticmethod
-    def EM3_v2(p: float) -> 'NoiseModel':
-        """EM3 with measurement flip errors correlated with measurement target depolarization error."""
-        return NoiseModel(
-            any_clifford_1=0,
-            any_clifford_2=0,
-            idle=p,
-            measure_reset_idle=0,
-            use_correlated_parity_measurement_errors=True,
-            noisy_gates={
-                "R": p/2,
-                "M": p/2,
-                "MPP": p,
-            },
-        )
+            circuit.append_operation("PAULI_CHANNEL_1", [qubit], [p_x, p_y, p_z])
 
-    @staticmethod
-    def SI1000(p: float) -> 'NoiseModel':
-        """Inspired by superconducting device."""
-        return NoiseModel(
-            any_clifford_1=p / 10,
-            idle=p / 10,
-            measure_reset_idle=2 * p,
-            noisy_gates={
-                "CZ": p,
-                "R": 2 * p,
-                "M": 5 * p,
-            },
-        )
+    def add_crosstalk_errors(self, touched_qubits: set[int], post: stim.Circuit):
+        if self.backend == None:
+            return
+        # TODO: could be enhanced by correlated errors
+        already_noised = set()
+        for q in touched_qubits:
+            for neighbor in self.qt.get_neighbours(q):
+                if neighbor in touched_qubits and (neighbor, q) not in already_noised and (q, neighbor) not in already_noised:
+                    noise_op = "X_ERROR" if random.random() < 0.5 else "Z_ERROR"
+                    post.append_operation(noise_op, [stim.target_qubit(neighbor)], self.crosstalk)
+                    already_noised.add((q, neighbor))
+                    already_noised.add((neighbor, q))
 
-    def noisy_op(self, op: stim.CircuitInstruction, p: float, ancilla: int) -> Tuple[stim.Circuit, stim.Circuit, stim.Circuit]:
+    def add_leakage_errors(self, circuit: stim.Circuit, pair: List[int]):
+        if random.random() < self.leakage:
+            circuit.append_operation("DEPOLARIZE2", pair, 1.0)
+    
+    def is_remote(self, pair: List[int]) -> bool:
+        if self.qt == None or self.backend == None:
+            return False
+        phy_q1 = self.qt.get_layout_postion(pair[0])
+        phy_q2 = self.qt.get_layout_postion(pair[1])
+        if (phy_q1, phy_q2) in self.backend.get_remote_gates or (phy_q2, phy_q1) in self.backend.get_remote_gates:
+            return True
+        else:
+            return False
+
+    def get_gate_time(self, op: stim.CircuitInstruction, pair: Optional[List[int]] = None) -> Union[float, None]:
+        if self.gate_times == {}:
+            return
+        
+        if pair:
+            if self.backend and self.is_remote(pair):
+                if self.backend.name == "FakeQuantinuumApollo" or self.backend.name == "FakeInfleqtion":
+                    return self.gate_times["REMOTE"] * self.qt.get_euclidian_distance(pair[0], pair[1])
+                else:
+                    return self.gate_times["REMOTE"]
+            else:
+                return self.gate_times["TQ"]
+                   
+        if op.name in SQ_OPS:
+            return self.gate_times["SQ"]
+        elif op.name in RESET_OPS:
+            return self.gate_times["R"]
+        elif op.name in MEASURE_OPS:
+            return self.gate_times["M"]
+        raise NotImplementedError(f"Gate time not defined for op: {repr(op)}")
+
+
+    def noisy_op(self, op: stim.CircuitInstruction, ancilla: int) -> Tuple[stim.Circuit, stim.Circuit, stim.Circuit]:
         pre = stim.Circuit()
         mid = stim.Circuit()
         post = stim.Circuit()
         targets = op.targets_copy()
         args = op.gate_args_copy()
-        if p > 0:
-            if op.name in ANY_CLIFFORD_1_OPS:
-                post.append_operation("DEPOLARIZE1", targets, p)
-            elif op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS:
-                for i in range(0, len(targets), 2):
-                    pair = [targets[i], targets[i+1]]
-                    post.append_operation("DEPOLARIZE2", pair, p)
-            elif op.name in RESET_OPS or op.name in MEASURE_OPS:
-                if op.name in RESET_OPS:
-                    post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, p)
-                if op.name in MEASURE_OPS:
-                    pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, p)
-            elif op.name == "MPP":
-                assert len(targets) % 3 == 0 and all(t.is_combiner for t in targets[1::3]), repr(op)
-                assert args == [] or args == [0]
 
-                if self.use_correlated_parity_measurement_errors:
-                    for k in range(0, len(targets), 3):
-                        mid += parity_measurement_with_correlated_measurement_noise(
-                            t1=targets[k],
-                            t2=targets[k + 2],
-                            ancilla=ancilla,
-                            mix_probability=p)
-                    return pre, mid, post
-
+        if op.name in SQ_OPS:
+            if op.name in self.noisy_gates:
+                post.append_operation("DEPOLARIZE1", targets, self.noisy_gates[op.name])
+            elif self.sq != 0:
+                post.append_operation("DEPOLARIZE1", targets, self.sq)
+            self.add_qubit_error(post, targets, self.get_gate_time(op))
+        elif op.name in TQ_OPS or op.name in SWAP_OPS:
+            if op.name in self.noisy_gates:
+                p = self.noisy_gates[op.name]
+            else:
+                p = self.tq
+            for i in range(0, len(targets), 2):
+                pair = [targets[i].value, targets[i+1].value]
+                if self.leakage > 0:
+                    self.add_leakage_errors(post, pair)
+                if self.is_remote(pair):
+                    post.append_operation("DEPOLARIZE2", pair, self.remote)
                 else:
-                    pre.append_operation("DEPOLARIZE2", [t.value for t in targets if not t.is_combiner], p)
-                    args = [p]
+                    post.append_operation("DEPOLARIZE2", pair, p)
+                self.add_qubit_error(post, targets, self.get_gate_time(op, pair))
+        elif op.name in RESET_OPS:
+            if op.name in self.noisy_gates:
+                post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, self.noisy_gates[op.name])
+            elif self.reset != 0:
+                post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, self.reset)
+            self.add_qubit_error(post, targets, self.get_gate_time(op))
+        elif op.name in MEASURE_OPS:
+            if op.name in self.noisy_gates:
+                p = self.noisy_gates[op.name]
+            else:
+                p = self.measure
+            pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, p)
+            #self.add_qubit_error(post, targets, self.get_gate_time(op))
+        elif op.name == "MPP":
+            assert len(targets) % 3 == 0 and all(t.is_combiner for t in targets[1::3]), repr(op)
+            assert args == [] or args == [0]
+            if op.name in self.noisy_gates:
+                p = self.noisy_gates[op.name]
+            else:
+                p = self.measure
+
+            if self.use_correlated_parity_measurement_errors:
+                for k in range(0, len(targets), 3):
+                    mid += parity_measurement_with_correlated_measurement_noise(
+                        t1=targets[k],
+                        t2=targets[k + 2],
+                        ancilla=ancilla,
+                        mix_probability=p)
+                return pre, mid, post
 
             else:
-                raise NotImplementedError(repr(op))
+                pre.append_operation("DEPOLARIZE2", [t.value for t in targets if not t.is_combiner], p)
+                args = [p]
         mid.append_operation(op.name, targets, args)
         return pre, mid, post
 
@@ -155,7 +194,9 @@ class NoiseModel:
         current_moment_mid = stim.Circuit()
         current_moment_post = stim.Circuit()
         used_qubits: Set[int] = set()
-        measured_or_reset_qubits: Set[int] = set()
+        measured_qubits: Set[int] = set()
+        reset_qubits: Set[int] = set()
+
         if qs is None:
             qs = set(range(circuit.num_qubits))
 
@@ -164,15 +205,16 @@ class NoiseModel:
             if not current_moment_mid:
                 return
 
-            # Apply idle depolarization rules.
             idle_qubits = sorted(qs - used_qubits)
             if used_qubits and idle_qubits and self.idle > 0:
                 current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.idle)
-            idle_qubits = sorted(qs - measured_or_reset_qubits)
-            if measured_or_reset_qubits and idle_qubits and self.measure_reset_idle > 0:
-                current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.measure_reset_idle)
+            idle_qubits = sorted(qs - measured_qubits)
+            if measured_qubits and idle_qubits and self.measure > 0:
+                current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.measure)
+            idle_qubits = sorted(qs - reset_qubits)
+            if reset_qubits and idle_qubits and self.reset > 0:
+                current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.reset)
 
-            # Move current noisy moment into result.
             result += current_moment_pre
             result += current_moment_mid
             result += current_moment_post
@@ -180,7 +222,8 @@ class NoiseModel:
             current_moment_pre.clear()
             current_moment_mid.clear()
             current_moment_post.clear()
-            measured_or_reset_qubits.clear()
+            measured_qubits.clear()
+            reset_qubits.clear()
 
         for op in circuit:
             if isinstance(op, stim.CircuitRepeatBlock):
@@ -191,23 +234,15 @@ class NoiseModel:
                     flush()
                     result.append_operation("TICK", [])
                     continue
+                
+                if op.name in SWAP_OPS:
+                    self.qt.update_stim_swaps(op)
 
-                if op.name in self.noisy_gates:
-                    p = self.noisy_gates[op.name]
-                elif self.any_clifford_1 is not None and op.name in ANY_CLIFFORD_1_OPS:
-                    p = self.any_clifford_1
-                elif self.any_clifford_2 is not None and (op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS):
-                    p = self.any_clifford_2
-                elif op.name in ANNOTATION_OPS:
-                    p = 0
-                else:
-                    raise NotImplementedError(repr(op))
-                pre, mid, post = self.noisy_op(op, p, ancilla)
+                pre, mid, post = self.noisy_op(op, ancilla)
                 current_moment_pre += pre
                 current_moment_mid += mid
                 current_moment_post += post
 
-                # Ensure the circuit is not touching qubits multiple times per tick.
                 touched_qubits = {
                     t.value
                     for t in op.targets_copy()
@@ -215,27 +250,22 @@ class NoiseModel:
                 }
                 if op.name in ANNOTATION_OPS:
                     touched_qubits.clear()
-                # Hack: turn off this assertion off for now since correlated errors are built into circuit.
-                #assert touched_qubits.isdisjoint(used_qubits), repr(current_moment_pre + current_moment_mid + current_moment_post)
+                
+                if self.crosstalk > 0:
+                    self.add_crosstalk_errors(touched_qubits, post)
+                
                 used_qubits |= touched_qubits
-                if op.name in MEASURE_OPS or op.name in RESET_OPS:
-                    measured_or_reset_qubits |= touched_qubits
+                if op.name in MEASURE_OPS:
+                    measured_qubits |= touched_qubits
+                if op.name in RESET_OPS:
+                    reset_qubits |= touched_qubits
             else:
                 raise NotImplementedError(repr(op))
         flush()
-
         return result
 
 
 def mix_probability_to_independent_component_probability(mix_probability: float, n: float) -> float:
-    """Converts the probability of applying a full mixing channel to independent component probabilities.
-
-    If each component is applied independently with the returned component probability, the overall effect
-    is identical to, with probability `mix_probability`, uniformly picking one of the components to apply.
-
-    Not that, unlike in other places in the code, the all-identity case is one of the components that can
-    be picked when applying the error case.
-    """
     return 0.5 - 0.5 * (1 - mix_probability) ** (1 / 2 ** (n - 1))
 
 
@@ -245,15 +275,6 @@ def parity_measurement_with_correlated_measurement_noise(
         t2: stim.GateTarget,
         ancilla: int,
         mix_probability: float) -> stim.Circuit:
-    """Performs a noisy parity measurement.
-
-    With probability mix_probability, applies a random element from
-
-        {I1,X1,Y1,Z1}*{I2,X2,Y2,Z2}*{no flip, flip}
-
-    Note that, unlike in other places in the code, the all-identity term is one of the possible
-    samples when the error occurs.
-    """
 
     ind_p = mix_probability_to_independent_component_probability(mix_probability, 5)
 
