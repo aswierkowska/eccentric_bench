@@ -1,6 +1,4 @@
 import math
-from qiskit_qec.circuits import SurfaceCodeCircuit, CSSCodeCircuit
-from qiskit_qec.codes.hhc import HHC
 from .gross_code import get_gross_code
 from .color_code_stim import get_color_code
 from .bacon_shor import get_bacon_shot_code
@@ -77,7 +75,6 @@ def get_max_d(code_name: str, n: int):
         #    return 5
         #elif n >= 26:
         #    return 3 
-        
     elif code_name == "hh":
         # n = 5d^2 - 2d - 1 /2
         d = int((2 + math.sqrt(40 * n + 24)) / 10)
