@@ -1,5 +1,6 @@
 from typing import Dict, Tuple, Optional, Set
 import stim
+import random
 import math
 import numpy as np
 from .noise import *
@@ -15,12 +16,13 @@ flamingo_err_prob = {
     "P_IDLE": 0.0
 }
 
-# TODO: fill in
 flamingo_gate_times = {
-    "SQ": 50,
-    "TQ": 70,
-    "M": 70,
+    "SQ": 50 * 1e-9,
+    "TQ": 70 * 1e-9,
+    "M": 70 * 1e-9,
 }
+
+P_CROSSTALK = 0.0
 
 class FlamingoNoise(NoiseModel):
     def __init__(
@@ -44,6 +46,7 @@ class FlamingoNoise(NoiseModel):
         self.any_clifford_1 = any_clifford_1
         self.any_clifford_2 = any_clifford_2
         self.use_correlated_parity_measurement_errors = use_correlated_parity_measurement_errors
+        self.crosstalk_prob = 0.0 # TODO: set value
 
     @staticmethod
     def get_noise(
@@ -52,15 +55,16 @@ class FlamingoNoise(NoiseModel):
     ) -> 'FlamingoNoise':
         return FlamingoNoise(
             idle=flamingo_err_prob["P_IDLE"],
-            measure_reset_idle=flamingo_err_prob["P_MEASURE"],
+            measure_reset_idle=flamingo_err_prob["P_MEASUREMENT"],
             noisy_gates={
                 "CX": flamingo_err_prob["P_TQ"],
                 "CZ": flamingo_err_prob["P_TQ"],
                 "SWAP": flamingo_err_prob["P_TQ"],
-                "R": flamingo_err_prob["P_RESET"],
+                "R": flamingo_err_prob["P_SQ"],
                 "H": flamingo_err_prob["P_SQ"],
                 "M": flamingo_err_prob["P_MEASUREMENT"],
                 "MPP": flamingo_err_prob["P_READOUT"],
+                "RESET": flamingo_err_prob["P_RESET"]
             },
             noisy_gates_connection={
                 "CX": 0.03,
@@ -71,6 +75,16 @@ class FlamingoNoise(NoiseModel):
             backend=backend,
             use_correlated_parity_measurement_errors=True
         )
+    
+    def add_crosstalk_errors_for_moment(self, used_qubits: Set[int], post: stim.Circuit, p: float):
+        already_noised = set()
+        for q in used_qubits:
+            for neighbor in self.qt.get_neighbours(q):
+                if neighbor in used_qubits and neighbor not in already_noised:
+                    if random.random() < p:
+                        noise_op = "X_ERROR" if random.random() < 0.5 else "Z_ERROR"
+                        post.append_operation(noise_op, [stim.target_qubit(neighbor)], 1.0)
+                        already_noised.add(neighbor)
 
     def update_swaps(self, op: stim.CircuitInstruction):
         targets = op.targets_copy()
@@ -222,6 +236,9 @@ class FlamingoNoise(NoiseModel):
             if measured_or_reset_qubits and idle_qubits and self.measure_reset_idle > 0:
                 current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.measure_reset_idle)
 
+            if self.crosstalk_prob > 0:
+                self.add_crosstalk_errors_for_moment(used_qubits, current_moment_post, self.crosstalk_prob)
+
             result += current_moment_pre
             result += current_moment_mid
             result += current_moment_post
@@ -250,7 +267,9 @@ class FlamingoNoise(NoiseModel):
                 elif self.any_clifford_2 is not None and (op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS):
                     p = self.any_clifford_2
                 elif op.name in ANNOTATION_OPS:
-                    p = 0
+                    flush()
+                    result.append_operation(op.name, op.targets_copy(), op.gate_args_copy())
+                    continue
                 if p == None:
                     raise NotImplementedError(repr(op))
 

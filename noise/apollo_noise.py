@@ -1,5 +1,6 @@
 from typing import Dict, Tuple, Optional, Set
 import stim
+import random
 import math
 from .noise import *
 from backends import QubitTracking
@@ -9,18 +10,24 @@ apollo_err_prob = {
     "P_TQ": 0.0001,
     "P_MEASUREMENT": 0.0001,
     "P_SHUTTLING_SWAP": 0,
+    "P_IDLE": 0,
+    "P_RESET": 0,
+    "P_READOUT": 0,
 }
 
-# TODO: add SHUTTLING_SWAP time
+P_MEMORY_ERROR = 0.00223
+P_CROSSTALK = 0.00000066 # kinda negligable
+
+# TODO: add time -- t1 few minutes
 apollo_gate_times = {
     "RESET": 0.0,
-    "SQ": 50,
-    "TQ": 70,
-    "M": 70,
-    "SHUTTLING_SWAP": 00,
+    "SQ": 0,
+    "TQ": 0,
+    "M": 0,
+    "SHUTTLING_SWAP": 0,
 }
 
-
+P_CROSSTALK = 0.66e-6
 
 class ApolloNoise(NoiseModel):
     def __init__(
@@ -50,15 +57,27 @@ class ApolloNoise(NoiseModel):
                 "CX": apollo_err_prob["P_TQ"],
                 "CZ": apollo_err_prob["P_TQ"],
                 "SWAP": apollo_err_prob["P_TQ"],
-                "R": apollo_err_prob["P_RESET"],
+                "R": apollo_err_prob["P_SQ"],
                 "H": apollo_err_prob["P_SQ"],
                 "M": apollo_err_prob["P_MEASUREMENT"],
                 "MPP": apollo_err_prob["P_READOUT"],
                 "SHUTTLING_SWAP": apollo_err_prob["P_SHUTTLING_SWAP"],
+                "RESET": apollo_err_prob["P_RESET"],
             },
             qt=qt,
             use_correlated_parity_measurement_errors=True
         )
+
+    def add_crosstalk_error(self, op: stim.CircuitInstruction, post: stim.Circuit, p: float):
+        targets = op.targets_copy()
+        for t in targets:
+            victims = self.qt.get_neighbours(t.value)
+            for victim in victims:
+                if random.random() < P_CROSSTALK:
+                    if random.random() < 0.5:
+                        post.append_operation("X_ERROR", victim, P_CROSSTALK)
+                    else:
+                        post.append_operation("Z_ERROR", victim, P_CROSSTALK)
 
     def update_swaps(self, op: stim.CircuitInstruction):
         targets = op.targets_copy()
@@ -86,25 +105,18 @@ class ApolloNoise(NoiseModel):
         if op.name in ANY_CLIFFORD_1_OPS:
             for t in targets:
                 q = t.value
-                qubit_p = self.get_qubit_err_prob(q, apollo_gate_times[op.name])
-                combined_p = 1 - (1 - base_p) * (1 - qubit_p)
-                if combined_p > 0:
-                    post.append_operation("DEPOLARIZE1", [q], combined_p)
+                if base_p > 0:
+                    post.append_operation("DEPOLARIZE1", [q], base_p)
                 mid.append_operation(op.name, [t], args)
 
         elif op.name in ANY_CLIFFORD_2_OPS or op.name in SWAP_OPS:
             for i in range(0, len(targets), 2):
                 q1 = targets[i].value
                 q2 = targets[i+1].value
-                p1 = self.get_qubit_err_prob(q1, apollo_gate_times[op.name])
-                p2 = self.get_qubit_err_prob(q2, apollo_gate_times[op.name])
-                combined_p1 = 1 - (1 - base_p) * (1 - p1)
-                combined_p2 = 1 - (1 - base_p) * (1 - p2)
-                if combined_p1 > 0:
-                    post.append_operation("DEPOLARIZE1", [q1], combined_p1)
-                if combined_p2 > 0:
-                    post.append_operation("DEPOLARIZE1", [q2], combined_p2)
+                if base_p > 0:
+                    post.append_operation("DEPOLARIZE2", [q1, q2], base_p)
                 if op.name == "SHUTTLING_SWAP":
+                    post.append_operation("DEPOLARIZE2", [q1, q2], P_MEMORY_ERROR)
                     mid.append_operation("SWAP", [targets[i], targets[i+1]], args)
                 else:
                     mid.append_operation(op.name, [targets[i], targets[i+1]], args)
@@ -114,12 +126,16 @@ class ApolloNoise(NoiseModel):
                 q = t.value
                 qubit_p = self.get_qubit_err_prob(q, apollo_gate_times[op.name])
                 combined_p = 1 - (1 - base_p) * (1 - qubit_p)
-                if combined_p > 0:
+                if base_p > 0:
                     if op.name in RESET_OPS:
+                        self.add_crosstalk_error(op, post, 0.04567e-4)
                         post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], combined_p)
                     if op.name in MEASURE_OPS:
+                        self.add_crosstalk_error(op, post, 0.03867e-4)
                         pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", [q], combined_p)
                 mid.append_operation(op.name, [t], args)
+
+        return pre, mid, post
 
     def noisy_circuit(self, circuit: stim.Circuit, *, qs: Optional[Set[int]] = None) -> stim.Circuit:
         result = stim.Circuit()
@@ -170,7 +186,9 @@ class ApolloNoise(NoiseModel):
                 elif self.any_clifford_2 is not None and op.name in ANY_CLIFFORD_2_OPS:
                     p = self.any_clifford_2
                 elif op.name in ANNOTATION_OPS:
-                    p = 0
+                    flush()
+                    result.append_operation(op.name, op.targets_copy(), op.gate_args_copy())
+                    continue
                 else:
                     raise NotImplementedError(repr(op))
                 
@@ -188,26 +206,9 @@ class ApolloNoise(NoiseModel):
                 }
                 if op.name in MEASURE_OPS or op.name in RESET_OPS:
                     measured_or_reset_qubits |= touched_qubits
+                    self.add_crosstalk_errors_for_moment(touched_qubits, current_moment_post, 0.04567e-4 if op.name in RESET_OPS else 0.03867e-4)
                 used_qubits |= touched_qubits
             else:
                 raise NotImplementedError(repr(op))
         flush()
         return result
-
-if __name__ == "__main__":
-    circuit = stim.Circuit("""
-    H 0
-    CX 0 1
-    M 0 1
-    """)
-    noisy_gates = {
-        "CX": apollo_err_prob["P_CZ"],
-        "H": apollo_err_prob["P_SQ"],
-        "M": apollo_err_prob["P_READOUT"],
-    }
-    noisy_gates_connection = {
-        "CX": apollo_err_prob["P_CZ"] + 0.3,
-    }
-    noise = ApolloNoise(0, 0, noisy_gates, noisy_gates_connection)
-    noisy = noise.noisy_circuit(circuit)
-    print(noisy)

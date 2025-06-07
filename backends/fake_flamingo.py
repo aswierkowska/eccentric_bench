@@ -14,6 +14,7 @@ class FakeIBMFlamingo(BackendV2):
         self._remote_gates, self._coupling_map = self.get_endpoints()
         self._num_qubits = self._coupling_map.size()
         self._target = Target("Fake IBM Flamingo", num_qubits=self._num_qubits) # TODO: hardware limitations
+        self.addStateOfTheArtQubits()
 
     @property
     def target(self):

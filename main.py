@@ -33,7 +33,9 @@ def run_experiment(
     translating_method=None,
 ):
     try:
+        print("Starting experiment")
         backend = get_backend(backend_name, backend_size)
+        print("Got backend")
         if d == None:
             d = get_max_d(code_name, backend.coupling_map.size())
             if d < 3:
@@ -45,17 +47,26 @@ def run_experiment(
         detectors, logicals = code.stim_detectors()
 
         for state, qc in code.circuit.items():
+            print("Before translating")
             if translating_method:
                 code.circuit[state] = translate(code.circuit[state], translating_method)
             # TODO: either else here or sth
+            print("Before transpiler")
             code.circuit[state] = run_transpiler(code.circuit[state], backend_name, backend, layout_method, routing_method)
+            print("After transpiler")
             qt = QubitTracking(backend, code.circuit[state])
+            print("After QT")
             stim_circuit = get_stim_circuits(
                 code.circuit[state], detectors=detectors, logicals=logicals
             )[0][0]
+            print("After GET STIM CIRCUIT")
             noise_model = get_noise_model(error_type, error_prob, qt, backend)
+            print("After get_noise_model")
             stim_circuit = noise_model.noisy_circuit(stim_circuit)
+            print(stim_circuit)
+            print("After adding noise")
             logical_error_rate = decode(code_name, stim_circuit, num_samples, decoder)
+            print("After decoding")
 
             result_data = {
                 "backend": backend_name,
@@ -85,7 +96,7 @@ def run_experiment(
                 )
     except Exception as e:
             logging.error(
-                f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}: {e}"
+                f"{experiment_name} | Failed to run experiment for {code_name}, distance {d}, backend {backend_name}, error type {error_type}: {e}"
             )
 
 
@@ -111,6 +122,8 @@ if __name__ == "__main__":
         # TODO: better handling case if distances and backends_sizes are both set
 
         with ProcessPoolExecutor() as executor:
+            if "backends_sizes" in experiment and "distances" in experiment:
+                raise ValueError("Cannot set both backends_sizes and distances in the same experiment")
             if "distances" in experiment:
                 distances = experiment["distances"]
                 parameter_combinations = product(backends, codes, decoders, error_types, error_probabilities, distances, layout_methods, routing_methods, translating_methods)

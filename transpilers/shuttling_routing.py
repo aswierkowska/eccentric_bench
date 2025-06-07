@@ -31,7 +31,8 @@ class ShuttlingRouting(TransformationPass):
             self.target = None
             self.coupling_map = coupling_map
         self.fake_run = fake_run
-
+    
+    # TODO: Optimize run to not use serial_layers() as that eats memory super fast
     def run(self, dag):
         if self.fake_run:
             return self._fake_run(dag)
@@ -46,41 +47,37 @@ class ShuttlingRouting(TransformationPass):
 
         if len(dag.qubits) > len(self.coupling_map.physical_qubits):
             raise TranspilerError("The layout does not match the amount of qubits in the DAG")
-        print("DISJOINT")
         disjoint_utils.require_layout_isolated_to_component(
             dag, self.coupling_map if self.target is None else self.target
         )
-        print("AFTER")
         canonical_register = dag.qregs["q"]
         trivial_layout = Layout.generate_trivial_layout(canonical_register)
         current_layout = trivial_layout.copy()
 
         for layer in dag.serial_layers():
             subdag = layer["graph"]
-
-            print(f"Layer {layer} processing started.")
             for gate in subdag.two_qubit_ops():
-                print(f"Processing gate {gate}")
                 physical_q0 = current_layout[gate.qargs[0]]
                 physical_q1 = current_layout[gate.qargs[1]]
                 # MODIFIED CODE TO INCLUDE SHUTTLING SWAP
                 dist = self.coupling_map.distance(physical_q0, physical_q1)
-                print(f"Distance between {physical_q0} and {physical_q1}: {dist}")
                 if dist > 1:
                     swap_gate = SwapGate() if dist == 2 else ShuttlingSwap()
-                    print(f"Applying {swap_gate} for qubits {physical_q0}, {physical_q1}")
                     swap_layer = DAGCircuit()
                     swap_layer.add_qreg(canonical_register)
-                    swap_layer.apply_operation_back(swap_gate, (physical_q0, physical_q1), cargs=(), check=False)
-                    
-                    order = current_layout.reorder_bits(new_dag.qubits)
-                    new_dag.compose(swap_layer, qubits=order)
+                    swap_layer.apply_operation_back(
+                        swap_gate,
+                        [canonical_register[physical_q0], canonical_register[physical_q1]],
+                        cargs=(),
+                        check=False
+                    )
                     current_layout.swap(physical_q0, physical_q1)
+                    if new_dag.depth() > 2000:
+                        raise RuntimeError("Aborting: DAG depth exploded — possible infinite swap loop")
                         
             order = current_layout.reorder_bits(new_dag.qubits)
             new_dag.compose(subdag, qubits=order)
-            if new_dag.depth() > 2000:
-                raise RuntimeError("Aborting: DAG depth exploded — possible infinite swap loop")
+
 
         if self.property_set["final_layout"] is None:
             self.property_set["final_layout"] = current_layout
@@ -90,3 +87,4 @@ class ShuttlingRouting(TransformationPass):
             )
 
         return new_dag
+    
