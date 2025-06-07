@@ -12,7 +12,7 @@ from concurrent.futures import ProcessPoolExecutor
 from qiskit.compiler import transpile
 from qiskit_qec.utils import get_stim_circuits
 from backends import get_backend, QubitTracking
-from codes import get_code, get_max_d
+from codes import get_code, get_max_d, get_min_n
 from noise import get_noise_model
 from decoders import decode
 from transpilers import run_transpiler, translate
@@ -44,7 +44,9 @@ def run_experiment(
                     f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible"
                 )
                 return
+        print("Got distance")
         code = get_code(code_name, d, cycles)
+        print("Got code")
         detectors, logicals = code.stim_detectors()
 
         for state, qc in code.circuit.items():
@@ -147,7 +149,7 @@ if __name__ == "__main__":
                         run_experiment,
                         experiment_name,
                         backend,
-                        None,
+                        get_min_n(code_name, d),
                         code_name,
                         decoder,
                         d,

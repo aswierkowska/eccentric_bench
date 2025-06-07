@@ -16,15 +16,16 @@ experiments:
     #error_types: ["si1000"]
     #error_probabilities: [0.01, 0.005, 0.015] 
     #decoders: ["bposd"] # mwpm
-    #- name: "gross_test"
-    #num_samples: 10000
-    #backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
+  - name: "gross_test"
+    num_samples: 10000
+    backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
     #backends_sizes: [400] #[64, 125, 216, 343, 512]
-    #codes: ["gross"]
-    #cycles: 12
-    #error_types: ["constant"]
-    #error_probabilities: [0.004] 
-    #decoders: ["bposd"] # mwpm
+    codes: ["steane"]
+    distances: [9]
+    cycles: 1
+    error_types: ["constant"]
+    error_probabilities: [0.004] 
+    decoders: ["bposd"] # mwpm
     #  - name: "Real_topology_26.05_20:48"
     #num_samples: 1000
     #backends: ["real_willow", "real_flamingo", "real_infleqtion", "real_apollo"] # custom_line, custom_grid, custom_cube, custom_full
