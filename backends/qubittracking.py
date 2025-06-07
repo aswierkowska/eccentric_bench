@@ -1,7 +1,10 @@
 from .utils import get_backend
+from .fake_infleqtion import FakeInfleqtionBackend
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit import QuantumCircuit, transpile
+from math import sqrt
 import rustworkx as rx
+import stim
 
 class QubitTracking:
     def __init__(self, backend : GenericBackendV2, circuit: QuantumCircuit):
@@ -45,6 +48,25 @@ class QubitTracking:
             return physical_qubit
         except KeyError:
             raise ValueError(f"Logical qubit {logical_qubit} not found in mapping.")
+        
+    def get_euclidian_distance(self, q1: int, q2: int):
+        if hasattr(self.backend, 'rows') and hasattr(self.backend, 'columns'):
+            q1 = self.get_layout_postion(q1)
+            q2 = self.get_layout_postion(q2)
+            x1, y1 = divmod(q1, self.backend.columns)
+            x2, y2 = divmod(q2, self.backend.columns)
+            distance = sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+            return distance
+        else:
+            return 1
+        
+    def update_stim_swaps(self, op: stim.CircuitInstruction):
+        targets = op.targets_copy()
+        for i in range(0, len(targets), 2):
+            q1 = targets[i].qubit_value
+            q2 = targets[i+1].qubit_value
+            self.swap_qubits(q1, q2)
+
         
     
 

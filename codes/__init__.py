@@ -1,1 +1,1 @@
-from .utils import get_max_d, get_code
+from .utils import get_max_d, get_code, get_min_n

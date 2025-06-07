@@ -1,6 +1,4 @@
 import math
-from qiskit_qec.circuits import SurfaceCodeCircuit, CSSCodeCircuit
-from qiskit_qec.codes.hhc import HHC
 from .gross_code import get_gross_code
 from .color_code_stim import get_color_code
 from .bacon_shor import get_bacon_shot_code
@@ -50,16 +48,33 @@ def get_code(code_name: str, d: int, cycles: int):
 
 def get_max_d(code_name: str, n: int):
     if code_name == "surface":
-        # d**2 data qubits + d**2 - 1 ancilla qubits
-        # TODO: tmp solution
-        #d = math.floor(math.sqrt((n + 1) / 2))
-        #d = d - ((1 - d) % 2)
-        if n >= 494:
-            return 15
-        elif n >= 376:
-            return 13
-        elif n >= 250: # TODO Arbitrary
-            return 11         
+        if n < 26:
+            raise 1 #Note that a Error will be logged in the main.py
+
+        d = int((-3 + math.isqrt(9 + 8*(n+1))) // 4)
+        return d
+        
+        #Either remove or keep for sanity checks n = 2d^2 + 3d - 1
+        #if n >= 944:
+        #    return 21
+        #elif n >= 778:
+        #    return 19
+        #elif n >= 628:
+        #    return 17
+        #elif n >= 494:
+        #    return 15
+        #elif n >= 376:
+        #    return 13
+        #elif n >= 274:
+        #    return 11
+        #elif n >= 188:
+        #    return 9
+        #elif n >= 118:
+        #   return 7
+        #elif n >= 64:
+        #    return 5
+        #elif n >= 26:
+        #    return 3 
     elif code_name == "hh":
         # n = 5d^2 - 2d - 1 /2
         d = int((2 + math.sqrt(40 * n + 24)) / 10)
@@ -85,4 +100,25 @@ def get_max_d(code_name: str, n: int):
             return 9
         elif n >= 13:
             return 3
+    return 0
+
+
+def get_min_n(code_name: str, d: int):
+    if code_name == "surface":
+        return 2 * d * d + 3 * d - 1
+    elif code_name == "hh":
+        return int(math.ceil((5 * d * d - 2 * d - 1) / 2))
+    elif code_name == "gross":
+        return 288
+    elif code_name == "color":
+        return int(math.ceil((3*d - 1)**2 / 4))
+    elif code_name == "bacon":
+        return d * d #this is only partially true d*d is for sure the lower bound but code actually might require more qubits
+    elif code_name == 'steane':
+        if d == 3:
+            return 14
+        elif d == 9:
+            return 98
+        elif d == 27:
+            return 686
     return 0
