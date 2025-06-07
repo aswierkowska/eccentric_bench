@@ -27,6 +27,7 @@ cachetools==5.5.0
 certifi==2024.8.30
 cffi==1.17.1
 charset-normalizer==2.0.12
+chromobius~=1.0
 cirq==1.4.1
 click==8.1.7
 cloudpickle==2.2.1

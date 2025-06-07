@@ -3,6 +3,7 @@ import logging
 import stim
 import pymatching
 import numpy as np
+import chromobius
 from stimbposd import (
     BPOSD,
 )  # doesn't work with current ldpcv2 code  pip install -U ldpc==0.1.60
@@ -86,17 +87,12 @@ def dem_to_check_matrices(dem: stim.DetectorErrorModel, return_col_dict=False):
 # TODO: for now returns logical error rate
 # TODO: add detection_events type
 def decode(code_name: str, circuit: stim.Circuit, num_shots: int, decoder: str) -> float:
-    sampler = circuit.compile_detector_sampler()
-    detection_events, observable_flips = sampler.sample(
-        num_shots, separate_observables=True
-    )
-
-    if not np.any(observable_flips):
-	    return 0
-
-    
-    dem = circuit.detector_error_model(approximate_disjoint_errors=False) # TODO switch to true
     if decoder == "mwpm":
+        sampler = circuit.compile_detector_sampler()
+        detection_events, observable_flips = sampler.sample(
+            num_shots, separate_observables=True
+        )
+        dem = circuit.detector_error_model()
         matcher = pymatching.Matching.from_detector_error_model(dem)
         predictions = matcher.decode_batch(detection_events)
         num_errors = 0
@@ -106,6 +102,15 @@ def decode(code_name: str, circuit: stim.Circuit, num_shots: int, decoder: str) 
             if not np.array_equal(actual_for_shot, predicted_for_shot):
                 num_errors += 1
         return num_errors / num_shots
+    elif decoder == "chromobius":
+        dets, actual_obs_flips = circuit.compile_detector_sampler().sample(
+            shots=num_shots,
+            separate_observables=True,
+            bit_packed=True,
+        )
+        decoder = chromobius.compile_decoder_for_dem(circuit.detector_error_model())
+        predicted_obs_flips = decoder.predict_obs_flips_from_dets_bit_packed(dets)
+        return np.count_nonzero(np.any(predicted_obs_flips != actual_obs_flips, axis=1))
     elif decoder == "bposd":
         # TODO: adjust BP-OSD
         try:
