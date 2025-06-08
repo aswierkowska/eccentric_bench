@@ -78,20 +78,20 @@ def get_max_d(code_name: str, n: int):
     elif code_name == "hh":
         # n = 5d^2 - 2d - 1 /2
         d = int((2 + math.sqrt(40 * n + 24)) / 10)
-        d = d - ((1 - d) % 2)
+        #d = d - ((1 - d) % 2)
         return d
     elif code_name == "gross":
         return math.floor(n / 2)
     elif code_name == "color":
         d = int((math.sqrt(4*n) +1)/3)
-        d = d - ((1 - d) % 2)
+        #d = d - ((1 - d) % 2)
         return d
     elif code_name == "bacon":
         #TODO: check this
         #assuming square lattice n = d^2
         #actually it should be d = min(m,n) according to qecc zoo but we have no m,n structure
         d = int(math.sqrt(n))
-        d = d - ((1 - d) % 2) 
+        #d = d - ((1 - d) % 2) 
         return d
     elif code_name == 'steane':
         if n >= 686: # According to Stim file
