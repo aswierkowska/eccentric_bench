@@ -14,7 +14,7 @@ def get_code(code_name: str, d: int, cycles: int):
              return get_hh_code(d, cycles)
     elif code_name == "gross":
         if cycles == None:
-        # TODO: should gross code accept parameter?
+        # TODO: cannot be arbitrary set to d unless d is set to 12
             return get_gross_code()
         else:
             return get_gross_code(T=cycles)
@@ -43,6 +43,8 @@ def get_code(code_name: str, d: int, cycles: int):
             m = 3
         else:
             raise ValueError("Steane code only supports m = 1, 2, 3")
+        if cycles == None:
+            cycles = d
         return get_concat_steane_code(m,cycles)
 
 

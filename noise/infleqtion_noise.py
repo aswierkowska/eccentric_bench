@@ -21,6 +21,5 @@ class InfleqtionNoise(NoiseModel):
                 "REMOTE": 0, # TODO ADD
             },
             qt=qt,
-            backend=backend,
-            use_correlated_parity_measurement_errors=True
+            backend=backend
         )

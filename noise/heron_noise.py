@@ -21,6 +21,5 @@ class HeronNoise(NoiseModel):
                 "R": 1.2942222222222222e-06
             },
             qt=qt,
-            backend=backend,
-            use_correlated_parity_measurement_errors=True
+            backend=backend
         )
