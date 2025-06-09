@@ -27,6 +27,7 @@ class NoiseModel:
         idle: Optional[float] = 0,
         crosstalk: Optional[float] = 0,
         leakage: Optional[float] = 0,
+        leakage_propagation: Optional[float] = 0,
         reset: Optional[float] = 0,
         measure: Optional[float] = 0,
         shuttle: Optional[float] = 0,
@@ -42,6 +43,7 @@ class NoiseModel:
         self.idle = idle
         self.crosstalk = crosstalk
         self.leakage = leakage
+        self.leakage_propagation = leakage_propagation if leakage_propagation != 0 else leakage
         self.reset = reset
         self.measure = measure
         self.shuttle = shuttle
@@ -90,9 +92,22 @@ class NoiseModel:
                     already_noised.add((q, neighbor))
                     already_noised.add((neighbor, q))
 
-    def add_leakage_errors(self, circuit: stim.Circuit, pair: List[int]):
-        if random.random() < self.leakage:
-            circuit.append_operation("DEPOLARIZE2", pair, 1.0)
+    def propagate_leakage(self, circuit: stim.Circuit, pair: List[int]):
+        if any(self.qt.check_leaked(q) for q in pair) and random.random() < self.leakage_propagation:
+            for q in pair:
+                if not self.qt.check_leaked(q):
+                    pauli = random.choice(["X_ERROR", "Y_ERROR", "Z_ERROR"])
+                    circuit.append_operation(pauli, [q], 1.0)
+                    self.qt.leak_qubit(q)
+
+    # TODO: add targets type
+    def add_leakage_errors(self, circuit: stim.Circuit, targets):
+        qubit_targets = [t for t in targets if t.is_qubit_target]
+        for target in qubit_targets:
+            if random.random() < self.leakage:
+                pauli = random.choice(["X_ERROR", "Y_ERROR", "Z_ERROR"])
+                circuit.append_operation(pauli, [target], 1.0)
+                self.qt.leak_qubit(target.value)
     
     def is_remote(self, pair: List[int]) -> bool:
         if self.qt == None or self.backend == None:
@@ -132,7 +147,10 @@ class NoiseModel:
         post = stim.Circuit()
         targets = op.targets_copy()
         args = op.gate_args_copy()
-
+        
+        if self.leakage > 0:
+            self.add_leakage_errors(post, targets)
+        
         if op.name in SQ_OPS:
             if op.name in self.noisy_gates:
                 post.append_operation("DEPOLARIZE1", targets, self.noisy_gates[op.name])
@@ -147,13 +165,15 @@ class NoiseModel:
             for i in range(0, len(targets), 2):
                 pair = [targets[i].value, targets[i+1].value]
                 if self.leakage > 0:
-                    self.add_leakage_errors(post, pair)
+                    self.propagate_leakage(post, pair)
                 if self.is_remote(pair):
                     post.append_operation("DEPOLARIZE2", pair, self.remote)
                 else:
                     post.append_operation("DEPOLARIZE2", pair, p)
                 self.add_qubit_error(post, targets, self.get_gate_time(op, pair))
         elif op.name in RESET_OPS:
+            for q in targets:
+                self.qt.reset_qubit(q.value)
             if op.name in self.noisy_gates:
                 post.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, self.noisy_gates[op.name])
             elif self.reset != 0:

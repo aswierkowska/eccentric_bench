@@ -14,6 +14,7 @@ class QubitTracking:
         #for i in range(self.physical_qubits):
         #    self.qubit_mapping[i] = i
         self.qubit_mapping = dict(enumerate(circuit.layout.initial_index_layout()))
+        self.leaked_qubits = set()
         
 
         self.coupling_map = backend.coupling_map
@@ -67,8 +68,16 @@ class QubitTracking:
             q2 = targets[i+1].qubit_value
             self.swap_qubits(q1, q2)
 
-        
-    
+    def leak_qubit(self, logical_qubit: int):
+        self.leaked_qubits.add(logical_qubit)
+
+    def check_leaked(self, logical_qubit: int):
+        return logical_qubit in self.leaked_qubits
+
+    def reset_qubit(self, logical_qubit: int):
+        if self.check_leaked(logical_qubit):
+            self.leaked_qubits.remove(logical_qubit)
+
 
 if __name__ == "__main__":
     # Example usage
