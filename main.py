@@ -9,6 +9,7 @@ import logging
 
 from itertools import product
 from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import Manager
 from qiskit.compiler import transpile
 from qiskit_qec.utils import get_stim_circuits
 from backends import get_backend, QubitTracking
@@ -30,6 +31,7 @@ def run_experiment(
     num_samples,
     error_type,
     error_prob,
+    lock,
     layout_method=None,
     routing_method=None,
     translating_method=None,
@@ -103,7 +105,8 @@ def run_experiment(
                 "translating_method": translating_method if translating_method else "N/A"
             }
 
-            save_results_to_csv(result_data, experiment_name)
+            with lock:
+                save_results_to_csv(result_data, experiment_name)
 
 
             if backend_size:
@@ -140,6 +143,8 @@ if __name__ == "__main__":
 
         setup_experiment_logging(experiment_name)
         save_experiment_metadata(experiment, experiment_name)
+        manager = Manager()
+        lock = manager.Lock()
         # TODO: better handling case if distances and backends_sizes are both set
 
         with ProcessPoolExecutor() as executor:
@@ -161,6 +166,7 @@ if __name__ == "__main__":
                         num_samples,
                         error_type,
                         error_prob,
+                        lock,
                         layout_method,
                         routing_method,
                         translating_method
@@ -185,9 +191,10 @@ if __name__ == "__main__":
                         num_samples,
                         error_type,
                         error_prob,
+                        lock,
                         layout_method,
                         routing_method,
-                        translating_method
+                        translating_method,
                     )
                     for backend, backends_sizes, code_name, decoder, error_type, error_prob, layout_method, routing_method, translating_method in parameter_combinations
                 ]
@@ -206,9 +213,10 @@ if __name__ == "__main__":
                         num_samples,
                         error_type,
                         error_prob,
+                        lock,
                         layout_method,
                         routing_method,
-                        translating_method
+                        translating_method,
                     )
                     for backend, code_name, decoder, error_type, error_prob, layout_method, routing_method, translating_method in parameter_combinations
                 ]
