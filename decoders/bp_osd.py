@@ -1,7 +1,9 @@
-import time
 import stim
 import numpy as np
 from ldpc import bposd_decoder
+from stimbposd import (
+    BPOSD,
+)  # doesn't work with current ldpcv2 code  pip install -U ldpc==0.1.60
 from scipy.sparse import csc_matrix
 from typing import Dict, List, FrozenSet
 
@@ -9,9 +11,8 @@ from typing import Dict, List, FrozenSet
 # Functions adapted from https://github.com/gongaa/SlidingWindowDecoder
 #########################################################################
 
+
 def dict_to_csc_matrix(elements_dict, shape):
-    # Constructs a `scipy.sparse.csc_matrix` check matrix from a dictionary `elements_dict`
-    # giving the indices of nonzero rows in each column.
     nnz = sum(len(v) for k, v in elements_dict.items())
     data = np.ones(nnz, dtype=np.uint8)
     row_ind = np.zeros(nnz, dtype=np.int64)
@@ -26,7 +27,6 @@ def dict_to_csc_matrix(elements_dict, shape):
 
 
 def dem_to_check_matrices(dem: stim.DetectorErrorModel, return_col_dict=False):
-
     DL_ids: Dict[str, int] = {}  # detectors + logical operators
     L_map: Dict[int, FrozenSet[int]] = {}  # logical operators
     priors_dict: Dict[int, float] = {}  # for each fault
@@ -82,37 +82,56 @@ def dem_to_check_matrices(dem: stim.DetectorErrorModel, return_col_dict=False):
     return check_matrix, observables_matrix, priors
 
 
-def modified_bposd_decoder(dem, num_repeat, num_shots, osd_order=10):
+def bposd_chk(circuit: stim.Circuit, num_shots: int):
+    dem = circuit.detector_error_model()
     chk, obs, priors, col_dict = dem_to_check_matrices(dem, return_col_dict=True)
-    chk, obs, priors, col_dict = dem_to_check_matrices(dem, return_col_dict=True)
-    num_row, num_col = chk.shape
-    chk_row_wt = np.sum(chk, axis=1)
-    chk_col_wt = np.sum(chk, axis=0)
-    print(
-        f"check matrix shape {chk.shape}, max (row, column) weight ({np.max(chk_row_wt)}, {np.max(chk_col_wt)}),",
-        f"min (row, column) weight ({np.min(chk_row_wt)}, {np.min(chk_col_wt)})",
-    )
 
     bpd = bposd_decoder(
-        chk,  # the parity check matrix
-        channel_probs=priors,  # assign error_rate to each qubit. This will override "error_rate" input variable
-        max_iter=10000,  # the maximum number of iterations for BP
-        bp_method="minimum_sum_log",  # messages are not clipped, may have numerical issues
-        ms_scaling_factor=1.0,  # min sum scaling factor. If set to zero the variable scaling factor method is used
-        osd_method="osd_cs",  # the OSD method. Choose from:  1) "osd_e", "osd_cs", "osd0"
-        osd_order=10,  # the osd search depth, not specified in [1]
-        input_vector_type="syndrome",  # "received_vector"
+        chk,
+        channel_probs=list(priors),
+        max_iter=10000,
+        bp_method="minimum_sum",
+        ms_scaling_factor=1.0,
+        osd_method="osd_cs",
+        osd_order=7,
+        input_vector_type="syndrome",
     )
 
     dem_sampler: stim.CompiledDemSampler = dem.compile_sampler()
     det_data, obs_data, err_data = dem_sampler.sample(
         shots=num_shots, return_errors=False, bit_packed=False
     )
+
     num_err = 0
+    num_flag_err = 0
     for i in range(num_shots):
         e_hat = bpd.decode(det_data[i])
+        num_flag_err += ((chk @ e_hat + det_data[i]) % 2).any()
         ans = (obs @ e_hat + obs_data[i]) % 2
         num_err += ans.any()
     p_l = num_err / num_shots
-    p_l_per_round = 1 - (1 - p_l) ** (1 / num_repeat)
     return p_l
+
+
+def bposd_batch(circuit: stim.Circuit, num_shots: int):
+    sampler = circuit.compile_detector_sampler()
+    detection_events, observable_flips = sampler.sample(
+        num_shots, separate_observables=True
+    )
+
+    dem = circuit.detector_error_model(approximate_disjoint_errors=False)
+    matcher = BPOSD(
+        dem,
+        max_bp_iters=10000,
+        bp_method="minimum_sum",
+        osd_method="osd_cs",
+        osd_order=7,
+    )
+    predictions = matcher.decode_batch(detection_events)
+    num_errors = 0
+    for shot in range(num_shots):
+        actual_for_shot = observable_flips[shot]
+        predicted_for_shot = predictions[shot]
+        if not np.array_equal(actual_for_shot, predicted_for_shot):
+            num_errors += 1
+    return num_errors / num_shots
