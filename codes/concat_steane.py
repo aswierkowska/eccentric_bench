@@ -1,7 +1,8 @@
 import stim 
 from qiskit_qec.circuits import StimCodeCircuit
 
-#from .steane_circuit_parts import concat_steane_end, concat_steane_round, concat_steane_start
+# TODO: check
+from .steane_circuit_parts import concat_steane_end, concat_steane_round, concat_steane_start
 
 import traceback
 

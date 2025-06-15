@@ -43,6 +43,8 @@ def get_code(code_name: str, d: int, cycles: int):
             m = 3
         else:
             raise ValueError("Steane code only supports m = 1, 2, 3")
+        if cycles == None:
+            cycles = d
         return get_concat_steane_code(m,cycles)
 
 
