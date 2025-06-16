@@ -44,7 +44,6 @@ def run_experiment(
             d = get_max_d(code_name, backend.coupling_map.size())
             print(f"Max distance for {code_name} on backend {backend_name} is {d}")
             if d < 3:
-                print("Are we here?")
                 logging.info(
                     f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible"
                 )
