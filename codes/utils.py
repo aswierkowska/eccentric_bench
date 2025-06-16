@@ -52,18 +52,22 @@ def get_max_d(code_name: str, n: int):
             raise 1 #Note that a Error will be logged in the main.py
 
         d = int((-3 + math.isqrt(9 + 8*(n+1))) // 4)
+        d = d - ((1 - d) % 2)
+        assert d % 2 == 1
         return d
     
     elif code_name == "hh":
         # n = 5d^2 - 2d - 1 /2
         d = int((2 + math.sqrt(40 * n + 24)) / 10)
-        #d = d - ((1 - d) % 2)
+        d = d - ((1 - d) % 2) # In order to mamize the logical error rate we want odd distances according to the heavy hex author: https://journals.aps.org/prx/pdf/10.1103/PhysRevX.10.011022
+        assert d % 2 == 1
         return d
     elif code_name == "gross":
         return 12
     elif code_name == "color":
         d = int((math.sqrt(4*n) +1)/3)
-        #d = d - ((1 - d) % 2)
+        d = d - ((1 - d) % 2) # we look into triangular color code which has odd distance
+        assert d % 2 == 1
         return d
     elif code_name == "bacon":
         #TODO: check this
