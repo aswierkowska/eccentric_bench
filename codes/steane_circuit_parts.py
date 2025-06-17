@@ -356,3 +356,107 @@ concat_steane_end = '''TICK
 CX 97 0 97 1 97 2 97 3 97 4 97 5 97 6 97 7 97 8 97 9 97 10 97 11 97 12 97 13 97 14 97 15 97 16 97 17 97 18 97 19 97 20 97 21 97 22 97 23 97 24 97 25 97 26 97 27 97 28 97 29 97 30 97 31 97 32 97 33 97 34 97 35 97 36 97 37 97 38 97 39 97 40 97 41 97 42 97 43 97 44 97 45 97 46 97 47 97 48
 MR 97
 OBSERVABLE_INCLUDE(0) rec[-1]'''
+
+
+normal_steane_start = '''MPP X3*X4*X5*X6
+MPP X1*X2*X5*X6
+MPP X0*X2*X4*X6
+TICK
+
+# ——— Round 1: ancilla prep ———
+# RX is “reset to |+>” (no rec), R is “reset to |0>” (no rec)
+RX 7 8 9
+R  10 11 12
+TICK
+
+# ——— Round 1: entangle X‐synd and Z‐synd ancillas ———
+CX 7 6 8 5
+TICK
+CX 7 2 8 1
+TICK
+CX 7 4 8 6
+TICK
+CX 7 0 8 2 9 5
+TICK
+CX 9 6
+TICK
+CX 9 3
+TICK
+CX 9 4
+TICK
+
+# CNOTs for Z stabilizers
+CX 6 12
+TICK
+CX 3 12
+TICK
+CX 4 12
+TICK
+CX 6 10 5 11
+TICK
+CX 2 10 1 11
+TICK
+CX 4 10 6 11
+TICK
+CX 0 10 2 11 5 12
+TICK
+
+# ——— Round 1: measure ancillas into rec bits ———
+MRX 7 8 9      # X‐basis measures → rec bits #4,5,6 of this “measurement block”
+MR  10 11 12   # Z‐basis measures → rec bits #1,2,3 of this block
+TICK
+
+DETECTOR rec[-6] rec[-7]        
+DETECTOR rec[-5] rec[-8]        
+DETECTOR rec[-4] rec[-9]       
+DETECTOR rec[-3]         # Z‐stab on (3,4,5,6)
+DETECTOR rec[-2]         # Z‐stab on (1,2,5,6)
+DETECTOR rec[-1]         # Z‐stab on (0,2,4,6)'''
+
+normal_steane_round = '''CX 7 6 8 5
+TICK
+CX 7 2 8 1
+TICK
+CX 7 4 8 6
+TICK
+CX 7 0 8 2 9 5
+TICK
+CX 9 6
+TICK
+CX 9 3
+TICK
+CX 9 4
+TICK
+
+# CNOTs for Z stabilizers
+CX 6 12
+TICK
+CX 3 12
+TICK
+CX 4 12
+TICK
+CX 6 10 5 11
+TICK
+CX 2 10 1 11
+TICK
+CX 4 10 6 11
+TICK
+CX 0 10 2 11 5 12
+TICK
+
+# ——— Round 1: measure ancillas into rec bits ———
+MRX 7 8 9      # X‐basis measures → rec bits #4,5,6 of this “measurement block”
+MR  10 11 12   # Z‐basis measures → rec bits #1,2,3 of this block
+TICK
+
+DETECTOR rec[-6] rec[-12]        
+DETECTOR rec[-5] rec[-11]        
+DETECTOR rec[-4] rec[-10]       
+DETECTOR rec[-3] rec[-9]        # Z‐stab on (3,4,5,6)
+DETECTOR rec[-2] rec[-8]        # Z‐stab on (1,2,5,6)
+DETECTOR rec[-1] rec[-7]        # Z‐stab on (0,2,4,6)
+'''
+
+normal_steane_end ='''CX 13 0  13 1  13 2  13 3  13 4  13 5  13 6
+MR 13
+OBSERVABLE_INCLUDE(0) rec[-1]''' 

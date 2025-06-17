@@ -1,28 +1,12 @@
 import stim 
 from qiskit_qec.circuits import StimCodeCircuit
 
-#from .steane_circuit_parts import concat_steane_end, concat_steane_round, concat_steane_start
+from .steane_circuit_parts import concat_steane_end, concat_steane_round, concat_steane_start, normal_steane_start, normal_steane_round, normal_steane_end
 
 import traceback
 
-def star_shaped_ordering_m1():
-    """Provides the star shaped measurement order.
-    This ordering generates a distinguishable fault set up to weight 4 fault combinations.
-    """
 
-    orderings = []
-
-    # weight 4 stabilizer generatrs
-    orderings.append([0, 1, 2, 6])
-    orderings.append([2, 3, 4, 6])
-    orderings.append([4, 5, 0, 6])
-
-
-    return orderings
-
-
-
-def star_shaped_ordering_m3():
+def ordering_extended_steane_code():
     """Provides the star shaped measurement order.
     This ordering generates a distinguishable fault set up to weight 4 fault combinations.
     """
@@ -97,10 +81,10 @@ def star_shaped_ordering_m3():
 
     return orderings
 
-def build_big_concat_steane_circuit(rounds=1):
+def extended_steane_circuit(rounds=0):
     circuit = stim.Circuit()
     #first encoding of the circuit
-    orderings = star_shaped_ordering_m3()
+    orderings = ordering_extended_steane_code()
     for ordering in orderings:
         #MPP for each of the entries
         string = "MPP "
@@ -127,8 +111,7 @@ def build_big_concat_steane_circuit(rounds=1):
         circuit += stim.Circuit(f"{string}\n")
         string = ""
     circuit += stim.Circuit("TICK")
-
-    
+ 
     #Z
     for ordering, i in zip(orderings, range(514,685)):
         string = "CX "
@@ -137,8 +120,6 @@ def build_big_concat_steane_circuit(rounds=1):
         circuit += stim.Circuit(f"{string}\n")
         string = ""
     circuit += stim.Circuit("TICK")
-
-    
 
     #add measurements
     for i in range(343, 514):
@@ -158,9 +139,7 @@ def build_big_concat_steane_circuit(rounds=1):
         circuit += stim.Circuit(f"DETECTOR rec[{0-i}]\n")
 
     circuit += stim.Circuit("TICK")
-
-
-    circuit = add_multiple_cycles_to_big_code(circuit, orderings, rounds)
+    circuit = add_cycles_extended_steane_circuit(circuit, orderings, rounds)
 
     #last ancilla
     string = "CX "
@@ -170,19 +149,12 @@ def build_big_concat_steane_circuit(rounds=1):
     string = ""
 
     circuit += stim.Circuit("TICK")
-
     circuit += stim.Circuit("MR 685\n")
-
-    #Add observable
     circuit += stim.Circuit("OBSERVABLE_INCLUDE(0) rec[-1]\n")
-
-    with open("codes/concat_3_new.stim", "w") as f:
-        print("Hello")
-        f.write(str(circuit))
 
     return circuit
 
-def add_multiple_cycles_to_big_code(circuit, orderings, rounds):
+def add_cycles_extended_steane_circuit(circuit, orderings, rounds):
     for r in range(rounds):
         #X
         for ordering, i in zip(orderings, range(343,514)):
@@ -192,9 +164,7 @@ def add_multiple_cycles_to_big_code(circuit, orderings, rounds):
             circuit += stim.Circuit(f"{string}\n")
             string = ""
         circuit += stim.Circuit("TICK")
-
-
-        
+   
         #Z
         for ordering, i in zip(orderings, range(514,685)):
             string = "CX "
@@ -217,190 +187,18 @@ def add_multiple_cycles_to_big_code(circuit, orderings, rounds):
 
         for i in range(342,0, -1):
             circuit += stim.Circuit(f"DETECTOR rec[{0-i}] rec[{0-i-342}]\n")
-
-    
     return circuit
 
 
-
-def multiple_round_steane_code(rounds):
-    circuit = stim.Circuit()
-
-    for i in range(rounds):
-        for ordering in star_shaped_ordering_m1():
-            #MPP for each of the entries
-            string = "MPP "
-            for j in ordering:
-                string += "X" + str(j) + "*"
-            #remove last element of string
-            string = string[:-1]
-            string += "\n"
-            circuit += stim.Circuit(f"{string}")
-            string = ""
-
-        for i in range(7,10):
-            circuit += stim.Circuit(f"RX {i}\n")
-        
-        for i in range(10,13): #Want to reset 14 as well because last ancilla
-            circuit += stim.Circuit(f"R {i}\n")
-
-        for ordering, i in zip(star_shaped_ordering_m1(), range(7,11)):
-            string = "CX "
-            for j in ordering:
-                string += str(i) + " " + str(j) + " "
-            circuit += stim.Circuit(f"{string}\n")
-            string = ""
-        
-        for ordering, i in zip(star_shaped_ordering_m1(), range(10,13)):
-            string = "CX "
-            for j in ordering:
-                string += str(j) + " " + str(i) + " "
-            circuit += stim.Circuit(f"{string}\n")
-            string = ""
-        
-        #last ancilla
-        string = "CX "
-        for i in range(7):
-            string += str(13) + " " + str(i) + " "
-        circuit += stim.Circuit(f"{string}\n")
-        string = ""
-
-        #add measurements
-        for i in range(7, 10):
-            circuit += stim.Circuit(f"MRX {i}\n")
-        
-        for i in range(10, 13): #Want to reset 14 as well because last ancilla
-            circuit += stim.Circuit(f"MR {i}\n")
-        
-        #now we need to apply detectors first 6 detectors from -2 to -7
-        for i in range(4, 1, -1):
-            circuit += stim.Circuit(f"DETECTOR rec[{0-i}]\n")
-        
-        count = 5
-        for i in range(5, 8):
-            circuit += stim.Circuit(f"DETECTOR rec[{0-i}] rec[{0-i-count}]\n")
-            count = count - 2
-        
-        #Add observable
-    circuit += stim.Circuit("OBSERVABLE_INCLUDE(0) rec[-1]\n")
-    return circuit
-
-def multiple_round_steane_code_own(rounds):
-    circuit = stim.Circuit('''# ——— Steane logical |0> prep ———
-# (this MPP‐based prep records 3 bits, which we will never reference in any DETECTOR)
-
-MPP X3*X4*X5*X6
-MPP X1*X2*X5*X6
-MPP X0*X2*X4*X6
-TICK
-
-# ——— Round 1: ancilla prep ———
-# RX is “reset to |+>” (no rec), R is “reset to |0>” (no rec)
-RX 7 8 9
-R  10 11 12
-TICK
-
-# ——— Round 1: entangle X‐synd and Z‐synd ancillas ———
-CX 7 6 8 5
-TICK
-CX 7 2 8 1
-TICK
-CX 7 4 8 6
-TICK
-CX 7 0 8 2 9 5
-TICK
-CX 9 6
-TICK
-CX 9 3
-TICK
-CX 9 4
-TICK
-
-# CNOTs for Z stabilizers
-CX 6 12
-TICK
-CX 3 12
-TICK
-CX 4 12
-TICK
-CX 6 10 5 11
-TICK
-CX 2 10 1 11
-TICK
-CX 4 10 6 11
-TICK
-CX 0 10 2 11 5 12
-TICK
-
-# ——— Round 1: measure ancillas into rec bits ———
-MRX 7 8 9      # X‐basis measures → rec bits #4,5,6 of this “measurement block”
-MR  10 11 12   # Z‐basis measures → rec bits #1,2,3 of this block
-TICK
-
-DETECTOR rec[-6] rec[-7]        
-DETECTOR rec[-5] rec[-8]        
-DETECTOR rec[-4] rec[-9]       
-DETECTOR rec[-3]         # Z‐stab on (3,4,5,6)
-DETECTOR rec[-2]         # Z‐stab on (1,2,5,6)
-DETECTOR rec[-1]         # Z‐stab on (0,2,4,6)''')
-    
-
-
+def normal_steane_circuit(rounds):
+    circuit = stim.Circuit(normal_steane_start)
     for i in range(rounds-1):
-        round_circuit = stim.Circuit('''CX 7 6 8 5
-TICK
-CX 7 2 8 1
-TICK
-CX 7 4 8 6
-TICK
-CX 7 0 8 2 9 5
-TICK
-CX 9 6
-TICK
-CX 9 3
-TICK
-CX 9 4
-TICK
-
-# CNOTs for Z stabilizers
-CX 6 12
-TICK
-CX 3 12
-TICK
-CX 4 12
-TICK
-CX 6 10 5 11
-TICK
-CX 2 10 1 11
-TICK
-CX 4 10 6 11
-TICK
-CX 0 10 2 11 5 12
-TICK
-
-# ——— Round 1: measure ancillas into rec bits ———
-MRX 7 8 9      # X‐basis measures → rec bits #4,5,6 of this “measurement block”
-MR  10 11 12   # Z‐basis measures → rec bits #1,2,3 of this block
-TICK
-
-DETECTOR rec[-6] rec[-12]        
-DETECTOR rec[-5] rec[-11]        
-DETECTOR rec[-4] rec[-10]       
-DETECTOR rec[-3] rec[-9]        # Z‐stab on (3,4,5,6)
-DETECTOR rec[-2] rec[-8]        # Z‐stab on (1,2,5,6)
-DETECTOR rec[-1] rec[-7]        # Z‐stab on (0,2,4,6)
-''')
-        #add round_circuit to circuit
-        circuit += round_circuit
-    
-    #add observable
-    circuit += stim.Circuit('''CX 13 0  13 1  13 2  13 3  13 4  13 5  13 6
-MR 13
-OBSERVABLE_INCLUDE(0) rec[-1]''')
-
+        round_circuit = stim.Circuit(normal_steane_round)
+        circuit += round_circuit  
+    circuit += stim.Circuit(normal_steane_end)
     return circuit
 
-def concat_steane_multiple_cycles(rounds=1):
+def concat_steane_circuit(rounds=1):
     circuit = stim.Circuit(concat_steane_start)
     for i in range(rounds-1):
         circuit += stim.Circuit(concat_steane_round)
@@ -409,33 +207,20 @@ def concat_steane_multiple_cycles(rounds=1):
 
 
 def get_concat_steane_code(m, rounds=1):
-    #read whaterver.stim file and make stim circuit out of it
-    if m==2:
-        #circuit = stim.Circuit.from_file("codes/concat-steane_multiple_cycles.stim")
-        circuit = concat_steane_multiple_cycles(rounds)
-    elif m==1:
-        #circuit = stim.Circuit.from_file("codes/multiple_rounds.stim")
-        circuit = multiple_round_steane_code_own(rounds)
+    if m==1:
+        circuit = normal_steane_circuit(rounds)
+    elif m==2:
+        circuit = concat_steane_circuit(rounds)
     elif m==3:
-        #build_big_concat_steane_circuit()
-        #circuit = stim.Circuit.from_file("codes/concat_3_new.stim")
-        circuit = build_big_concat_steane_circuit(rounds)
-    
-    print(circuit)
+        circuit = extended_steane_circuit(rounds)
     try: 
         s = StimCodeCircuit(stim_circuit=circuit)
     except Exception as e:
         print(f"Error while creating StimCodeCircuit: {e}")
         print(traceback.format_exc())
         return None
-    print("Do we manage?")
     return s
 
 
 if __name__ == "__main__":
-    #circuit = build_big_concat_steane_circuit()
-    #circuit = get_concat_steane_code(3)
-
-    #circuit = multiple_round_steane_code_own(2)
-    #print(circuit)
-    circuit = build_big_concat_steane_circuit(1)
+    circuit = normal_steane_circuit(0)
