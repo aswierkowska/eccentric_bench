@@ -1,7 +1,7 @@
 import math
 from .gross_code import get_gross_code
 from .color_code_stim import get_color_code
-from .bacon_shor import get_bacon_shot_code
+from .bacon_shor import get_bacon_shor_code
 from .concat_steane import get_concat_steane_code
 from .surface_code import get_surface_code
 from .hh_code import get_hh_code
@@ -30,9 +30,9 @@ def get_code(code_name: str, d: int, cycles: int):
             return get_color_code(d, rounds=cycles)
     elif code_name == "bacon":
         if cycles == None:
-            return get_bacon_shot_code(d)
+            return get_bacon_shor_code(d)
         else:
-            return get_bacon_shot_code(d, cycles)
+            return get_bacon_shor_code(d, cycles)
     elif code_name == 'steane':
         if d == 3:
             m = 1
@@ -53,17 +53,21 @@ def get_max_d(code_name: str, n: int):
             raise 1 #Note that a Error will be logged in the main.py
 
         d = int((-3 + math.isqrt(9 + 8*(n+1))) // 4)
+        d = d - ((1 - d) % 2)
+        assert d % 2 == 1
         return d
     elif code_name == "hh":
         # n = 5d^2 - 2d - 1 /2
         d = int((2 + math.sqrt(40 * n + 24)) / 10)
-        #d = d - ((1 - d) % 2)
+        d = d - ((1 - d) % 2) # In order to mamize the logical error rate we want odd distances according to the heavy hex author: https://journals.aps.org/prx/pdf/10.1103/PhysRevX.10.011022
+        assert d % 2 == 1
         return d
     elif code_name == "gross":
-        return math.floor(n / 2)
+        return 12
     elif code_name == "color":
         d = int((math.sqrt(4*n) +1)/3)
-        #d = d - ((1 - d) % 2)
+        d = d - ((1 - d) % 2) # we look into triangular color code which has odd distance
+        assert d % 2 == 1
         return d
     elif code_name == "bacon":
         #assuming square lattice n = d^2
