@@ -1,6 +1,6 @@
 import qiskit
 import stim
-import stim_gate_list
+from .stim_gate_list import *
 
 import os
 

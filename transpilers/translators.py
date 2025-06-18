@@ -8,7 +8,7 @@ from pytket.extensions.qiskit import qiskit_to_tk, tk_to_qiskit
 from qiskit import transpile
 
 
-qiskit_stim_gates = [
+qiskit_stim = [
     "x",
     "y",
     "z",
@@ -24,7 +24,7 @@ qiskit_stim_gates = [
     "barrier",
 ]
 
-bqskit_stim_gates = [
+bqskit_stim = [
     XGate(),
     YGate(),
     ZGate(),
@@ -41,7 +41,7 @@ bqskit_stim_gates = [
 ]
 
 # TODO: either we need to provide custom tk1 to clifford gates decomposition or use a diff set for experiments
-tket_stim_gates = [
+tket_stim = [
     OpType.X,
     OpType.Y,
     OpType.Z,
@@ -136,25 +136,44 @@ tket_h2 =[
 
 
 def translate(circuit, translating_method, gate_set=None):
+    if gate_set:
+        full_gate_set_name = f"{translating_method}_{gate_set}"
+        try:
+            gate_set_obj = globals()[full_gate_set_name]
+        except KeyError:
+            logging.error(f"Gate set '{full_gate_set_name}' is not defined.")
+            raise ValueError(f"Unknown gate set: {full_gate_set_name}")
+    else:
+        gate_set_obj = {
+            "qiskit": qiskit_stim,
+            "bqskit": bqskit_stim,
+            "tket": tket_stim,
+        }.get(translating_method)
+
+        if gate_set_obj is None:
+            logging.error(f"Default gate set not defined for: {translating_method}")
+            raise ValueError(f"Missing default gate set for: {translating_method}")
+
     if translating_method == "qiskit":
         qiskit_circuit = transpile(
             circuit,
-            basis_gates=gate_set if gate_set else qiskit_stim_gates,
+            basis_gates=gate_set_obj,
             optimization_level=0,
         )
         return qiskit_circuit
+
     elif translating_method == "bqskit":
-        # TODO: bqskit renames which later causes ['round_0_zplaq_bit', 0] is not in list
         bqskit_circuit = qiskit_to_bqskit(circuit)
-        model = MachineModel(bqskit_circuit.num_qudits, gate_set=gate_set if gate_set else bqskit_stim_gates)
-        # BQSkit doesn't allow for 0 level of optimizations
+        model = MachineModel(bqskit_circuit.num_qudits, gate_set=gate_set_obj)
         bqskit_circuit = compile(bqskit_circuit, model=model, optimization_level=1)
         return bqskit_to_qiskit(bqskit_circuit)
+
     elif translating_method == "tket":
         tket_circuit = qiskit_to_tk(circuit)
-        rebase_pass = AutoRebase(set(gate_set if gate_set else tket_stim_gates))
+        rebase_pass = AutoRebase(set(gate_set_obj))
         rebase_pass.apply(tket_circuit)
         return tk_to_qiskit(tket_circuit)
+
     else:
-        logging.error(f'Unknown translate method: {translating_method}')
+        logging.error(f"Unknown translate method: {translating_method}")
         raise NotImplementedError
