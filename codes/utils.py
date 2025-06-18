@@ -14,7 +14,6 @@ def get_code(code_name: str, d: int, cycles: int):
              return get_hh_code(d, cycles)
     elif code_name == "gross":
         if cycles == None:
-        # TODO: should gross code accept parameter?
             return get_gross_code()
         else:
             return get_gross_code(T=cycles)
@@ -43,6 +42,8 @@ def get_code(code_name: str, d: int, cycles: int):
             m = 3
         else:
             raise ValueError("Steane code only supports m = 1, 2, 3")
+        if cycles == None:
+            cycles = d
         return get_concat_steane_code(m,cycles)
 
 
@@ -55,7 +56,6 @@ def get_max_d(code_name: str, n: int):
         d = d - ((1 - d) % 2)
         assert d % 2 == 1
         return d
-    
     elif code_name == "hh":
         # n = 5d^2 - 2d - 1 /2
         d = int((2 + math.sqrt(40 * n + 24)) / 10)
@@ -70,7 +70,6 @@ def get_max_d(code_name: str, n: int):
         assert d % 2 == 1
         return d
     elif code_name == "bacon":
-        #TODO: check this
         #assuming square lattice n = d^2
         #actually it should be d = min(m,n) according to qecc zoo but we have no m,n structure
         d = int(math.sqrt(n))

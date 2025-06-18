@@ -21,7 +21,7 @@ experiments:
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
     #backends_sizes: [400] #[64, 125, 216, 343, 512]
     codes: ["steane"]
-    distances: [9]
+    distances: [3,9,27]
     cycles: 1
     error_types: ["constant"]
     error_probabilities: [0.004] 
