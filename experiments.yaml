@@ -19,9 +19,9 @@ experiments:
   - name: "steane_test"
     num_samples: 10
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    #backends_sizes: [400] #[64, 125, 216, 343, 512]
-    codes: ["steane"]
-    distances: [3,9,27]
+    backends_sizes: [400] #[64, 125, 216, 343, 512]
+    codes: ["steane","hh","gross","color","bacon","surface"]
+    #distances: [3,9,27]
     cycles: 1
     error_types: ["constant"]
     error_probabilities: [0.004] 
