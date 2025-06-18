@@ -48,6 +48,12 @@ def run_experiment(
                     f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible"
                 )
                 return
+        
+        if cycles is not None and cycles <= 1:
+            logging.info(
+                f"{experiment_name} | Logical error rate for {code_name} with distance {d}, backend {backend_name}: Execution not possible, cycles must be greater than 1"
+            )
+            return
               
         print("Got distance")
         code = get_code(code_name, d, cycles)
