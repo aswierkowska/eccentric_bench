@@ -3,7 +3,6 @@ from backends import QubitTracking
 
 
 class HeronNoise(NoiseModel):
-
     @staticmethod
     def get_noise(
         qt: QubitTracking,
@@ -14,7 +13,6 @@ class HeronNoise(NoiseModel):
             tq=0.002,
             measure=0.01,
             gate_times={
-                # TODO: what is reset gate time?
                 "SQ": 50 * 1e-9,
                 "TQ": 70 * 1e-9,
                 "M": 70 * 1e-9,
