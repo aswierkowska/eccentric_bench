@@ -21,6 +21,10 @@ class ApolloNoise(NoiseModel):
             idle=0.00223,
             crosstalk=0.66e-6,
             measure=0.0001,
+            remote=2.23e-4, # TODO SCALE
+            gate_times={
+                "REMOTE": 4, # TODO ADD
+            },
             qt=qt
             # backend seems unnecessary as t1 is a few minutes
         )
