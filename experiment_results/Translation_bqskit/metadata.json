@@ -1,0 +1,23 @@
+{
+    "name": "Translation_bqskit",
+    "codes": [
+        "surface",
+        "hh",
+        "gross",
+        "color",
+        "steane"
+    ],
+    "backends": [
+        "custom_full"
+    ],
+    "backends_sizes": [
+        300
+    ],
+    "translating_methods": [
+        "bqskit"
+    ],
+    "gate_sets": [
+        "h2",
+        "ibm_heron"
+    ]
+}

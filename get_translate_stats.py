@@ -42,12 +42,12 @@ def run_experiment(
 
         for state, qc in code.circuit.items():
             original_circuit = qc
-            original_total_gates = count_total_gates_qiskit(original_circuit)
+            #original_total_gates = count_total_gates_qiskit(original_circuit)
 
             for translating_method in translating_methods:
                 for gate_set in gate_sets:
                     transpiled_circuit = translate(original_circuit, translating_method, gate_set)
-                    transpiled_total_gates = count_total_gates_qiskit(transpiled_circuit)
+                    #transpiled_total_gates = count_total_gates_qiskit(transpiled_circuit)
                     gate_overhead = get_resource_overhead_total_gates(original_circuit, transpiled_circuit)
                     result_data = {
                         "backend": backend_name,
@@ -58,8 +58,8 @@ def run_experiment(
                         "state": state,
                         "translating_method": translating_method or "N/A",
                         "gate_set": gate_set or "N/A",
-                        "original_total_gates": original_total_gates,
-                        "transpiled_total_gates": transpiled_total_gates,
+                        #"original_total_gates": original_total_gates,
+                        #"transpiled_total_gates": transpiled_total_gates,
                         "gate_overhead": gate_overhead,
                     }
 
