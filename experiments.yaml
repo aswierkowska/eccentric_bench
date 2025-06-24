@@ -1,31 +1,28 @@
 experiments:
-  #- name: "Const_cycles"
-  #  num_samples: 1000
-  #  backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-  #  backends_sizes: [400]
-  #  codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-  #  error_types: ["constant"]
-  #  error_probabilities: [0.004] 
-  #  decoders: ["bposd"] # mwpm
-    #- name: "Topology_size_27.05_si_steane"
-    #num_samples: 1000
-    #backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    #backends_sizes: [300, 350, 400, 450, 500]
-    #codes: ["steane"]
-    #cycles: 1
-    #error_types: ["si1000"]
-    #error_probabilities: [0.01, 0.005, 0.015] 
-    #decoders: ["bposd"] # mwpm
-  - name: "distances_check"
-    num_samples: 10
+  - name: "Topology_size_full_18.06"
+    num_samples: 1000
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    backends_sizes: [400] #[64, 125, 216, 343, 512]
-    codes: ["steane","hh","gross","color","bacon","surface"]
-    #distances: [3,9,27]
-    cycles: 1
-    error_types: ["constant"]
-    error_probabilities: [0.004] 
+    backends_sizes: [300, 350, 400, 450, 500]
+    codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
+    error_types: ["constant", "modsi1000"]
+    error_probabilities: [0.004, 0.002, 0.008] 
     decoders: ["bposd"] # mwpm
+    #  - name: "Topology_size_hh_15.06"
+    #num_samples: 10000
+    #backends: ["custom_heavyhex"] # custom_line, custom_grid, custom_cube, custom_full
+    #backends_sizes: [114, 192, 290, 408, 546]
+    #codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
+    #error_types: ["constant", "modsi1000"]
+    #error_probabilities: [0.004, 0.002, 0.008] 
+    #decoders: ["bposd"] # mwpm
+    # - name: "Topology_connectivity_15.06"
+    #num_samples: 10000
+    #backends: ["custom_line, custom_grid, custom_cube, custom_full"]
+    #backends_sizes: [729]
+    #codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
+    #error_types: ["constant", "modsi1000"]
+    #error_probabilities: [0.004, 0.002, 0.008] 
+    #decoders: ["bposd"] # mwpm
     #  - name: "Real_topology_26.05_20:48"
     #num_samples: 1000
     #backends: ["real_willow", "real_flamingo", "real_infleqtion", "real_apollo"] # custom_line, custom_grid, custom_cube, custom_full

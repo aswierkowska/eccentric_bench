@@ -73,7 +73,7 @@ def get_max_d(code_name: str, n: int):
         #assuming square lattice n = d^2
         #actually it should be d = min(m,n) according to qecc zoo but we have no m,n structure
         d = int(math.sqrt(n))
-        #d = d - ((1 - d) % 2) 
+        d = d - ((1 - d) % 2) 
         return d
     elif code_name == 'steane':
         if n >= 686: # According to Stim file
