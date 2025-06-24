@@ -17,11 +17,28 @@ def count_total_gates_qiskit(circuit: qiskit.QuantumCircuit):
             count += num_gates
     return count
 
+def count_2q_gates_qiskit(circuit: qiskit.QuantumCircuit) -> int:
+    count = 0
+    for instr, qargs, _ in circuit.data:
+        if instr.name not in ["measure", "reset", "barrier"] and len(qargs) == 2:
+            count += 1
+    return count
+
 def count_total_gates_tket(circuit: TketCircuit):
     count = 0
     for command in circuit.get_commands():
         op_type = command.op.type
         if op_type.name not in ["Measure", "Barrier", "Reset"]:
+            count += 1
+    return count
+
+def count_2q_gates_tket(circuit: TketCircuit) -> int:
+    count = 0
+    for command in circuit.get_commands():
+        op_type = command.op.type
+        if op_type.name in ["Measure", "Reset", "Barrier"]:
+            continue
+        if len(command.qubits) == 2:
             count += 1
     return count
 
@@ -32,6 +49,16 @@ def count_total_gates_bqskit(circuit: BqskitCircuit):
         if gate_name in ['Measure', 'Reset', 'Barrier']:
             continue
         count += 1
+    return count
+
+def count_2q_gates_bqskit(circuit: BqskitCircuit) -> int:
+    count = 0
+    for op in circuit.operations():
+        gate_name = op.gate.name if hasattr(op, 'gate') else None
+        if gate_name in ['Measure', 'Reset', 'Barrier']:
+            continue
+        if len(op.location) == 2:
+            count += 1
     return count
 
 def count_swaps_qiskit(circuit: qiskit.QuantumCircuit):
@@ -203,6 +230,22 @@ def get_resource_overhead_total_gates(starting_circuit, transpiled_circuit):
     starting_gates = count_gates(starting_circuit)
     transpiled_gates = count_gates(transpiled_circuit)
     return transpiled_gates - starting_gates
+
+def get_resource_overhead_2q_gates(starting_circuit, transpiled_circuit):
+    def count_2q_gates(circuit):
+        if isinstance(circuit, qiskit.QuantumCircuit):
+            return count_2q_gates_qiskit(circuit)
+        elif isinstance(circuit, TketCircuit):
+            return count_2q_gates_tket(circuit)
+        elif isinstance(circuit, BqskitCircuit):
+            return count_2q_gates_bqskit(circuit)
+        else:
+            raise ValueError(f"Unsupported circuit type: {type(circuit)}")
+
+    starting_2q = count_2q_gates(starting_circuit)
+    transpiled_2q = count_2q_gates(transpiled_circuit)
+    return transpiled_2q - starting_2q
+
 
 def get_error_supression_factor_logical(logical_error_rate_low, logical_error_rate_high):
     big_lamda  = logical_error_rate_low/logical_error_rate_high if logical_error_rate_high != 0 else -1

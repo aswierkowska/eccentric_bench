@@ -14,7 +14,7 @@ from backends import get_backend
 from codes import get_code, get_max_d
 from transpilers import translate
 from utils import save_experiment_metadata, save_results_to_csv, setup_experiment_logging
-from metrics import count_total_gates_qiskit, get_resource_overhead_total_gates
+from metrics import count_total_gates_qiskit, get_resource_overhead_total_gates, get_resource_overhead_2q_gates
 
 
 def run_experiment(
@@ -49,6 +49,8 @@ def run_experiment(
                     transpiled_circuit = translate(original_circuit, translating_method, gate_set)
                     #transpiled_total_gates = count_total_gates_qiskit(transpiled_circuit)
                     gate_overhead = get_resource_overhead_total_gates(original_circuit, transpiled_circuit)
+                    tq_gate_overhead = get_resource_overhead_2q_gates(original_circuit, transpiled_circuit)
+
                     result_data = {
                         "backend": backend_name,
                         "backend_size": backend_size,
@@ -61,6 +63,7 @@ def run_experiment(
                         #"original_total_gates": original_total_gates,
                         #"transpiled_total_gates": transpiled_total_gates,
                         "gate_overhead": gate_overhead,
+                        "tq_gate_overhead": tq_gate_overhead,
                     }
 
                     with lock:
