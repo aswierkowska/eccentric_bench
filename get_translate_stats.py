@@ -5,8 +5,10 @@ import logging
 from itertools import product
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Manager
+from pytket.qasm import circuit_to_qasm
 
 import stim
+import qiskit
 
 sys.path.append(os.path.join(os.getcwd(), "external/qiskit_qec/src"))
 
@@ -43,7 +45,6 @@ def run_experiment(
         for state, qc in code.circuit.items():
             original_circuit = qc
             #original_total_gates = count_total_gates_qiskit(original_circuit)
-
             for translating_method in translating_methods:
                 for gate_set in gate_sets:
                     transpiled_circuit = translate(original_circuit, translating_method, gate_set)
