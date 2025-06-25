@@ -56,6 +56,7 @@ class NoiseModel:
 
     
     def add_qubit_error(self, circuit: stim.Circuit, qubits: List[stim.GateTarget], gate_duration: float) -> None:
+        # https://arxiv.org/pdf/1404.3747
         if self.backend == None:
             return
         for qubit in qubits:
@@ -64,18 +65,16 @@ class NoiseModel:
             t2 = qubit_properties.t2
 
             # Safety check
-            if t1 <= 0 or t2 <= 0 or (1 / t2 <= 1 / (2 * t1)):
-                T_phi = float("inf")
-            else:
-                T_phi = 1 / (1 / t2 - 1 / (2 * t1))
+            if t1 <= 0 or t2 <= 0:
+                continue
 
             p_x = 0.25 * (1 - np.exp(-gate_duration / t1))
             p_y = 0.25 * (1 - np.exp(-gate_duration / t1))
-            p_z = 0.5 * (1 - np.exp(-gate_duration / T_phi)) if T_phi != float('inf') else 0.0
+            p_z = (1 - np.exp(-gate_duration / t2)) / 2 - (1 - np.exp(-gate_duration / t1)) / 4
 
-            p_x = min(max(p_x, 0.0), 1.0)
-            p_y = min(max(p_y, 0.0), 1.0)
-            p_z = min(max(p_z, 0.0), 1.0)
+            p_x = np.clip(p_x, 0.0, 1.0)
+            p_y = np.clip(p_y, 0.0, 1.0)
+            p_z = np.clip(p_z, 0.0, 1.0)
 
             circuit.append_operation("PAULI_CHANNEL_1", [qubit], [p_x, p_y, p_z])
 
