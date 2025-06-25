@@ -11,6 +11,7 @@ class WillowNoise(NoiseModel):
             idle=0.9e-2,
             crosstalk=5.5e-4,
             leakage=2.5e-4,
+            leakage_propagation=2.0e-4,
             reset=1.5e-3,
             measure=0.8e-2, # In the paper: readout
             qt=qt
