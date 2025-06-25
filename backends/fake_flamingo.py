@@ -83,7 +83,7 @@ class FakeIBMFlamingo(BackendV2):
     def addStateOfTheArtQubits(self):
         qubit_props = []
         
-        for i in range(self.num_qubits):
+        for i in range(self._num_qubits):
             t1 = np.random.normal(190, 120, 1)
             t1 = np.clip(t1, 50, 500)
             t1 = t1 * 1e-6

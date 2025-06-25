@@ -12,7 +12,6 @@ class ArtificialVarianceNoise(NoiseModel):
         return NoiseModel(
             sq=p,
             tq=p,
-            idle=p,
             measure=p,
             reset=p,
             qt=qt,
