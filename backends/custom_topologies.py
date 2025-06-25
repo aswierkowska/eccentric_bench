@@ -2,6 +2,7 @@ from qiskit.providers.fake_provider import GenericBackendV2
 # from qiskit.visualization import plot_coupling_map
 from qiskit.transpiler import CouplingMap
 import rustworkx as rx
+import math
 
 def generate_cube_map(num_layers, num_rows, num_columns, bidirectional=True):
     """Return a coupling map of qubits connected in a 3D cube structure."""
@@ -50,6 +51,12 @@ def get_custom_topology(shape: str, num_qubits: int):
         # plot_coupling_map(num_qubits, None, coupling_map.get_edges(), filename="graph.png")
     elif shape == "full":
         coupling_map = CouplingMap.from_full(num_qubits)
+    elif shape == "heavyhex":
+        d = (2 + math.sqrt(40 * num_qubits + 24)) / 10
+        d = int(d)
+        if d % 2 == 0:
+            d -= 1
+        coupling_map = CouplingMap.from_heavy_hex(d)
     else:
         return None
     

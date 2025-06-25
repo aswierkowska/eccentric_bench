@@ -14,7 +14,7 @@ from gen import _gen_util
 
 from qiskit_qec.circuits import StimCodeCircuit
 
-def get_bacon_shot_code(d=5, cycles=1):
+def get_bacon_shor_code(d=5, cycles=1):
     #This custom value should be fixed because it seems there lies the problem
     #Workflow:
     #https://github.com/Strilanc/more-bacon-less-threshold/blob/main/step1_generate_circuits.sh
@@ -48,4 +48,4 @@ def get_bacon_shot_code(d=5, cycles=1):
 
 
 if __name__ == "__main__":
-    get_bacon_shot_code()
+    get_bacon_shor_code()
