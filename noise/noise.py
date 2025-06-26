@@ -120,7 +120,7 @@ class NoiseModel:
 
     def get_gate_time(self, op: stim.CircuitInstruction, pair: Optional[List[int]] = None) -> Union[float, None]:
         if self.gate_times == {}:
-            return
+            return 0
         
         if pair:
             if self.backend and self.is_remote(pair):

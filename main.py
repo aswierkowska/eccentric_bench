@@ -71,7 +71,7 @@ def run_experiment(
             if translating_method:
                 code.qc = translate(code.qc, translating_method)
                 #TODO: either else here or sth
-            print("Before transpiler")
+            print(f"Before transpiler {backend} {layout_method} {routing_method}")
             code.qc = run_transpiler(code.qc, backend, layout_method, routing_method)
             print("After transpiler")
             qt = QubitTracking(backend, code.qc)
@@ -85,7 +85,7 @@ def run_experiment(
             stim_circuit = noise_model.noisy_circuit(stim_circuit)
             print("After adding noise")
             print("before decoding")
-            error_occured = decode(code_name, stim_circuit, 1, decoder)
+            error_occured = decode(code_name, stim_circuit, 1, decoder, backend_name, error_type)
             print("After decoding")
             if error_occured == None:
                 exit(1)
