@@ -52,9 +52,6 @@ class VarianceBackend(BackendV2):
     def get_remote_gates(self):
         return []
     
-    def num_qubits(self):
-        return self._num_qubits
-    
     @classmethod
     def _default_options(cls):
         return Options(shots=1024)
