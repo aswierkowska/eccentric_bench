@@ -1,0 +1,10 @@
+experiments:
+  - name: "Routing_25.06"
+    num_samples: 1
+    backends: ["custom_grid", "custom_heavyhex"] # custom_line, custom_grid, custom_cube, custom_full
+    backends_sizes: [290]
+    codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
+    routing_methods: ["basic", "sabre", "stochastic", "lookahead"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
+    layout_methods: ["default"] # default, dense, trivial, sabre per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
+    # BUG: https://github.com/Qiskit/qiskit/issues/13152
+    #translating_methods: ["translator"] #default translator synthesis according to https://github.com/Qiskit/qiskit/blob/stable/2.0/qiskit/compiler/transpiler.py#L141
