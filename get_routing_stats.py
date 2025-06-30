@@ -105,7 +105,7 @@ if __name__ == "__main__":
         manager = Manager()
         lock = manager.Lock()
 
-        with ProcessPoolExecutor(max_workers=1) as executor:
+        with ProcessPoolExecutor() as executor:
             parameter_combinations = product(
                 backends, backends_sizes, codes, routing_methods, layout_methods
             )
