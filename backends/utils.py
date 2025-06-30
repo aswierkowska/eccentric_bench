@@ -26,7 +26,7 @@ def get_backend(backend: str, backend_size: int):
             backend = FakeQuantinuumApolloBackend()
         elif name == "infleqtion":
             backend = FakeInfleqtionBackend(extended=True)
-        elif name == "infleqtion":
+        elif name == "nsinfleqtion":
             backend = FakeInfleqtionNoShuttlingBackend(extended=True)
         #elif name == "aquila":
         #    backend = FakeQueraAquilaBackend()
