@@ -16,10 +16,10 @@ class FakeInfleqtionBackend(BackendV2):
     def __init__(self, extended=False):
         super().__init__(name="FakeInfleqtion", backend_version=2)
         if extended:
-            self.rows = 12
-            self.columns = 18
+            self.rows = 16
+            self.columns = 24
         else:
-            # rescaled 3x each side
+            # rescaled 4x each side
             self.rows = 4
             self.columns = 6
         self._coupling_map = CouplingMap.from_grid(self.rows, self.columns)
