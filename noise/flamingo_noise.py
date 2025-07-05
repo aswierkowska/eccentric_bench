@@ -15,7 +15,6 @@ class FlamingoNoise(NoiseModel):
             measure=0.01,
             remote=0.03,
             gate_times={
-                # TODO: what is reset gate time?
                 "SQ": 50 * 1e-9,
                 "TQ": 70 * 1e-9,
                 "M": 70 * 1e-9,
