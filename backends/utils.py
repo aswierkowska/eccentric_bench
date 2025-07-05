@@ -4,6 +4,7 @@ from .fake_apollo import FakeQuantinuumApolloBackend
 from .fake_flamingo import FakeIBMFlamingo
 from .fake_willow import FakeGoogleWillowBackend
 from .fake_infleqtion import FakeInfleqtionBackend
+from .fake_infleqtion_no_shuttling import FakeInfleqtionNoShuttlingBackend
 from .variance_backend import VarianceBackend
 
 def get_backend(backend: str, backend_size: int):
@@ -25,6 +26,8 @@ def get_backend(backend: str, backend_size: int):
             backend = FakeQuantinuumApolloBackend()
         elif name == "infleqtion":
             backend = FakeInfleqtionBackend(extended=True)
+        elif name == "nsinfleqtion":
+            backend = FakeInfleqtionNoShuttlingBackend(extended=True)
         #elif name == "aquila":
         #    backend = FakeQueraAquilaBackend()
         else:
