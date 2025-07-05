@@ -10,21 +10,36 @@ from backends import QubitTracking
 #}
 
 class ApolloNoise(NoiseModel):
-
+    # H2 rescaled according to roadmap: https://www.quantinuum.com/press-releases/quantinuum-unveils-accelerated-roadmap-to-achieve-universal-fault-tolerant-quantum-computing-by-2030
     @staticmethod
     def get_noise(qt: QubitTracking) -> 'NoiseModel':
-        # TODO: get more detailed values from https://github.com/CQCL/quantinuum-hardware-specifications/blob/main/qtm_spec/combined_analysis.py or here: https://arxiv.org/pdf/2406.02501
-        # Values taken from Quantinuum H2 and rescaled according to their roadmap
         return NoiseModel(
-            sq=0.000002,
-            tq=0.0001,
-            idle=0.00223,
-            crosstalk=0.66e-6,
-            measure=0.0001,
-            remote=2.23e-4, # TODO SCALE
+            sq=8.0e-5 / 10,
+            tq=1.4e-3 / 10,
+            idle=5.3e-4 / 10,
+            crosstalk=6.3e-6 / 10,
+            measure=1.33e-3 / 10,
+            leakage=4.3e-4 / 10,
+            remote=6.3e-06 / 10,
             gate_times={
-                "REMOTE": 4, # TODO ADD
+                "REMOTE": 0,
             },
             qt=qt
-            # backend seems unnecessary as t1 is a few minutes
         )
+    
+    # H2:    
+    #def get_noise(qt: QubitTracking) -> 'NoiseModel':
+    #    # Values from https://github.com/CQCL/quantinuum-hardware-specifications/blob/main/qtm_spec/combined_analysis.py
+    #    return NoiseModel(
+    #        sq=8.0e-5,
+    #        tq=1.4e-3,
+    #        idle=5.3e-4,
+    #        crosstalk=6.3e-6,
+    #        measure=1.33e-3,
+    #        leakage=4.3e-4,
+    #        remote=6.3e-06,
+    #        gate_times={
+    #            "REMOTE": 0,
+    #        },
+    #        qt=qt
+    #    )
