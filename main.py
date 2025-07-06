@@ -75,8 +75,6 @@ def run_experiment(
         stim_circuit_idle = get_stim_circuits(
             idle_circuit.qc, detectors=detectors_idle, logicals=logicals_idle
         )[0][0]
-        print(cycles)
-        print(stim_circuit_idle)
 
         noise_model = get_noise_model(error_type, qt, error_prob, backend)
         noise_model_idle = get_noise_model(error_type, qt_idle, error_prob, backend)
