@@ -1,12 +1,16 @@
 import stim
 from qiskit_qec.circuits import StimCodeCircuit
 
-def make_idle_qubit_circuit(num_rounds: int) -> stim.Circuit:
+def make_idle_qubit_circuit(num_rounds: int, num_qubits: int) -> StimCodeCircuit:
     circuit = stim.Circuit()
-    circuit.append("QUBIT_COORDS", [0, 0])
+
+    for q in range(num_qubits):
+        circuit.append("QUBIT_COORDS", [q, 0])
+
     for _ in range(num_rounds):
         circuit.append("TICK")
 
-    circuit.append("M", [0])
+    # Measure all qubits at the end in Z basis
+    circuit.append("M", list(range(num_qubits)))
 
-    return StimCodeCircuit(stim_circuit = circuit)
+    return StimCodeCircuit(stim_circuit=circuit)

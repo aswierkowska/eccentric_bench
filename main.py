@@ -60,7 +60,12 @@ def run_experiment(
         
         code = get_code(code_name, d, cycles)
         detectors, logicals = code.stim_detectors()
-        idle_circuit = make_idle_qubit_circuit(cycles)
+        if code_name == "gross":
+            num_qubits = 12
+        else:
+            num_qubits = 1
+
+        idle_circuit = make_idle_qubit_circuit(cycles, num_qubits)
         detectors_idle, logicals_idle = idle_circuit.stim_detectors()
 
         code.qc = run_transpiler(code.qc, backend, layout_method, routing_method)
@@ -144,7 +149,7 @@ if __name__ == "__main__":
         lock = manager.Lock()
         # TODO: better handling case if distances and backends_sizes are both set
 
-        with ProcessPoolExecutor() as executor:
+        with ProcessPoolExecutor(max_workers=3) as executor:
             if "backends_sizes" in experiment and "distances" in experiment:
                 raise ValueError("Cannot set both backends_sizes and distances in the same experiment")
             if "distances" in experiment:
