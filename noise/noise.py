@@ -225,7 +225,7 @@ class NoiseModel:
 
         def flush():
             nonlocal result
-            if not current_moment_mid:
+            if not current_moment_mid and self.idle == 0:
                 return
 
             idle_qubits = sorted(qs - used_qubits)
