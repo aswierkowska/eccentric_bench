@@ -231,12 +231,6 @@ class NoiseModel:
             idle_qubits = sorted(qs - used_qubits)
             if used_qubits and idle_qubits and self.idle > 0:
                 current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.idle)
-            idle_qubits = sorted(qs - measured_qubits)
-            if measured_qubits and idle_qubits and self.measure > 0:
-                current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.measure)
-            idle_qubits = sorted(qs - reset_qubits)
-            if reset_qubits and idle_qubits and self.reset > 0:
-                current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.reset)
 
             result += current_moment_pre
             result += current_moment_mid
