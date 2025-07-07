@@ -902,7 +902,6 @@ def get_color_code(d=5,rounds=5):
     cnot_schedule="tri_optimal",  # Default CNOT schedule optimized in our paper.
     p_circuit=0,
     )
-    #print(colorcode.circuit)
     return StimCodeCircuit(stim_circuit = colorcode.circuit)
 
 

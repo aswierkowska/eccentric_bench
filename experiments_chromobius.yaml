@@ -1,12 +1,12 @@
 experiments:
-  - name: "Const_cycles"
+  - name: "chromobius"
     num_samples: 1000
-    distances: [7]
+    distances: [3,5,7]
     backends: ["custom_full"]
     codes: ["color"]
-    error_types: ["constant"]
-    error_probabilities: [0.004] 
-    decoders: ["bposd"] # mwpm
+    error_types: ["phenomenological"]
+    error_probabilities: [0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01] 
+    decoders: ["chromobius", "bposd"] # mwpm
     #  - name: "Real_topology_26.05_20:48"
     #num_samples: 1000
     #backends: ["real_willow", "real_flamingo", "real_infleqtion", "real_apollo"] # custom_line, custom_grid, custom_cube, custom_full
