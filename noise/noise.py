@@ -229,7 +229,7 @@ class NoiseModel:
                 return
 
             idle_qubits = sorted(qs - used_qubits)
-            if used_qubits and idle_qubits and self.idle > 0:
+            if idle_qubits and self.idle > 0:
                 current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.idle)
 
             result += current_moment_pre
