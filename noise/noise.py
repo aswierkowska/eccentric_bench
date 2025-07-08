@@ -164,8 +164,8 @@ class NoiseModel:
             pre.append_operation("Z_ERROR" if op.name.endswith("X") else "X_ERROR", targets, p)
             #self.add_qubit_error(post, targets, self.get_gate_time(op))
         elif op.name == "MPP":
-            assert len(targets) % 3 == 0 and all(t.is_combiner for t in targets[1::3]), repr(op)
-            assert args == [] or args == [0]
+            #assert len(targets) % 3 == 0 and all(t.is_combiner for t in targets[1::3]), repr(op)
+            #assert args == [] or args == [0]
             if op.name in self.noisy_gates:
                 p = self.noisy_gates[op.name]
             else:
@@ -181,7 +181,9 @@ class NoiseModel:
                 return pre, mid, post
 
             else:
-                pre.append_operation("DEPOLARIZE2", [t.value for t in targets if not t.is_combiner], p)
+                for t in targets:
+                    if not t.is_combiner:
+                        pre.append_operation("DEPOLARIZE1", [t.value], p)
                 args = [p]
         mid.append_operation(op.name, targets, args)
         return pre, mid, post
@@ -202,18 +204,12 @@ class NoiseModel:
 
         def flush():
             nonlocal result
-            if not current_moment_mid:
+            if not current_moment_mid and self.idle == 0:
                 return
 
             idle_qubits = sorted(qs - used_qubits)
             if used_qubits and idle_qubits and self.idle > 0:
                 current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.idle)
-            idle_qubits = sorted(qs - measured_qubits)
-            if measured_qubits and idle_qubits and self.measure > 0:
-                current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.measure)
-            idle_qubits = sorted(qs - reset_qubits)
-            if reset_qubits and idle_qubits and self.reset > 0:
-                current_moment_post.append_operation("DEPOLARIZE1", idle_qubits, self.reset)
 
             result += current_moment_pre
             result += current_moment_mid

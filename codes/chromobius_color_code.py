@@ -122,8 +122,8 @@ def make_color_code_circuit(
                     ], [center.real, center.imag, 0, chromobius_annotation])
 
         # End the round.
-        if data_noise_after:
-            c.append("DEPOLARIZE1", range(len(all_qubits)), noise_strength)
+        #if data_noise_after:
+            #c.append("DEPOLARIZE1", range(len(all_qubits)), noise_strength)
         c.append("SHIFT_COORDS", [], [0, 0, 1])
         c.append("TICK")
 
