@@ -16,8 +16,8 @@ class FakeInfleqtionNoShuttlingBackend(BackendV2):
     def __init__(self, extended=False):
         super().__init__(name="FakeInfleqtion", backend_version=2)
         if extended:
-            self.rows = 12
-            self.columns = 18
+            self.rows = 16
+            self.columns = 24
         else:
             # rescaled 3x each side
             self.rows = 4
