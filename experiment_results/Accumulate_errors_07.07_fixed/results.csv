@@ -1,0 +1,13 @@
+backend,backend_size,code,decoder,distance,cycles,num_samples,error_type,error_probability,raw_error_rate,idle_error_rate,corrected_error_rate
+custom_full,300,surface,bposd,11,11,1000,modsi1000,0.002,0.335000,0.000000,0.000000
+custom_full,300,surface,bposd,11,11,1000,modsi1000,0.004,0.447000,0.000000,0.000004
+custom_full,300,gross,bposd,12,12,1000,modsi1000,0.002,1.000000,0.000000,0.000000
+custom_full,300,gross,bposd,12,12,1000,modsi1000,0.004,1.000000,0.000000,0.000029
+custom_full,300,hh,bposd,11,11,1000,modsi1000,0.002,0.443000,0.000000,0.000008
+custom_full,300,hh,bposd,11,11,1000,modsi1000,0.004,0.495000,0.000000,0.000132
+custom_full,300,steane,bposd,9,9,1000,modsi1000,0.002,0.040000,0.000000,0.000045
+custom_full,300,steane,bposd,9,9,1000,modsi1000,0.004,0.062000,0.000000,0.000066
+custom_full,300,color,bposd,11,11,1000,modsi1000,0.002,0.411000,0.000000,0.000001
+custom_full,300,color,bposd,11,11,1000,modsi1000,0.004,0.481000,0.000000,0.000079
+custom_full,300,bacon,bposd,17,17,1000,modsi1000,0.002,0.504000,0.000000,0.000314
+custom_full,300,bacon,bposd,17,17,1000,modsi1000,0.004,0.486000,0.000000,0.000512
