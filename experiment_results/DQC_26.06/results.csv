@@ -1,0 +1,4 @@
+backend,backend_size,code,decoder,distance,cycles,num_samples,error_type,error_probability,logical_error_rate,layout_method,routing_method,translating_method
+real_flamingo,,steane,bposd,9,9,1000,real_flamingo,,0.079000,N/A,N/A,N/A
+real_flamingo,,hh,bposd,11,11,1000,real_flamingo,,0.496000,N/A,N/A,N/A
+real_flamingo,,gross,bposd,12,12,1000,real_flamingo,,1.000000,N/A,N/A,N/A
