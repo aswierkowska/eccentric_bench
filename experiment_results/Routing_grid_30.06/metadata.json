@@ -1,0 +1,28 @@
+{
+    "name": "Routing_grid_30.06",
+    "num_samples": 1000,
+    "backends": [
+        "custom_grid"
+    ],
+    "backends_sizes": [
+        289
+    ],
+    "codes": [
+        "surface",
+        "hh",
+        "gross",
+        "color",
+        "bacon",
+        "steane"
+    ],
+    "routing_methods": [
+        "basic",
+        "sabre",
+        "stochastic"
+    ],
+    "layout_methods": [
+        "dense",
+        "trivial",
+        "sabre"
+    ]
+}

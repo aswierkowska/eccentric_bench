@@ -1,0 +1,25 @@
+{
+    "name": "steane_test",
+    "num_samples": 10,
+    "backends": [
+        "custom_full"
+    ],
+    "codes": [
+        "steane"
+    ],
+    "distances": [
+        3,
+        9,
+        27
+    ],
+    "cycles": 1,
+    "error_types": [
+        "constant"
+    ],
+    "error_probabilities": [
+        0.004
+    ],
+    "decoders": [
+        "bposd"
+    ]
+}

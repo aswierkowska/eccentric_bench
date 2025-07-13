@@ -1,0 +1,27 @@
+{
+    "name": "Translation",
+    "codes": [
+        "surface",
+        "hh",
+        "gross",
+        "color",
+        "bacon",
+        "steane"
+    ],
+    "backends": [
+        "custom_full"
+    ],
+    "backends_sizes": [
+        300
+    ],
+    "translating_methods": [
+        "qiskit",
+        "bqskit",
+        "tket"
+    ],
+    "gate_sets": [
+        "stim",
+        "h2",
+        "ibm_heron"
+    ]
+}
