@@ -1,0 +1,14 @@
+backend,backend_size,code,distance,cycles,state,translating_method,gate_set,original_total_gates,original_2q_gates,gate_overhead_mean,gate_overhead_var,tq_gate_overhead_mean,tq_gate_overhead_var
+custom_full,300,bacon,17,17,,qiskit,h2,1666,1088,4930.0,0.0,0.0,0.0
+custom_full,300,steane,9,9,,qiskit,h2,3121,2401,10324.0,0.0,0.0,0.0
+custom_full,300,bacon,17,17,,qiskit,ibm_heron,1666,1088,7684.0,0.0,0.0,0.0
+custom_full,300,color,11,11,,qiskit,h2,6360,5280,22200.0,0.0,0.0,0.0
+custom_full,300,surface,11,11,,qiskit,h2,6160,4840,20680.0,0.0,0.0,0.0
+custom_full,300,steane,9,9,,qiskit,ibm_heron,3121,2401,15846.0,0.0,0.0,0.0
+custom_full,300,hh,11,11,,qiskit,h2,8360,7040,29480.0,0.0,0.0,0.0
+custom_full,300,gross,150,150,,qiskit,h2,12168,10368,43272.0,0.0,0.0,0.0
+custom_full,300,color,11,11,,qiskit,ibm_heron,6360,5280,33840.0,0.0,0.0,0.0
+custom_full,300,surface,11,11,,qiskit,ibm_heron,6160,4840,31680.0,0.0,0.0,0.0
+custom_full,300,hh,11,11,,qiskit,ibm_heron,8360,7040,44880.0,0.0,0.0,0.0
+custom_full,300,gross,150,150,,qiskit,ibm_heron,12168,10368,65808.0,0.0,0.0,0.0
+custom_full,300,steane,9,9,,bqskit,h2,3121,2401,34296.557,3908.4247510000005,-120.313,32.301031

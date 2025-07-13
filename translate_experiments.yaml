@@ -1,7 +1,8 @@
 experiments:
-  - name: "Translation_with_tq"
+  - name: "Translation_full_qiskit_max_and_tket"
+    num_samples: 1000
     codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
     backends: ["custom_full"]
     backends_sizes: [300]
-    translating_methods: ["qiskit", "bqskit", "tket"]
+    translating_methods: ["qiskit", "tket"]
     gate_sets: ["h2", "ibm_heron"]

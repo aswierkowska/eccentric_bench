@@ -158,7 +158,7 @@ def translate(circuit, translating_method, gate_set=None):
         qiskit_circuit = transpile(
             circuit,
             basis_gates=gate_set_obj,
-            optimization_level=0,
+            optimization_level=3, # TODO: 3 just for experiments!
         )
         return qiskit_circuit
 
