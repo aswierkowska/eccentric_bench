@@ -1,8 +1,17 @@
 experiments:
-  - name: "Variance_25.06"
+  - name: "Topology_size_hh_13.07"
     num_samples: 1000
-    backends: ["variance_low", "variance_mid", "variance_high"] # custom_line, custom_grid, custom_cube, custom_full
+    backends: ["custom_heavyhex"] # custom_line, custom_grid, custom_cube, custom_full
+    backends_sizes: [291, 409, 547, 705, 883]
     codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-    error_types: ["variance", "real_heron"]
+    error_types: ["constant", "modsi1000"]
+    error_probabilities: [0.004] 
+    decoders: ["bposd"] # mwpm
+  - name: "Topology_size_full_13.07"
+    num_samples: 1000
+    backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
+    backends_sizes: [300, 350, 400, 450, 500]
+    codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
+    error_types: ["constant", "modsi1000"]
     error_probabilities: [0.004] 
     decoders: ["bposd"] # mwpm

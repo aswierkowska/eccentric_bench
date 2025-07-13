@@ -3,8 +3,8 @@ with import <nixpkgs> {};
 
 mkShell rec {
   buildInputs = [
-    python3  # Add the Python version you need
-    python3Packages.virtualenv  # Ensure you have virtualenv available
+    python310  # Add the Python version you need
+    python310Packages.virtualenv  # Ensure you have virtualenv available
     cmake
   ];
 

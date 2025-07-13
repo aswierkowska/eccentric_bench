@@ -1,0 +1,32 @@
+{
+    "name": "Topology_size_hh_07.07",
+    "num_samples": 1000,
+    "backends": [
+        "custom_heavyhex"
+    ],
+    "backends_sizes": [
+        291,
+        409,
+        547,
+        705,
+        883
+    ],
+    "codes": [
+        "surface",
+        "hh",
+        "gross",
+        "color",
+        "steane",
+        "bacon"
+    ],
+    "error_types": [
+        "constant",
+        "modsi1000"
+    ],
+    "error_probabilities": [
+        0.004
+    ],
+    "decoders": [
+        "bposd"
+    ]
+}
