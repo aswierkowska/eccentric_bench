@@ -1,8 +1,19 @@
 experiments:
-  - name: "Variance_25.06"
+  - name: "Willow_07.07"
     num_samples: 1000
-    backends: ["variance_low", "variance_mid", "variance_high"] # custom_line, custom_grid, custom_cube, custom_full
+    backends: ["real_willow"]
     codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-    error_types: ["variance", "real_heron"]
-    error_probabilities: [0.004] 
+    error_types: ["real_willow"]
+    decoders: ["bposd"] # mwpm
+  - name: "Apollo_07.07"
+    num_samples: 1000
+    backends: ["real_apollo"]
+    codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
+    error_types: ["real_apollo"]
+    decoders: ["bposd"] # mwpm
+  - name: "Infleqtion_07.07"
+    num_samples: 1000
+    backends: ["real_infleqtion", "real_nsinfleqtion"]
+    codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
+    error_types: ["real_infleqtion"]
     decoders: ["bposd"] # mwpm
