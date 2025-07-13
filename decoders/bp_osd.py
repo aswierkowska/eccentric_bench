@@ -82,8 +82,8 @@ def dem_to_check_matrices(dem: stim.DetectorErrorModel, return_col_dict=False):
     return check_matrix, observables_matrix, priors
 
 
-def bposd_chk(circuit: stim.Circuit, num_shots: int):
-    dem = circuit.detector_error_model()
+def bposd_chk(circuit: stim.Circuit, num_shots: int, approximate_disjoint_errors: bool):
+    dem = circuit.detector_error_model(approximate_disjoint_errors=approximate_disjoint_errors)
     chk, obs, priors, col_dict = dem_to_check_matrices(dem, return_col_dict=True)
 
     bpd = bposd_decoder(
@@ -113,13 +113,13 @@ def bposd_chk(circuit: stim.Circuit, num_shots: int):
     return p_l
 
 
-def bposd_batch(circuit: stim.Circuit, num_shots: int):
+def bposd_batch(circuit: stim.Circuit, num_shots: int, approximate_disjoint_errors: bool):
     sampler = circuit.compile_detector_sampler()
     detection_events, observable_flips = sampler.sample(
         num_shots, separate_observables=True
     )
 
-    dem = circuit.detector_error_model(approximate_disjoint_errors=False)
+    dem = circuit.detector_error_model(approximate_disjoint_errors=approximate_disjoint_errors)
     matcher = BPOSD(
         dem,
         max_bp_iters=10000,

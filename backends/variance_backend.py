@@ -52,27 +52,24 @@ class VarianceBackend(BackendV2):
     def get_remote_gates(self):
         return []
     
-    def num_qubits(self):
-        return self._num_qubits
-    
     @classmethod
     def _default_options(cls):
         return Options(shots=1024)
      
     def addStateOfTheArtQubits(self, variance=120):
         qubit_props = []
-        
-        for i in range(self.num_qubits):
+       
+        for i in range(self._num_qubits):
             t1 = np.random.normal(190, variance, 1)
             t1 = np.clip(t1, 0, 570)
             t1 = t1 * 1e-6
-
+            
             t2 = np.random.normal(130, variance, 1)
             t2 = np.clip(t2, 0, 390)
             t2 = t2 * 1e-6
-
+        
             qubit_props.append(QubitProperties(t1=t1, t2=t2, frequency=5.0e9))
-
+        
         self.target.qubit_properties = qubit_props
 
 
