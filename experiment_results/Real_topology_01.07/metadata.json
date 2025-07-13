@@ -1,0 +1,27 @@
+{
+    "name": "Real_topology_01.07",
+    "num_samples": 1000,
+    "backends": [
+        "real_willow",
+        "real_apollo",
+        "real_infleqtion",
+        "real_nsinfleqtion"
+    ],
+    "codes": [
+        "surface",
+        "hh",
+        "gross",
+        "color",
+        "steane",
+        "bacon"
+    ],
+    "error_types": [
+        "modsi1000"
+    ],
+    "error_probabilities": [
+        0.004
+    ],
+    "decoders": [
+        "bposd"
+    ]
+}

@@ -9,15 +9,20 @@ def create_experiment_directory(experiment_name):
     return directory
 
 def save_results_to_csv(data, experiment_name):
-    directory = create_experiment_directory(experiment_name)
-    filename = os.path.join(directory, "results.csv")
+    try:
+        directory = create_experiment_directory(experiment_name)
+        filename = os.path.join(directory, "results.csv")
 
-    file_exists = os.path.isfile(filename)
-    with open(filename, mode="a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=data.keys())
-        if not file_exists:
-            writer.writeheader()
-        writer.writerow(data)
+        file_exists = os.path.isfile(filename)
+        with open(filename, mode="a", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=data.keys())
+            if not file_exists:
+                writer.writeheader()
+            writer.writerow(data)
+    except FileNotFoundError as e:
+        logging.error(f"Error saving results {e}")
+        logging.info(data)
+        print(f"Error saving results: {e}")
 
 def save_experiment_metadata(experiment, experiment_name):
     directory = create_experiment_directory(experiment_name)

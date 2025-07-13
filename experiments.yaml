@@ -1,8 +1,8 @@
 experiments:
-  - name: "Variance_25.06"
+  - name: "Real_topology_07.07"
     num_samples: 1000
-    backends: ["variance_low", "variance_mid", "variance_high"] # custom_line, custom_grid, custom_cube, custom_full
+    backends: ["real_willow", "real_apollo", "real_infleqtion", "real_nsinfleqtion"] # custom_line, custom_grid, custom_cube, custom_full
     codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-    error_types: ["variance", "real_heron"]
+    error_types: ["modsi1000"]
     error_probabilities: [0.004] 
     decoders: ["bposd"] # mwpm

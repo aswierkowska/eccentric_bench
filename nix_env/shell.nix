@@ -1,23 +1,28 @@
-# shell.nix
 with import <nixpkgs> {};
 
-mkShell rec {
-  buildInputs = [
-    python3  # Add the Python version you need
-    python3Packages.virtualenv  # Ensure you have virtualenv available
-    cmake
-  ];
+let
+  pythonEnv = python3.withPackages (ps: with ps; [ pip virtualenv ]);
 
-  # Setting the LD_LIBRARY_PATH, if necessary, for additional libraries
-  NIX_LD_LIBRARY_PATH = lib.makeLibraryPath [
+  # Define it here, outside mkShell attribute set:
+  nixLdLibraryPath = lib.makeLibraryPath [
     stdenv.cc.cc
     zlib
   ];
-  LD_LIBRARY_PATH = NIX_LD_LIBRARY_PATH;
-  NIX_LD = lib.fileContents "${stdenv.cc}/nix-support/dynamic-linker";
+in
+
+mkShell {
+  buildInputs = [
+    pythonEnv
+    cmake
+  ];
+
+  # Now just use the let-bound variable:
+  NIX_LD_LIBRARY_PATH = nixLdLibraryPath;
+  LD_LIBRARY_PATH = nixLdLibraryPath;
+
+  NIX_LD = builtins.readFile "${stdenv.cc}/nix-support/dynamic-linker";
 
   shellHook = ''
-    # Activate the virtual environment
     if [ -d ".venv" ]; then
       source .venv/bin/activate
     else
