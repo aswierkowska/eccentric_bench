@@ -1,0 +1,22 @@
+{
+    "name": "test",
+    "num_samples": 1000,
+    "backends": [
+        "custom_full"
+    ],
+    "backends_sizes": [
+        400
+    ],
+    "codes": [
+        "color"
+    ],
+    "error_types": [
+        "constant"
+    ],
+    "error_probabilities": [
+        0.005
+    ],
+    "decoders": [
+        "chromobius"
+    ]
+}

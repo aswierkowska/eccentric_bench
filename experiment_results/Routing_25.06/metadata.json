@@ -1,0 +1,28 @@
+{
+    "name": "Routing_25.06",
+    "num_samples": 1,
+    "backends": [
+        "custom_grid",
+        "custom_heavyhex"
+    ],
+    "backends_sizes": [
+        290
+    ],
+    "codes": [
+        "surface",
+        "hh",
+        "gross",
+        "color",
+        "bacon",
+        "steane"
+    ],
+    "routing_methods": [
+        "basic",
+        "sabre",
+        "stochastic",
+        "lookahead"
+    ],
+    "layout_methods": [
+        "default"
+    ]
+}

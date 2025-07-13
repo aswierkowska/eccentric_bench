@@ -1,0 +1,23 @@
+{
+    "name": "gross_test",
+    "num_samples": 10000,
+    "backends": [
+        "custom_full"
+    ],
+    "codes": [
+        "steane"
+    ],
+    "distances": [
+        9
+    ],
+    "cycles": 1,
+    "error_types": [
+        "constant"
+    ],
+    "error_probabilities": [
+        0.004
+    ],
+    "decoders": [
+        "bposd"
+    ]
+}

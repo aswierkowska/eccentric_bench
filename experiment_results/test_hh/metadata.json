@@ -1,0 +1,22 @@
+{
+    "name": "test_hh",
+    "num_samples": 100,
+    "backends": [
+        "custom_heavyhex"
+    ],
+    "backends_sizes": [
+        100
+    ],
+    "codes": [
+        "hh"
+    ],
+    "error_types": [
+        "constant"
+    ],
+    "error_probabilities": [
+        0.005
+    ],
+    "decoders": [
+        "mwpm"
+    ]
+}

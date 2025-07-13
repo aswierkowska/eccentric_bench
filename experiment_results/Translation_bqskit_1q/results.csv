@@ -1,0 +1,12 @@
+custom_full,300,bacon,17,17,,bqskit,ibm_heron,2312
+custom_full,300,bacon,17,17,,bqskit,h2,2312
+custom_full,300,steane,9,9,,bqskit,ibm_heron,34685
+custom_full,300,color,11,11,,bqskit,ibm_heron,109920
+custom_full,300,steane,9,9,,bqskit,h2,34395
+custom_full,300,surface,11,11,,bqskit,ibm_heron,102080
+custom_full,300,color,11,11,,bqskit,h2,109920
+custom_full,300,hh,11,11,,bqskit,ibm_heron,146080
+custom_full,300,surface,11,11,,bqskit,h2,102080
+custom_full,300,gross,150,150,,bqskit,ibm_heron,214560
+custom_full,300,hh,11,11,,bqskit,h2,146080
+custom_full,300,gross,150,150,,bqskit,h2,214560
