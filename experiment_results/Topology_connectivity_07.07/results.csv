@@ -1,0 +1,2 @@
+backend,backend_size,code,decoder,distance,cycles,num_samples,error_type,error_probability,logical_error_rate,layout_method,routing_method,translating_method
+custom_full,729,gross,bposd,12,12,1000,modsi1000,0.004,0.031000,N/A,N/A,N/A

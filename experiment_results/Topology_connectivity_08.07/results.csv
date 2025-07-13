@@ -1,0 +1,11 @@
+backend,backend_size,code,decoder,distance,cycles,num_samples,error_type,error_probability,logical_error_rate,layout_method,routing_method,translating_method
+custom_full,729,gross,bposd,12,12,1000,modsi1000,0.004,0.023000,N/A,N/A,N/A
+custom_cube,729,steane,bposd,9,9,1000,modsi1000,0.004,0.102000,N/A,N/A,N/A
+custom_cube,729,gross,bposd,12,12,1000,modsi1000,0.004,1.000000,N/A,N/A,N/A
+custom_grid,729,gross,bposd,12,12,1000,modsi1000,0.004,1.000000,N/A,N/A,N/A
+custom_full,729,surface,bposd,17,17,1000,modsi1000,0.004,0.001000,N/A,N/A,N/A
+custom_full,729,hh,bposd,17,17,1000,modsi1000,0.004,0.157000,N/A,N/A,N/A
+custom_full,729,color,bposd,17,17,1000,modsi1000,0.004,0.079000,N/A,N/A,N/A
+custom_grid,729,bacon,bposd,27,27,1000,modsi1000,0.004,0.474000,N/A,N/A,N/A
+custom_full,729,bacon,bposd,27,27,1000,modsi1000,0.004,0.509000,N/A,N/A,N/A
+custom_cube,729,hh,bposd,13,13,1000,modsi1000,0.004,0.483000,N/A,N/A,N/A

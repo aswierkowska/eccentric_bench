@@ -1,0 +1,25 @@
+{
+    "name": "Topology_connectivity_line_03.07",
+    "num_samples": 1000,
+    "backends": [
+        "custom_line"
+    ],
+    "backends_sizes": [
+        729
+    ],
+    "codes": [
+        "surface",
+        "hh",
+        "color",
+        "steane"
+    ],
+    "error_types": [
+        "modsi1000"
+    ],
+    "error_probabilities": [
+        0.004
+    ],
+    "decoders": [
+        "bposd"
+    ]
+}
