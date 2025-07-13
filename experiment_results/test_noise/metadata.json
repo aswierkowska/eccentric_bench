@@ -1,0 +1,19 @@
+{
+    "name": "test_noise",
+    "num_samples": 100,
+    "backends": [
+        "real_willow"
+    ],
+    "codes": [
+        "surface"
+    ],
+    "error_types": [
+        "real_willow"
+    ],
+    "error_probabilities": [
+        0.004
+    ],
+    "decoders": [
+        "mwpm"
+    ]
+}

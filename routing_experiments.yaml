@@ -1,0 +1,17 @@
+experiments:
+  - name: "Routing_grid_30.06"
+    num_samples: 1000
+    backends: ["custom_grid"] # custom_line, custom_grid, custom_cube, custom_full
+    backends_sizes: [289]
+    codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
+    routing_methods: ["basic", "sabre", "stochastic"] # Lookahead is crazy slow, "lookahead"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
+    layout_methods: ["dense", "trivial", "sabre"] # default, dense, trivial, sabre per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
+    # BUG: https://github.com/Qiskit/qiskit/issues/13152
+    #translating_methods: ["translator"] #default translator synthesis according to https://github.com/Qiskit/qiskit/blob/stable/2.0/qiskit/compiler/transpiler.py#L141
+  - name: "Routing_hh_30.06"
+    num_samples: 1000
+    backends: ["custom_heavyhex"] # custom_line, custom_grid, custom_cube, custom_full
+    backends_sizes: [290]
+    codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
+    routing_methods: ["basic", "sabre", "stochastic"] # Lookahead is crazy slow, "lookahead"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
+    layout_methods: ["dense", "trivial", "sabre"] # default, dense, trivial, sabre per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing

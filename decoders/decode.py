@@ -1,5 +1,6 @@
 import logging
 import stim
+import numpy as np
 
 from .bp_osd import bposd_chk, bposd_batch
 from .mwpm import mwpm
@@ -28,3 +29,14 @@ def decode(
             return None
     else:
         raise NotImplementedError
+
+def raw_error_rate(circuit: stim.Circuit, num_shots: int):
+    sampler = circuit.compile_detector_sampler()
+    _, observable_flips = sampler.sample(
+        num_shots, separate_observables=True
+    )
+
+    errors = np.any(observable_flips, axis=1)
+    num_errors = np.count_nonzero(errors)
+
+    return num_errors

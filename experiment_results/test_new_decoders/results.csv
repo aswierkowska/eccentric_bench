@@ -1,0 +1,7 @@
+backend,backend_size,code,decoder,distance,cycles,num_samples,error_type,error_probability,logical_error_rate,layout_method,routing_method,translating_method
+custom_full,100,surface,mwpm,6,6,5,constant,0.004,0.000000,N/A,N/A,N/A
+custom_full,100,surface,bposd,6,6,5,constant,0.004,0.000000,N/A,N/A,N/A
+custom_full,100,bacon,mwpm,10,10,5,constant,0.004,0.000000,N/A,N/A,N/A
+custom_full,100,bacon,bposd,10,10,5,constant,0.004,0.000000,N/A,N/A,N/A
+custom_full,100,surface,mwpm,6,6,5,constant,0.004,0.000000,N/A,N/A,N/A
+custom_full,100,surface,bposd,6,6,5,constant,0.004,0.000000,N/A,N/A,N/A

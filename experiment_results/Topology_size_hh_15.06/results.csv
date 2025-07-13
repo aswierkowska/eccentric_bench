@@ -149,3 +149,15 @@ custom_heavyhex,546,surface,bposd,13,13,1000,modsi1000,0.008,0.502000,N/A,N/A,N/
 custom_heavyhex,546,surface,bposd,13,13,1000,constant,0.008,0.499000,N/A,N/A,N/A
 custom_heavyhex,546,surface,bposd,13,13,1000,modsi1000,0.004,0.486000,N/A,N/A,N/A
 custom_heavyhex,546,surface,bposd,13,13,1000,constant,0.004,0.482000,N/A,N/A,N/A
+custom_heavyhex,546,hh,bposd,13,13,1000,modsi1000,0.008,0.489000,N/A,N/A,N/A
+custom_heavyhex,546,hh,bposd,13,13,1000,modsi1000,0.004,0.482000,N/A,N/A,N/A
+custom_heavyhex,546,hh,bposd,13,13,1000,constant,0.008,0.500000,N/A,N/A,N/A
+custom_heavyhex,546,hh,bposd,13,13,1000,constant,0.002,0.503000,N/A,N/A,N/A
+custom_heavyhex,546,hh,bposd,13,13,1000,constant,0.004,0.485000,N/A,N/A,N/A
+custom_heavyhex,546,hh,bposd,13,13,1000,modsi1000,0.002,0.498000,N/A,N/A,N/A
+custom_heavyhex,546,color,bposd,13,13,1000,constant,0.002,0.523000,N/A,N/A,N/A
+custom_heavyhex,546,color,bposd,13,13,1000,modsi1000,0.008,0.497000,N/A,N/A,N/A
+custom_heavyhex,546,color,bposd,13,13,1000,modsi1000,0.002,0.485000,N/A,N/A,N/A
+custom_heavyhex,546,color,bposd,13,13,1000,constant,0.004,0.501000,N/A,N/A,N/A
+custom_heavyhex,546,color,bposd,13,13,1000,modsi1000,0.004,0.494000,N/A,N/A,N/A
+custom_heavyhex,546,color,bposd,13,13,1000,constant,0.008,0.501000,N/A,N/A,N/A

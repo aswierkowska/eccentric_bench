@@ -1,0 +1,13 @@
+backend,backend_size,code,distance,cycles,state,translating_method,gate_set,original_total_gates,transpiled_total_gates,gate_overhead
+custom_full,300,bacon,17,17,,tket,h2,1666,14790,13124
+custom_full,300,bacon,17,17,,tket,ibm_heron,1666,16966,15300
+custom_full,300,surface,11,11,,tket,h2,6160,62040,55880
+custom_full,300,steane,9,9,,tket,h2,3121,30972,27851
+custom_full,300,color,11,11,,tket,h2,6360,66600,60240
+custom_full,300,gross,150,150,,tket,h2,12168,129816,117648
+custom_full,300,hh,11,11,,tket,h2,8360,88440,80080
+custom_full,300,steane,9,9,,tket,ibm_heron,3121,35774,32653
+custom_full,300,surface,11,11,,tket,ibm_heron,6160,71720,65560
+custom_full,300,color,11,11,,tket,ibm_heron,6360,77160,70800
+custom_full,300,hh,11,11,,tket,ibm_heron,8360,102520,94160
+custom_full,300,gross,150,150,,tket,ibm_heron,12168,150552,138384
