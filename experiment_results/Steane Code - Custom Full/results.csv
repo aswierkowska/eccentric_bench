@@ -1,0 +1,9 @@
+backend,backend_size,code,decoder,distance,cycles,num_samples,error_type,error_probability,logical_error_rate,layout_method,routing_method,translating_method
+custom_full,98,steane,bposd,9,9,1,sd6,0.004,0.000000,N/A,N/A,N/A
+custom_full,98,steane,bposd,9,9,1,sd6,0.004,0.000000,N/A,N/A,N/A
+custom_full,14,steane,bposd,3,3,1,sd6,0.004,0.000000,N/A,N/A,N/A
+custom_full,14,steane,bposd,3,3,1,sd6,0.404,0.000000,N/A,N/A,N/A
+custom_full,14,steane,bposd,3,3,1,sd6,0.404,0.000000,N/A,N/A,N/A
+custom_full,14,steane,bposd,3,3,10,sd6,0.404,0.600000,N/A,N/A,N/A
+custom_full,14,steane,bposd,3,3,100,sd6,0.404,0.480000,N/A,N/A,N/A
+custom_full,98,steane,bposd,9,9,10,sd6,0.404,0.500000,N/A,N/A,N/A
