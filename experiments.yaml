@@ -1,8 +1,10 @@
 experiments:
-  - name: "Variance_25.06"
-    num_samples: 1000
-    backends: ["variance_low", "variance_mid", "variance_high"] # custom_line, custom_grid, custom_cube, custom_full
-    codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-    error_types: ["variance", "real_heron"]
-    error_probabilities: [0.004] 
+  - name: "Steane Code - Custom Full"
+    num_samples: 1
+    backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
+    backend_sizes: [700]
+    distances: [27]
+    codes: [ "steane"]
+    error_types: [sd6]
+    error_probabilities: [0.0004] 
     decoders: ["bposd"] # mwpm

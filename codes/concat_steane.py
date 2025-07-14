@@ -98,7 +98,10 @@ def extended_steane_circuit(rounds=0):
         circuit += stim.Circuit("TICK")
 
     for i in range(343, 514):
-        circuit += stim.Circuit(f"RX {i}\n")
+        circuit += stim.Circuit(f"R {i}\n")
+
+    for i in range(343, 514):
+        circuit += stim.Circuit(f"H {i}\n")
     
     for i in range(514, 686): #Want to reset 685 as well because last ancilla
         circuit += stim.Circuit(f"R {i}\n")
@@ -123,7 +126,9 @@ def extended_steane_circuit(rounds=0):
 
     #add measurements
     for i in range(343, 514):
-        circuit += stim.Circuit(f"MRX {i}\n")
+        circuit += stim.Circuit(f"H {i}\n")
+    for i in range(343, 514):
+        circuit += stim.Circuit(f"MR {i}\n")
 
     circuit += stim.Circuit("TICK")
     
@@ -157,6 +162,8 @@ def extended_steane_circuit(rounds=0):
 def add_cycles_extended_steane_circuit(circuit, orderings, rounds):
     for r in range(rounds):
         #X
+        for i in range(343, 514):
+            circuit += stim.Circuit(f"H {i}\n")
         for ordering, i in zip(orderings, range(343,514)):
             string = "CX "
             for j in ordering:
@@ -176,7 +183,9 @@ def add_cycles_extended_steane_circuit(circuit, orderings, rounds):
 
         #add measurements
         for i in range(343, 514):
-            circuit += stim.Circuit(f"MRX {i}\n")
+            circuit += stim.Circuit(f"H {i}\n")
+        for i in range(343, 514):
+            circuit += stim.Circuit(f"MR {i}\n")
 
         circuit += stim.Circuit("TICK")
         
@@ -223,4 +232,5 @@ def get_concat_steane_code(m, rounds=1):
 
 
 if __name__ == "__main__":
-    circuit = normal_steane_circuit(0)
+    circuit = normal_steane_circuit(1)
+    print(circuit)
