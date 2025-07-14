@@ -1,0 +1,9 @@
+code,distance,cycles,num_qubits,1q,2q,measurements
+hh,11,3,291,360,1920,931
+gross,12,3,288,504,2592,576
+color,11,3,181,360,1440,361
+steane,9,3,98,432,961,169
+bacon_X_autoCZ,11,3,121,726,1320,781
+bacon_Z_autoCZ,11,3,121,726,1320,781
+bacon_Z_noCZ,11,3,121,726,1320,781
+surface,11,3,274,360,1320,481
