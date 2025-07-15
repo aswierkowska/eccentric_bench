@@ -126,7 +126,7 @@ def ordering_extended_steane_code():
 
     return orderings
 
-def normal_steane_circuit_f(rounds = 0):
+def normal_steane_circuit_f(rounds = 0, basis="Z"):
     circuit = stim.Circuit()
     #first encoding of the circuit
     orderings = ordering_normal_stean_code()
@@ -142,14 +142,20 @@ def normal_steane_circuit_f(rounds = 0):
         string = ""
         circuit += stim.Circuit("TICK")
 
-    for i in range(7, 10):
-        circuit += stim.Circuit(f"R {i}\n")
-
-    for i in range(7, 10):
-        circuit += stim.Circuit(f"H {i}\n")
-    
-    for i in range(10, 14): #Want to reset 20 as well because last ancilla
-        circuit += stim.Circuit(f"R {i}\n")
+    if basis == "Z":
+        for i in range(7, 10):
+            circuit += stim.Circuit(f"R {i}\n")
+            circuit += stim.Circuit(f"H {i}\n")
+        
+        for i in range(10, 14):
+            circuit += stim.Circuit(f"R {i}\n")
+    elif basis == "X":
+        for i in range(7, 10):
+            circuit += stim.Circuit(f"RX {i}\n")
+        
+        for i in range(10, 14):
+            circuit += stim.Circuit(f"RX {i}\n")
+            circuit += stim.Circuit(f"H {i}\n")
 
     #X
     for ordering, i in zip(orderings, range(7,10)):
@@ -170,15 +176,27 @@ def normal_steane_circuit_f(rounds = 0):
     circuit += stim.Circuit("TICK")
 
     #add measurements
-    for i in range(7, 10):
-        circuit += stim.Circuit(f"H {i}\n")
-    for i in range(7, 10):
-        circuit += stim.Circuit(f"MR {i}\n")
+    if basis == "Z":
+        for i in range(7, 10):
+            circuit += stim.Circuit(f"H {i}\n")
+        for i in range(7, 10):
+            circuit += stim.Circuit(f"MR {i}\n")
 
-    circuit += stim.Circuit("TICK")
-    
-    for i in range(10, 13): #Want to reset 20 as well because last ancilla
-        circuit += stim.Circuit(f"MR {i}\n")
+        circuit += stim.Circuit("TICK")
+        
+        for i in range(10, 13): #Want to reset 20 as well because last ancilla
+            circuit += stim.Circuit(f"MR {i}\n")
+
+    elif basis == "X":
+        for i in range(7, 10):
+            circuit += stim.Circuit(f"MX {i}\n")
+            circuit += stim.Circuit(f"RX {i}\n")
+        for i in range(10, 13):
+            circuit += stim.Circuit(f"H {i}\n")
+            circuit += stim.Circuit(f"MX {i}\n")
+            circuit += stim.Circuit(f"RX {i}\n")
+            
+
 
     circuit += stim.Circuit("TICK")
     
@@ -190,7 +208,7 @@ def normal_steane_circuit_f(rounds = 0):
 
     circuit += stim.Circuit("TICK")
     #add cycles
-    circuit = add_cycles_normal_steane_code(circuit, orderings, rounds-1)
+    circuit = add_cycles_normal_steane_code(circuit, orderings, rounds-1, basis)
 
     #last ancilla
     string = "CX "
@@ -199,15 +217,22 @@ def normal_steane_circuit_f(rounds = 0):
     circuit += stim.Circuit(f"{string}\n")
     string = ""
     circuit += stim.Circuit("TICK")
-    circuit += stim.Circuit("MR 13\n")
+
+    if basis == "Z":
+        circuit += stim.Circuit("MR 13\n")
+    elif basis == "X":
+        circuit += stim.Circuit("H 13\n")
+        circuit += stim.Circuit("MX 13\n")
+        circuit += stim.Circuit("RX 13\n")
     circuit += stim.Circuit("OBSERVABLE_INCLUDE(0) rec[-1]\n")
     return circuit
 
-def add_cycles_normal_steane_code(circuit, orderings, rounds):
+def add_cycles_normal_steane_code(circuit, orderings, rounds, basis):
     for r in range(rounds):
         #X
-        for i in range(7, 10):
-            circuit += stim.Circuit(f"H {i}\n")
+        if basis == "Z":
+            for i in range(7, 10):
+                circuit += stim.Circuit(f"H {i}\n")
         for ordering, i in zip(orderings, range(7,10)):
             string = "CX "
             for j in ordering:
@@ -217,6 +242,9 @@ def add_cycles_normal_steane_code(circuit, orderings, rounds):
         circuit += stim.Circuit("TICK")
    
         #Z
+        if basis == "X":
+            for i in range(10,13):
+                circuit += stim.Circuit(f"H {i}\n")
         for ordering, i in zip(orderings, range(10,13)):
             string = "CX "
             for j in ordering:
@@ -226,24 +254,32 @@ def add_cycles_normal_steane_code(circuit, orderings, rounds):
         circuit += stim.Circuit("TICK")
 
         #add measurements
-        for i in range(7, 10):
-            circuit += stim.Circuit(f"H {i}\n")
-        for i in range(7, 10):
-            circuit += stim.Circuit(f"MR {i}\n")
+        if basis == "Z":
+            for i in range(7, 10):
+                circuit += stim.Circuit(f"H {i}\n")
+            for i in range(7, 10):
+                circuit += stim.Circuit(f"MR {i}\n")
 
-        circuit += stim.Circuit("TICK")
-        
-        for i in range(10, 13):
-            circuit += stim.Circuit(f"MR {i}\n")
+            circuit += stim.Circuit("TICK")
+            
+            for i in range(10, 13): #Want to reset 20 as well because last ancilla
+                circuit += stim.Circuit(f"MR {i}\n")
 
-        circuit += stim.Circuit("TICK")
+        elif basis == "X":
+            for i in range(7, 10):
+                circuit += stim.Circuit(f"MX {i}\n")
+                circuit += stim.Circuit(f"RX {i}\n")
+            for i in range(10, 13):
+                circuit += stim.Circuit(f"H {i}\n")
+                circuit += stim.Circuit(f"MX {i}\n")
+                circuit += stim.Circuit(f"RX {i}\n")
 
         for i in range(6,0,-1):
             circuit += stim.Circuit(f"DETECTOR rec[{0-i}] rec[{0-i-6}]\n")
         
     return circuit
 
-def concat_steane_circuit_f(rounds = 0):
+def concat_steane_circuit_f(rounds = 0, basis="Z"):
     circuit = stim.Circuit()
 
     orderings = ordering_concat_steane_code()
@@ -324,7 +360,7 @@ def concat_steane_circuit_f(rounds = 0):
 
     return circuit
 
-def add_cycles_concat_steane_code(circuit, orderings, rounds):
+def add_cycles_concat_steane_code(circuit, orderings, rounds, basis):
     for r in range(rounds):
         #X
         for i in range(49, 73):
@@ -364,7 +400,7 @@ def add_cycles_concat_steane_code(circuit, orderings, rounds):
         
     return circuit
 
-def extended_steane_circuit(rounds=0):
+def extended_steane_circuit(rounds=0, basis="Z"):
     circuit = stim.Circuit()
     #first encoding of the circuit
     orderings = ordering_extended_steane_code()
@@ -442,7 +478,7 @@ def extended_steane_circuit(rounds=0):
 
     return circuit
 
-def add_cycles_extended_steane_circuit(circuit, orderings, rounds):
+def add_cycles_extended_steane_circuit(circuit, orderings, rounds, basis):
     for r in range(rounds):
         #X
         for i in range(343, 514):
@@ -481,8 +517,7 @@ def add_cycles_extended_steane_circuit(circuit, orderings, rounds):
             circuit += stim.Circuit(f"DETECTOR rec[{0-i}] rec[{0-i-342}]\n")
     return circuit
 
-
-def normal_steane_circuit(rounds):
+def normal_steane_circuit(rounds=1):
     circuit = stim.Circuit(normal_steane_start)
     for i in range(rounds-1):
         round_circuit = stim.Circuit(normal_steane_round)
@@ -500,11 +535,12 @@ def concat_steane_circuit(rounds=1):
 
 def get_concat_steane_code(m, rounds=1,basis="Z"):
     if m==1:
-        circuit = normal_steane_circuit_f(rounds)
+        circuit = normal_steane_circuit_f(rounds,basis=basis)
+        print(circuit)
     elif m==2:
-        circuit = concat_steane_circuit_f(rounds)
+        circuit = concat_steane_circuit_f(rounds,basis=basis)
     elif m==3:
-        circuit = extended_steane_circuit(rounds)
+        circuit = extended_steane_circuit(rounds,basis=basis)
     try: 
         s = StimCodeCircuit(stim_circuit=circuit)
     except Exception as e:

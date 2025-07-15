@@ -1,14 +1,14 @@
 {
     "name": "Steane Code - Custom Full",
-    "num_samples": 1,
+    "num_samples": 10,
     "backends": [
         "custom_full"
     ],
     "backend_sizes": [
-        100
+        20
     ],
     "distances": [
-        9
+        3
     ],
     "cycles": 2,
     "codes": [
