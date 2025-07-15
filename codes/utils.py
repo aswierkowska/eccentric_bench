@@ -44,7 +44,7 @@ def get_code(code_name: str, d: int, cycles: int):
             raise ValueError("Steane code only supports m = 1, 2, 3")
         if cycles == None:
             cycles = d
-        return get_concat_steane_code(m,cycles)
+        return get_concat_steane_code(m,cycles, basis="Z")
 
 
 def get_max_d(code_name: str, n: int):
