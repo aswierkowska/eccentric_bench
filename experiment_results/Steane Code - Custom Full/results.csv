@@ -11,3 +11,11 @@ custom_full,14,steane,bposd,3,3,1,modsi1000,0.004,0.000000,N/A,N/A,N/A
 custom_full,14,steane,bposd,3,3,1,sd6,0.05,0.000000,N/A,N/A,N/A
 custom_full,14,steane,bposd,3,3,1,sd6,0.05,1.000000,N/A,N/A,N/A
 custom_full,14,steane,bposd,3,3,10,sd6,0.05,0.200000,N/A,N/A,N/A
+custom_full,98,steane,bposd,9,9,1,sd6,0.05,1.000000,N/A,N/A,N/A
+custom_full,98,steane,bposd,9,9,1,sd6,0.05,0.000000,N/A,N/A,N/A
+custom_full,98,steane,bposd,9,2,1,sd6,0.05,0.000000,N/A,N/A,N/A
+custom_full,98,steane,bposd,9,10,1,sd6,0.05,0.000000,N/A,N/A,N/A
+custom_full,98,steane,bposd,9,2,10,sd6,0.05,0.300000,N/A,N/A,N/A
+custom_full,14,steane,bposd,3,2,10,sd6,0.05,0.200000,N/A,N/A,N/A
+custom_full,98,steane,bposd,9,2,10,sd6,0.05,0.600000,N/A,N/A,N/A
+custom_full,98,steane,bposd,9,2,1,sd6,0.05,1.000000,N/A,N/A,N/A
