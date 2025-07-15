@@ -1,14 +1,14 @@
 {
     "name": "Steane Code - Custom Full",
-    "num_samples": 10,
+    "num_samples": 1,
     "backends": [
         "custom_full"
     ],
     "backend_sizes": [
-        100
+        700
     ],
     "distances": [
-        9
+        27
     ],
     "cycles": 2,
     "codes": [
@@ -18,7 +18,7 @@
         "sd6"
     ],
     "error_probabilities": [
-        0.05
+        0.005
     ],
     "decoders": [
         "bposd"
