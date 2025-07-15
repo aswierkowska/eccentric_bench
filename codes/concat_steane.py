@@ -599,11 +599,10 @@ def concat_steane_circuit(rounds=1):
 def get_concat_steane_code(m, rounds=1,basis="Z"):
     if m==1:
         circuit = normal_steane_circuit_f(rounds,basis=basis)
-        print(circuit)
     elif m==2:
-        circuit = concat_steane_circuit_f(rounds,basis="X")
+        circuit = concat_steane_circuit_f(rounds,basis=basis)
     elif m==3:
-        circuit = extended_steane_circuit(rounds,basis="X")
+        circuit = extended_steane_circuit(rounds,basis=basis)
     try: 
         s = StimCodeCircuit(stim_circuit=circuit)
     except Exception as e:
