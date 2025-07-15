@@ -5,10 +5,10 @@
         "custom_full"
     ],
     "backend_sizes": [
-        20
+        100
     ],
     "distances": [
-        3
+        9
     ],
     "cycles": 2,
     "codes": [

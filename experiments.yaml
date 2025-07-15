@@ -2,8 +2,8 @@ experiments:
   - name: "Steane Code - Custom Full"
     num_samples: 10
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    backend_sizes: [20]
-    distances: [3]
+    backend_sizes: [100]
+    distances: [9]
     cycles: 2
     codes: [ "steane"]
     error_types: [sd6]
