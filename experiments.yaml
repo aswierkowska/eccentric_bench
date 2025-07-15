@@ -1,10 +1,10 @@
 experiments:
   - name: "Steane Code - Custom Full"
-    num_samples: 1
+    num_samples: 10
     backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    backend_sizes: [700]
-    distances: [27]
+    backend_sizes: [20]
+    distances: [3]
     codes: [ "steane"]
     error_types: [sd6]
-    error_probabilities: [0.0004] 
+    error_probabilities: [0.05] 
     decoders: ["bposd"] # mwpm

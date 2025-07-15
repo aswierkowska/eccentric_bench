@@ -5,12 +5,57 @@ from .steane_circuit_parts import concat_steane_end, concat_steane_round, concat
 
 import traceback
 
+def ordering_normal_stean_code():
+    orderings = []
+    orderings.append([0, 1, 2, 6])
+    orderings.append([2, 3, 4, 6])
+    orderings.append([4, 5, 0, 6])
+
+    return orderings
+
+def ordering_concat_steane_code():
+    """Provides the star shaped measurement order.
+    This ordering generates a distinguishable fault set up to weight 4 fault combinations.
+    """
+    orderings = []
+    
+    # weight 4 stabilizer generators
+    for j in range(7):
+        offset = j * 7
+        orderings.append([offset + 0, offset + 1, offset + 2, offset + 6])
+        orderings.append([offset + 2, offset + 3, offset + 4, offset + 6])
+        orderings.append([offset + 4, offset + 5, offset + 0, offset + 6])
+
+    
+    # weight 12 stabilizer generators
+    stab12_1 = [                
+                1, 12, 17, 47, 
+                2, 7, 18, 42, 
+                3, 8, 19, 43,
+        ]
+
+    stab12_2 = [
+                15, 26, 31, 43, 
+                16, 21, 32, 44, 
+                17, 22, 33, 45,
+        ]
+    stab12_3 = [
+                29, 40, 3, 45, 
+                30, 35, 4, 46, 
+                31, 36, 5, 47,
+        ]
+    orderings.append(stab12_1)
+    orderings.append(stab12_2)
+    orderings.append(stab12_3)
+
+    return orderings
 
 def ordering_extended_steane_code():
     """Provides the star shaped measurement order.
     This ordering generates a distinguishable fault set up to weight 4 fault combinations.
     """
     orderings = []
+    
 
     # weight 4 stabilizer generatrs
     for i in range(7):
@@ -80,6 +125,123 @@ def ordering_extended_steane_code():
     orderings.append(stab36_3)
 
     return orderings
+
+def normal_steane_circuit_f(rounds = 0):
+    circuit = stim.Circuit()
+    #first encoding of the circuit
+    orderings = ordering_normal_stean_code()
+    for ordering in orderings:
+        #MPP for each of the entries
+        string = "MPP "
+        for j in ordering:
+            string += "X" +str(j)+"*"
+        #remove last element of string
+        string = string[:-1]
+        string += "\n"
+        circuit += stim.Circuit(f"{string}")
+        string = ""
+        circuit += stim.Circuit("TICK")
+
+    for i in range(7, 10):
+        circuit += stim.Circuit(f"R {i}\n")
+
+    for i in range(7, 10):
+        circuit += stim.Circuit(f"H {i}\n")
+    
+    for i in range(10, 14): #Want to reset 20 as well because last ancilla
+        circuit += stim.Circuit(f"R {i}\n")
+
+    #X
+    for ordering, i in zip(orderings, range(7,10)):
+        string = "CX "
+        for j in ordering:
+            string += str(i) + " " + str(j) + " "
+        circuit += stim.Circuit(f"{string}\n")
+        string = ""
+    circuit += stim.Circuit("TICK")
+ 
+    #Z
+    for ordering, i in zip(orderings, range(10,13)):
+        string = "CX "
+        for j in ordering:
+            string += str(j) + " " + str(i) + " "
+        circuit += stim.Circuit(f"{string}\n")
+        string = ""
+    circuit += stim.Circuit("TICK")
+
+    #add measurements
+    for i in range(7, 10):
+        circuit += stim.Circuit(f"H {i}\n")
+    for i in range(7, 10):
+        circuit += stim.Circuit(f"MR {i}\n")
+
+    circuit += stim.Circuit("TICK")
+    
+    for i in range(10, 13): #Want to reset 20 as well because last ancilla
+        circuit += stim.Circuit(f"MR {i}\n")
+
+    circuit += stim.Circuit("TICK")
+    
+    for i in range(6,3,-1):
+        circuit += stim.Circuit(f"DETECTOR rec[{0-i}] rec[{0-i-3}]\n")
+    
+    for i in range(3,0, -1):
+        circuit += stim.Circuit(f"DETECTOR rec[{0-i}]\n")
+
+    circuit += stim.Circuit("TICK")
+    #add cycles
+    circuit = add_cycles_normal_steane_code(circuit, orderings, rounds-1)
+
+    #last ancilla
+    string = "CX "
+    for i in range(7):
+        string += str(13) + " " + str(i) + " "
+    circuit += stim.Circuit(f"{string}\n")
+    string = ""
+    circuit += stim.Circuit("TICK")
+    circuit += stim.Circuit("MR 13\n")
+    circuit += stim.Circuit("OBSERVABLE_INCLUDE(0) rec[-1]\n")
+    return circuit
+
+def add_cycles_normal_steane_code(circuit, orderings, rounds):
+    for r in range(rounds):
+        #X
+        for i in range(7, 10):
+            circuit += stim.Circuit(f"H {i}\n")
+        for ordering, i in zip(orderings, range(7,10)):
+            string = "CX "
+            for j in ordering:
+                string += str(i) + " " + str(j) + " "
+            circuit += stim.Circuit(f"{string}\n")
+            string = ""
+        circuit += stim.Circuit("TICK")
+   
+        #Z
+        for ordering, i in zip(orderings, range(10,13)):
+            string = "CX "
+            for j in ordering:
+                string += str(j) + " " + str(i) + " "
+            circuit += stim.Circuit(f"{string}\n")
+            string = ""
+        circuit += stim.Circuit("TICK")
+
+        #add measurements
+        for i in range(7, 10):
+            circuit += stim.Circuit(f"H {i}\n")
+        for i in range(7, 10):
+            circuit += stim.Circuit(f"MR {i}\n")
+
+        circuit += stim.Circuit("TICK")
+        
+        for i in range(10, 13):
+            circuit += stim.Circuit(f"MR {i}\n")
+
+        circuit += stim.Circuit("TICK")
+
+        for i in range(6,0,-1):
+            circuit += stim.Circuit(f"DETECTOR rec[{0-i}] rec[{0-i-6}]\n")
+        
+    return circuit
 
 def extended_steane_circuit(rounds=0):
     circuit = stim.Circuit()
@@ -215,9 +377,9 @@ def concat_steane_circuit(rounds=1):
     return circuit
 
 
-def get_concat_steane_code(m, rounds=1):
+def get_concat_steane_code(m, rounds=1,basis="Z"):
     if m==1:
-        circuit = normal_steane_circuit(rounds)
+        circuit = normal_steane_circuit_f(rounds)
     elif m==2:
         circuit = concat_steane_circuit(rounds)
     elif m==3:
@@ -232,5 +394,8 @@ def get_concat_steane_code(m, rounds=1):
 
 
 if __name__ == "__main__":
-    circuit = normal_steane_circuit(1)
+    circuit = normal_steane_circuit_f(2)
+    circuit_2 = normal_steane_circuit(2)
     print(circuit)
+    print("--------------------------------------------------------------------------")
+    print(circuit_2)
