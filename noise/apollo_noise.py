@@ -22,6 +22,11 @@ class ApolloNoise(NoiseModel):
             leakage=4.3e-4 / 10,
             remote=6.3e-06 / 10,
             gate_times={
+                # As suggested by Quantinuum FAQ: https://arxiv.org/pdf/2003.01293
+                "SQ": 5 * 1e-6,
+                "TQ": 25 * 1e-6,
+                "M": 60 * 1e-6,
+                "R": 10 * 1e-6,
                 "REMOTE": 0,
             },
             qt=qt

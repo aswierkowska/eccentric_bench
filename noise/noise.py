@@ -57,7 +57,7 @@ class NoiseModel:
     
     def add_qubit_error(self, circuit: stim.Circuit, qubits: List[stim.GateTarget], gate_duration: float) -> None:
         # https://arxiv.org/pdf/1404.3747
-        if self.backend == None:
+        if self.backend == None or self.idle != 0:
             return
         for qubit in qubits:
             qubit_properties = self.backend.qubit_properties(qubit.value)
