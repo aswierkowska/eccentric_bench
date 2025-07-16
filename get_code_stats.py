@@ -23,16 +23,13 @@ import stim
 
 def run_experiment():
     experiment_name = "Codes_Statistics"
-    codes = ["surface"] #["surface", "hh", "gross", "color", "steane", "bacon"]
-    distances = [11] #[11, 11, 12, 11, 9, 11]
+    codes = ["steane"] #["surface", "hh", "gross", "color", "steane", "bacon"]
+    distances = [9] #[11, 11, 12, 11, 9, 11]
     cycles = 3
 
     for code_name, d in zip(codes, distances):
     
         code = get_code(code_name, d, cycles)
-
-        if code_name == "bacon":
-            code_name = "bacon_Z_noCZ"
 
         result_data = {
             "code": code_name,
