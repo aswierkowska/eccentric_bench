@@ -1,1 +1,1 @@
-from .decode import decode
+from .decode import decode, raw_error_rate

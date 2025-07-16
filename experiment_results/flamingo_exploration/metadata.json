@@ -1,0 +1,16 @@
+{
+    "name": "flamingo_exploration",
+    "num_samples": 1,
+    "backends": [
+        "real_flamingo"
+    ],
+    "codes": [
+        "surface"
+    ],
+    "error_types": [
+        "real_flamingo"
+    ],
+    "decoders": [
+        "bposd"
+    ]
+}

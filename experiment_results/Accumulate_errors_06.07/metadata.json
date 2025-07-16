@@ -1,0 +1,27 @@
+{
+    "name": "Accumulate_errors_06.07",
+    "num_samples": 1000,
+    "backends": [
+        "custom_full"
+    ],
+    "backends_sizes": [
+        300
+    ],
+    "codes": [
+        "surface",
+        "hh",
+        "gross",
+        "color",
+        "steane",
+        "bacon"
+    ],
+    "error_types": [
+        "modsi1000"
+    ],
+    "error_probabilities": [
+        0.002
+    ],
+    "decoders": [
+        "bposd"
+    ]
+}

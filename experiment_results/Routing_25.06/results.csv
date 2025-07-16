@@ -1,0 +1,4 @@
+backend,backend_size,code,distance,cycles,state,routing_method,layout_method,gate_overhead_mean,gate_overhead_var,tq_gate_overhead_mean,tq_gate_overhead_var,swap_overhead_mean,swap_overhead_var
+custom_grid,290,surface,11,11,,basic,default,35082.0,0.0,35082.0,0.0,35082.0,0.0
+custom_grid,290,surface,11,11,,sabre,default,11660.0,0.0,11660.0,0.0,11660.0,0.0
+custom_grid,290,surface,11,11,,stochastic,default,19990.0,0.0,19990.0,0.0,19990.0,0.0

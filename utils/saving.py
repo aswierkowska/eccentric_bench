@@ -2,6 +2,7 @@ import logging
 import os
 import csv
 import json
+import datetime
 
 def create_experiment_directory(experiment_name):
     directory = f"experiment_results/{experiment_name}"
@@ -24,7 +25,8 @@ def save_results_to_csv(data, experiment_name):
 
 def save_experiment_metadata(experiment, experiment_name):
     directory = create_experiment_directory(experiment_name)
-    filename = os.path.join(directory, "metadata.json")
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = os.path.join(directory, f"metadata_{timestamp}.json")
 
     with open(filename, "w") as f:
         json.dump(experiment, f, indent=4)

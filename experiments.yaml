@@ -1,19 +1,9 @@
 experiments:
-  - name: "Willow_07.07"
+  - name: "DQC_30.06"
     num_samples: 1000
-    backends: ["real_willow"]
-    codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-    error_types: ["real_willow"]
-    decoders: ["bposd"] # mwpm
-  - name: "Apollo_07.07"
-    num_samples: 1000
-    backends: ["real_apollo"]
-    codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-    error_types: ["real_apollo"]
-    decoders: ["bposd"] # mwpm
-  - name: "Infleqtion_07.07"
-    num_samples: 1000
-    backends: ["real_infleqtion", "real_nsinfleqtion"]
-    codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-    error_types: ["real_infleqtion"]
+    backends: ["real_flamingo"] # custom_line, custom_grid, custom_cube, custom_full
+    #backends_sizes: [300, 350, 400, 450, 500]
+    codes: ["surface", "color", "bacon"]
+    error_types: ["real_flamingo"]
+    #error_probabilities: [0.004, 0.002, 0.008] 
     decoders: ["bposd"] # mwpm

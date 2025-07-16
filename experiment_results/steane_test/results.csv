@@ -1,0 +1,2 @@
+backend,backend_size,code,decoder,distance,cycles,num_samples,error_type,error_probability,logical_error_rate,layout_method,routing_method,translating_method
+custom_full,14,steane,bposd,3,1,10,constant,0.004,0.200000,N/A,N/A,N/A
