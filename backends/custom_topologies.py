@@ -42,10 +42,15 @@ def get_custom_topology(shape: str, num_qubits: int):
     if shape == "line":
         coupling_map = CouplingMap.from_line(num_qubits)
     elif shape == "grid":
-        num_rows, num_cols = int(num_qubits**(1/2)), int(num_qubits**(1/2))
+        #num_rows, num_cols = int(num_qubits**(1/2)), int(num_qubits**(1/2))
+        num_rows = 15
+        num_cols = 20
         coupling_map = CouplingMap.from_grid(num_rows, num_cols)
     elif shape == "cube":
-        num_layers, num_rows, num_cols = int(num_qubits**(1/3)), int(num_qubits**(1/3)), int(num_qubits**(1/3))
+        #num_layers, num_rows, num_cols = int(num_qubits**(1/3)), int(num_qubits**(1/3)), int(num_qubits**(1/3))
+        num_layers = 5
+        num_rows = 6
+        num_cols = 10
         coupling_map = generate_cube_map(num_layers, num_rows, num_cols)
         # TODO: requires graphviz installed, useful for the paper
         # plot_coupling_map(num_qubits, None, coupling_map.get_edges(), filename="graph.png")

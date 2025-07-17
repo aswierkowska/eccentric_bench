@@ -1,65 +1,9 @@
 experiments:
-  - name: "Topology_size_full_18.06"
+  - name: "Topology_connectivity_14.07"
     num_samples: 1000
-    backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-    backends_sizes: [300, 350, 400, 450, 500]
+    backends: ["custom_grid", "custom_cube", "custom_full"]
+    backends_sizes: [300]
     codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-    error_types: ["constant", "modsi1000"]
-    error_probabilities: [0.004, 0.002, 0.008] 
+    error_types: ["modsi1000"]
+    error_probabilities: [0.002] 
     decoders: ["bposd"] # mwpm
-    #  - name: "Topology_size_hh_15.06"
-    #num_samples: 10000
-    #backends: ["custom_heavyhex"] # custom_line, custom_grid, custom_cube, custom_full
-    #backends_sizes: [114, 192, 290, 408, 546]
-    #codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-    #error_types: ["constant", "modsi1000"]
-    #error_probabilities: [0.004, 0.002, 0.008] 
-    #decoders: ["bposd"] # mwpm
-    # - name: "Topology_connectivity_15.06"
-    #num_samples: 10000
-    #backends: ["custom_line, custom_grid, custom_cube, custom_full"]
-    #backends_sizes: [729]
-    #codes: ["surface", "hh", "gross", "color", "steane", "bacon"]
-    #error_types: ["constant", "modsi1000"]
-    #error_probabilities: [0.004, 0.002, 0.008] 
-    #decoders: ["bposd"] # mwpm
-    #  - name: "Real_topology_26.05_20:48"
-    #num_samples: 1000
-    #backends: ["real_willow", "real_flamingo", "real_infleqtion", "real_apollo"] # custom_line, custom_grid, custom_cube, custom_full
-    #backends_sizes: [729] 
-    #codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
-    #cycles: 3
-    #error_types: ["sd6", "pc3", "em3_1", "em3_2"]
-    #error_probabilities: [0.01, 0.05, 0.015] 
-    #decoders: ["bposd"] # mwpm
-#  - name: "Basic"
-#    num_samples: 10000
-#    backends: ["custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-#    backends_sizes: [64, 125, 216, 343, 512]
-#    codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
-#    cycles: 1
-#    error_types: ["sd6", "pm3", "em3_1"]
-#    error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
-#    decoders: ["bposd"] # mwpm
-#  - name: "Topology_connectivity"
-#    num_samples: 10000
-#    backends: ["custom_line", "custom_grid", "custom_cube", "custom_full"] # custom_line, custom_grid, custom_cube, custom_full
-#    backends_sizes: [512] #[64, 125, 216, 343, 512]
-#    codes: ["surface", "hh", "gross", "color", "bacon", "steane"]
-#    cycles: 1
-#    error_types: ["sd6", "pm3", "em3_1"]
-#    error_probabilities: [0.0001, 0.001, 0.01, 0.1] 
-#    decoders: ["bposd"] # mwpm
-    #routing_methods: ["basic"] # sabre, none, basic, stochastic, lookahead per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
-    #layout_methods: ["default"] # default, dense, trivial, sabre per https://docs.quantum.ibm.com/api/qiskit/transpiler#transpiler-preset-stage-routing
-    # BUG: https://github.com/Qiskit/qiskit/issues/13152
-    #translating_methods: ["translator"] #default translator synthesis according to https://github.com/Qiskit/qiskit/blob/stable/2.0/qiskit/compiler/transpiler.py#L141
-    #   translating_methods: ["qiskit"] # qiskit bqskit tket
-  #  cycles: 1
-  #-3 name: "Basic"
-  #  num_samples: 100
-  #  backends: ["custom_grid"]
-  #  backends_sizes: [216]
-  #  codes: ["hh"]
-  #  error_probability: 0.02
-  #  decoders: ["bposd", "mwpm"]
