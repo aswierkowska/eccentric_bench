@@ -1,0 +1,13 @@
+backend,backend_size,code,decoder,distance,cycles,num_samples,error_type,error_probability,logical_error_rate,layout_method,routing_method,translating_method
+real_infleqtion,,steane,bposd,9,9,1000,real_infleqtion,,0.002000,N/A,N/A,N/A
+real_nsinfleqtion,,steane,bposd,9,9,1000,real_infleqtion,,0.003000,N/A,N/A,N/A
+real_infleqtion,,hh,bposd,11,11,1000,real_infleqtion,,0.079000,N/A,N/A,N/A
+real_infleqtion,,color,bposd,13,13,1000,real_infleqtion,,0.026000,N/A,N/A,N/A
+real_infleqtion,,surface,bposd,13,13,1000,real_infleqtion,,0.001000,N/A,N/A,N/A
+real_infleqtion,,gross,bposd,12,12,1000,real_infleqtion,,0.888000,N/A,N/A,N/A
+real_nsinfleqtion,,hh,bposd,11,11,1000,real_infleqtion,,0.488000,N/A,N/A,N/A
+real_nsinfleqtion,,gross,bposd,12,12,1000,real_infleqtion,,1.000000,N/A,N/A,N/A
+real_infleqtion,,bacon,bposd,19,19,1000,real_infleqtion,,0.472000,N/A,N/A,N/A
+real_nsinfleqtion,,bacon,bposd,19,19,1000,real_infleqtion,,0.504000,N/A,N/A,N/A
+real_nsinfleqtion,,surface,bposd,13,13,1000,real_infleqtion,,0.513000,N/A,N/A,N/A
+real_nsinfleqtion,,color,bposd,13,13,1000,real_infleqtion,,0.472000,N/A,N/A,N/A
