@@ -166,9 +166,12 @@ class NoiseModel:
                 if self.leakage > 0:
                     self.propagate_leakage(post, pair)
                 if self.is_remote(pair):
-                    post.append_operation("DEPOLARIZE2", pair, self.remote)
-                else:
-                    post.append_operation("DEPOLARIZE2", pair, p)
+                    if self.shuttle:
+                        post.append_operation("DEPOLARIZE2", pair, self.shuttle)
+                    if self.remote:
+                        post.append_operation("DEPOLARIZE2", pair, self.remote)
+                    else:
+                        post.append_operation("DEPOLARIZE2", pair, p)
                 self.add_qubit_error(post, targets, self.get_gate_time(op, pair))
         elif op.name in RESET_OPS:
             for q in targets:

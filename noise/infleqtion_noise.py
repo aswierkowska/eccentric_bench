@@ -12,6 +12,7 @@ class InfleqtionNoise(NoiseModel):
             crosstalk=0, # included in gate error
             leakage=0, # included in gate error
             measure=0.004, # SPAM, no additional reset error
+            shuttle=0.001999,
             gate_times={
                 "SQ": 2.5e-7,
                 "TQ": 4.16e-7,

@@ -20,7 +20,7 @@ class ApolloNoise(NoiseModel):
             crosstalk=6.3e-6 / 10,
             measure=1.33e-3 / 10,
             leakage=4.3e-4 / 10,
-            remote=6.3e-06 / 10,
+            shuttle=6.3e-06 / 10,
             gate_times={
                 # As suggested by Quantinuum FAQ: https://arxiv.org/pdf/2003.01293
                 "SQ": 5 * 1e-6,
