@@ -38,10 +38,10 @@ def get_bacon_shor_code(d=5, cycles=1):
     construction = {**make_bacon_shor_constructions()}
     circuit = _gen_util._generate_single_circuit(
                 constructions=construction,
-                params=_gen_util.CircuitBuildParams(style='bacon_shor', rounds=cycles, diameter=d, custom={'b': 'X'}),
+                params=_gen_util.CircuitBuildParams(style='bacon_shor', rounds=cycles, diameter=d, custom={'b': 'Z'}),
                 noise=None,
                 debug_out_dir=None,
-                convert_to_cz='auto'
+                convert_to_cz='0'
             )
     #print(circuit)
     return StimCodeCircuit(stim_circuit=circuit)

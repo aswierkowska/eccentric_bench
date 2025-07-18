@@ -34,7 +34,8 @@ MPP X15*X26*X31*X43*X16*X21*X32*X44*X17*X22*X33*X45
 MPP X29*X40*X3*X45*X30*X35*X4*X46*X31*X36*X5*X47
 
 TICK
-RX 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72
+R 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72
+H 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72
 R 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97
 
 #CNOT for X stabelizers
@@ -136,8 +137,8 @@ CX 29 96 40 96 3 96 45 96 30 96 35 96 4 96 46 96 31 96 36 96 5 96 47 96
 TICK
 #Mesurable observable
 
-
-MRX 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72
+H 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72
+MR 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72
 MR 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96
 
 
@@ -195,7 +196,7 @@ DETECTOR rec[-1]'''
 
 
 concat_steane_round = '''#Next Round
-
+H 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72
 
 #CNOT for X stabelizers
 TICK
@@ -296,8 +297,8 @@ CX 29 96 40 96 3 96 45 96 30 96 35 96 4 96 46 96 31 96 36 96 5 96 47 96
 TICK
 #Mesurable observable
 
-
-MRX 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72
+H 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72
+MR 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72
 MR 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96
 
 
@@ -365,7 +366,8 @@ TICK
 
 # ——— Round 1: ancilla prep ———
 # RX is “reset to |+>” (no rec), R is “reset to |0>” (no rec)
-RX 7 8 9
+R 7 8 9
+H 7 8 9
 R  10 11 12
 TICK
 
@@ -402,7 +404,8 @@ CX 0 10 2 11 5 12
 TICK
 
 # ——— Round 1: measure ancillas into rec bits ———
-MRX 7 8 9      # X‐basis measures → rec bits #4,5,6 of this “measurement block”
+H 7 8 9
+MR 7 8 9      # X‐basis measures → rec bits #4,5,6 of this “measurement block”
 MR  10 11 12   # Z‐basis measures → rec bits #1,2,3 of this block
 TICK
 
@@ -413,7 +416,9 @@ DETECTOR rec[-3]         # Z‐stab on (3,4,5,6)
 DETECTOR rec[-2]         # Z‐stab on (1,2,5,6)
 DETECTOR rec[-1]         # Z‐stab on (0,2,4,6)'''
 
-normal_steane_round = '''CX 7 6 8 5
+normal_steane_round = '''
+H 7 8 9
+CX 7 6 8 5
 TICK
 CX 7 2 8 1
 TICK
@@ -445,7 +450,8 @@ CX 0 10 2 11 5 12
 TICK
 
 # ——— Round 1: measure ancillas into rec bits ———
-MRX 7 8 9      # X‐basis measures → rec bits #4,5,6 of this “measurement block”
+H 7 8 9
+MR 7 8 9      # X‐basis measures → rec bits #4,5,6 of this “measurement block”
 MR  10 11 12   # Z‐basis measures → rec bits #1,2,3 of this block
 TICK
 
