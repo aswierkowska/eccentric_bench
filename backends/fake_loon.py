@@ -34,7 +34,7 @@ class FakeIBMLoon(BackendV2):
     
     @property
     def get_remote_gates(self):
-        return []
+        return self._remote_gates
     
     @property
     def qubit_positions(self):
