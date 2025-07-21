@@ -10,7 +10,8 @@ class FakeIBMLoon(BackendV2):
     def __init__(self):
         super().__init__(name="FakeIBMLoon", backend_version="2")
 
-        self._coupling_map = self.get_coupling_map()
+        # self._coupling_map = self.get_coupling_map()
+        self._remote_gates, self._coupling_map = self.get_distributed_coupling_map()
         self._num_qubits = self._coupling_map.size()
 
         # TODO: hardware limitations
@@ -30,6 +31,10 @@ class FakeIBMLoon(BackendV2):
     @property
     def coupling_map(self):
         return self._coupling_map
+    
+    @property
+    def get_remote_gates(self):
+        return []
     
     @property
     def qubit_positions(self):
@@ -92,9 +97,37 @@ class FakeIBMLoon(BackendV2):
                         edges.append((q, idx(r + int(c_coupler_distance/2), c + c_coupler_distance)))
 
         return CouplingMap(edges)
+    
+    def DQCCouplingMap(self, coupling_map1: CouplingMap, coupling_map2: CouplingMap, endpoints: list):
+        edges_1 = coupling_map1.get_edges()
+        last_qubit = coupling_map1.size()
+        converted_edges_1 = [[i, j] for i,j in edges_1]
+        new_endpoints = [[i, last_qubit + j] for i,j in endpoints]
+        new_coupling_map2 = [[last_qubit + i, last_qubit + j] for i,j in coupling_map2]
+        
+        new_coupling_map = CouplingMap(converted_edges_1 + new_endpoints + new_coupling_map2)
+        new_endpoints_tuple = [(i, j) for i,j in new_endpoints]
+
+        return new_endpoints_tuple, new_coupling_map
 
     def get_coupling_map(self) -> CouplingMap:
-        return self.squareLatticeCouplingMap(add_c_couplers=True) 
+        return self.squareLatticeCouplingMap(add_c_couplers=True)
+
+    def get_distributed_coupling_map(self) -> tuple[list, CouplingMap]:
+        """ Create coupling map of nighthawk architecture by combining multiple loon chips.
+        
+        Similar to fake_flamingo, multiple coupling maps are connected at specific locations and are combined into a
+        single coupling map. The connections are returned as endpoints.
+
+        TODO: Check if the specified endpoints make sense 
+        """
+
+        endpoints, coupling_map_two = self.DQCCouplingMap(self.squareLatticeCouplingMap(add_c_couplers=True),
+                                                    self.squareLatticeCouplingMap(add_c_couplers=True),
+                                                    [[32, 18], [51, 37], [70, 56], [89, 75]]
+                                                    )
+
+        return endpoints, coupling_map_two
 
     def addStateOfTheArtQubits(self):
         qubit_props = []
