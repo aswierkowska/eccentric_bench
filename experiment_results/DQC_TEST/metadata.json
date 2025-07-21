@@ -1,6 +1,6 @@
 {
-    "name": "DQC_26.06",
-    "num_samples": 1,
+    "name": "DQC_TEST",
+    "num_samples": 10,
     "backends": [
         "real_flamingo"
     ],
