@@ -2,6 +2,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from .custom_topologies import get_custom_topology
 from .fake_apollo import FakeQuantinuumApolloBackend
 from .fake_flamingo import FakeIBMFlamingo
+from .fake_loon import FakeIBMLoon
 from .fake_willow import FakeGoogleWillowBackend
 from .fake_infleqtion import FakeInfleqtionBackend
 from .fake_infleqtion_no_shuttling import FakeInfleqtionNoShuttlingBackend
@@ -19,6 +20,8 @@ def get_backend(backend: str, backend_size: int):
         name = backend.split("_")[1]
         if name == "flamingo":
             backend = FakeIBMFlamingo()
+        if name == "loon":
+            backend = FakeIBMLoon()
         elif name == "willow":
             # By default we allow extension as otherwise codes are limited
             backend = FakeGoogleWillowBackend(extended=True)
