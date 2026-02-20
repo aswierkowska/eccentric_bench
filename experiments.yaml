@@ -3,25 +3,25 @@ experiments:
     num_samples: 10000
     backends: ["real_mcm"]
     distances: [7, 9, 11]
-    cycles: [11]
+    cycles: [11, 100]
     codes: [ "surface"]
-    error_types: ["mcm_0.25_1_2", "mcm_0.5_1_2", "mcm_1.0_1_2", "mcm_2.0_1_2", "mcm_4.0_1_2", "mcm_1_0.25_2", "mcm_1_0.5_2", "mcm_1_0.75_2", "mcm_1_1.0_2", "mcm_1_1.5_2", "mcm_1_2.0_2", "mcm_0.25_1", "mcm_0.5_1", "mcm_1.0_1", "mcm_2.0_1", "mcm_4.0_1", "mcm_1_0.25", "mcm_1_0.5", "mcm_1_0.75", "mcm_1_1.0", "mcm_1_1.5", "mcm_1_2.0"]
+    error_types: ["mcm_0.25_1_2", "mcm_0.5_1_2", "mcm_1.0_1_2", "mcm_1.25_1_2", "mcm_1.5_2_2", "mcm_1.75_1_2", "mcm_2.0_1_2", "mcm_1_0.25_2", "mcm_1_0.5_2", "mcm_1_0.75_2", "mcm_1_1.0_2", "mcm_1_1.5_2", "mcm_1_2.0_2", "mcm_0.25_1", "mcm_0.5_1", "mcm_0.75_1", "mcm_1.0_1", "mcm_1.25_1", "mcm_1.5_1", "mcm_1.75_1", "mcm_2_1", "mcm_1_0.25", "mcm_1_0.5", "mcm_1_0.75", "mcm_1_1.0", "mcm_1_1.5", "mcm_1_2.0"]
     decoders: ["mwpm"]
   - name: "MCM_tradeoff"
     num_samples: 10000
     backends: ["real_mcm"]
     distances: [7, 9, 11]
-    cycles: [11]
+    cycles: [11, 100]
     codes: [ "surface"]
-    error_types: ["mcm_388_0.25", "mcm_214_0.5", "mcm_186_0.75", "mcm_178_1.0"]
+    error_types: ["mcm_388_0.25", "mcm_214_0.5", "mcm_186_0.75", "mcm_178_1.0", "mcm_178_1.25", "mcm_178_1.5", "mcm_178_1.75", "mcm_178_2.0"]
     decoders: ["mwpm"]
   - name: "MCM_flamingo"
     num_samples: 10000
     backends: ["real_mcm"]
     distances: [7, 9, 11]
-    cycles: [11]
+    cycles: [11, 100]
     codes: [ "surface"]
-    error_types: ["real_flamingo_2_1_2", "real_flamingo_3_1_2", "real_flamingo_4_1_2", "real_flamingo_5_1_2", "real_flamingo_6_1_2", "real_flamingo_7_1_2", "real_flamingo_8_1_2", "real_flamingo_9_1_2", "real_flamingo_10_1_2", "real_flamingo_1_0.25_2", "real_flamingo_1_0.5_2", "real_flamingo_1_0.75_2", "real_flamingo_1_1.0_2", "real_flamingo_1_1.5_2", "real_flamingo_1_2.0_2", "real_flamingo_2_1", "real_flamingo_3_1", "real_flamingo_4_1", "real_flamingo_5_1", "real_flamingo_6_1", "real_flamingo_7_1", "real_flamingo_8_1", "real_flamingo_9_1", "real_flamingo_10_1", "real_flamingo_1_0.25", "real_flamingo_1_0.5", "real_flamingo_1_0.75", "real_flamingo_1_1.0", "real_flamingo_1_1.5", "real_flamingo_1_2.0"]
+    error_types: ["real_flamingo_0.25_1_2", "real_flamingo_0.5_1_2", "real_flamingo_0.75_1_2", "real_flamingo_1_1_2", "real_flamingo_1.25_1_2", "real_flamingo_1.5_1_2", "real_flamingo_1.75_1_2", "real_flamingo_2_1_2", "real_flamingo_1_0.25_2", "real_flamingo_1_0.5_2", "real_flamingo_1_0.75_2", "real_flamingo_1_1.0_2", "real_flamingo_1_1.5_2", "real_flamingo_1_2.0_2", "real_flamingo_0.25_1", "real_flamingo_0.5_1", "real_flamingo_0.75_1", "real_flamingo_1_1", "real_flamingo_1.25_1", "real_flamingo_1.5_1", "real_flamingo_1.75_1", "real_flamingo_2_1", "real_flamingo_1_0.25", "real_flamingo_1_0.5", "real_flamingo_1_0.75", "real_flamingo_1_1.0", "real_flamingo_1_1.5", "real_flamingo_1_2.0"]
     decoders: ["mwpm"]
 #  - name: "MCM_nighthawk"
 #    num_samples: 100000

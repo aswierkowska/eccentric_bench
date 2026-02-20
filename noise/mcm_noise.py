@@ -16,15 +16,15 @@ class MCMNoise(NoiseModel):
         m_time_multiplier = float(m_time_multiplier)
         decoding_time = float(decoding_time)
         p = 1e-4
+        # IBM FEZ
         return NoiseModel(
-            sq=p,
-            tq=5 * p,
-            measure=5 * p * m_error_multiplier,
+            sq=2.843 * 1e-4,
+            tq=2.709*1e-3,
+            measure=1.46*1e-2 * m_error_multiplier,
             gate_times={
-                "SQ": 50 * 1e-9,
-                "TQ": 70 * 1e-9,
+                "SQ": 24 * 1e-9,
+                "TQ": 68 * 1e-9,
                 "M": 1000 * 1e-9 * m_time_multiplier + decoding_time * 1e-6,
-                "REMOTE": (300 * 1e-9) / (2.2222222222222221e-10 * 1e9) * (2.2222222222222221e-10 * 1e9),
                 "R": 1.2942222222222222e-06
             },
             qt=qt,
