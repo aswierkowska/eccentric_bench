@@ -1,0 +1,27 @@
+{
+    "name": "MCM_tradeoff",
+    "num_samples": 10000,
+    "backends": [
+        "real_mcm"
+    ],
+    "distances": [
+        7,
+        9,
+        11
+    ],
+    "cycles": [
+        11
+    ],
+    "codes": [
+        "surface"
+    ],
+    "error_types": [
+        "mcm_388_0.25",
+        "mcm_214_0.5",
+        "mcm_`86_0.75",
+        "mcm_178_1.0"
+    ],
+    "decoders": [
+        "mwpm"
+    ]
+}

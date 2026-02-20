@@ -1,34 +1,43 @@
 {
     "name": "MCM",
-    "num_samples": 100000,
+    "num_samples": 10000,
     "backends": [
-        "real_heron"
+        "real_mcm"
     ],
     "distances": [
-        3,
-        5,
-        7
+        7,
+        9,
+        11
     ],
     "cycles": [
-        300,
-        500,
-        750
+        11
     ],
     "codes": [
         "surface"
     ],
     "error_types": [
-        "real_heron_0.25_1",
-        "real_heron_0.5_1",
-        "real_heron_1.0_1",
-        "real_heron_2.0_1",
-        "real_heron_4.0_1",
-        "real_heron_1_0.25",
-        "real_heron_1_0.5",
-        "real_heron_1_0.75",
-        "real_heron_1_1.0",
-        "real_heron_1_1.5",
-        "real_heron_1_2.0"
+        "mcm_0.25_1_2",
+        "mcm_0.5_1_2",
+        "mcm_1.0_1_2",
+        "mcm_2.0_1_2",
+        "mcm_4.0_1_2",
+        "mcm_1_0.25_2",
+        "mcm_1_0.5_2",
+        "mcm_1_0.75_2",
+        "mcm_1_1.0_2",
+        "mcm_1_1.5_2",
+        "mcm_1_2.0_2",
+        "mcm_0.25_1",
+        "mcm_0.5_1",
+        "mcm_1.0_1",
+        "mcm_2.0_1",
+        "mcm_4.0_1",
+        "mcm_1_0.25",
+        "mcm_1_0.5",
+        "mcm_1_0.75",
+        "mcm_1_1.0",
+        "mcm_1_1.5",
+        "mcm_1_2.0"
     ],
     "decoders": [
         "mwpm"
