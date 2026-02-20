@@ -32,12 +32,18 @@ def get_noise_model(error_type: str, qt: QubitTracking, p: float = None, backend
     elif error_type.startswith("mcm") and backend:
         m_error_multiplier = error_type.split("_")[1] if error_type != "mcm" else 1
         m_time_multiplier = error_type.split("_")[2] if error_type != "mcm" else 1
-        decoding_time = error_type.split("_")[3] if error_type != "mcm" else 0
+        if len(error_type.split("_")) > 4:
+            decoding_time = error_type.split("_")[3]
+        else:
+            decoding_time = 0
         return MCMNoise.get_noise(qt, backend, m_error_multiplier, m_time_multiplier, decoding_time)
     elif error_type.startswith("real_flamingo") and backend:
         m_error_multiplier = error_type.split("_")[2] if error_type != "real_flamingo" else 1
         m_time_multiplier = error_type.split("_")[3] if error_type != "real_flamingo" else 1
-        decoding_time = error_type.split("_")[4] if error_type != "real_flamingo" else 0
+        if len(error_type.split("_")) > 4:
+            decoding_time = error_type.split("_")[4]
+        else:
+            decoding_time = 0
         return FlamingoNoise.get_noise(qt, backend, m_error_multiplier, m_time_multiplier, decoding_time)
     elif error_type == "real_infleqtion" and backend:
         return InfleqtionNoise.get_noise(qt, backend)

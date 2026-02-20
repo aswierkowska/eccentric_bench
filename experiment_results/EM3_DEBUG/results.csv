@@ -1,7 +1,0 @@
-backend,backend_size,code,decoder,distance,cycles,num_samples,error_type,error_probability,logical_error_rate,layout_method,routing_method,translating_method
-custom_full,300,steane,bposd,9,3,10,em3_1,0.01,0.100000,N/A,N/A,N/A
-custom_full,300,color,bposd,11,3,10,em3_1,0.01,0.000000,N/A,N/A,N/A
-custom_full,300,gross,bposd,150,3,10,em3_1,0.01,0.000000,N/A,N/A,N/A
-custom_full,300,surface,bposd,11,3,10,em3_1,0.01,0.000000,N/A,N/A,N/A
-custom_full,300,hh,bposd,11,3,10,em3_1,0.01,0.500000,N/A,N/A,N/A
-custom_full,300,bacon,bposd,17,3,10,em3_1,0.01,0.300000,N/A,N/A,N/A

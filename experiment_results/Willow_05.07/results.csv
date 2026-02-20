@@ -1,2 +1,0 @@
-backend,backend_size,code,decoder,distance,cycles,num_samples,error_type,error_probability,logical_error_rate,layout_method,routing_method,translating_method
-real_willow,,steane,bposd,9,9,1000,real_willow,,0.438000,N/A,N/A,N/A
