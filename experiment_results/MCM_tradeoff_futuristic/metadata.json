@@ -1,0 +1,31 @@
+{
+    "name": "MCM_tradeoff_futuristic",
+    "num_samples": 10000,
+    "backends": [
+        "real_mcm"
+    ],
+    "distances": [
+        9,
+        11,
+        13
+    ],
+    "cycles": [
+        100
+    ],
+    "codes": [
+        "surface"
+    ],
+    "error_types": [
+        "mcm_13.29_0.25",
+        "mcm_7.33_0.5",
+        "mcm_6.37_0.75",
+        "mcm_6.10_1.0",
+        "mcm_6.10_1.25",
+        "mcm_6.10_1.5",
+        "mcm_6.10_1.75",
+        "mcm_6.10_2.0"
+    ],
+    "decoders": [
+        "mwpm"
+    ]
+}

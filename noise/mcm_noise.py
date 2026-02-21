@@ -18,9 +18,9 @@ class MCMNoise(NoiseModel):
         p = 1e-4
         # IBM FEZ
         return NoiseModel(
-            sq=2.843 * 1e-4,
-            tq=2.709*1e-3,
-            measure=1.46*1e-2 * m_error_multiplier,
+            sq=2.843 * 1e-4 / 10,
+            tq=2.709*1e-3 / 10,
+            measure=1.46*1e-2 * m_error_multiplier / 10,
             gate_times={
                 "SQ": 24 * 1e-9,
                 "TQ": 68 * 1e-9,
