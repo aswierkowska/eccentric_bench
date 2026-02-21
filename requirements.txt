@@ -204,3 +204,4 @@ yarg==0.1.9
 yarl==1.18.3
 z3-solver==4.13.3.0
 zipp==3.21.0
+tqec

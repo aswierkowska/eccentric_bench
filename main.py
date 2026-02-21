@@ -21,6 +21,81 @@ from utils import save_experiment_metadata, save_results_to_csv, setup_experimen
 from metrics.utils import *
 import stim
 
+from tqec import compile_block_graph, NoiseModel
+from tqec.utils.enums import Basis
+from tqec.computation.block_graph import BlockGraph, BlockKind, block_kind_from_str
+from tqec.computation.cube import CubeKind, Port, YHalfCube
+from tqec.computation.pipe import PipeKind
+from tqec.computation.cube import ZXCube
+from tqec.utils.position import FloatPosition3D, Position3D
+from tqec.utils.scale import round_or_fail
+from tqec.gallery import cnot, three_cnots, memory, stability, cz
+from tqec.gallery.steane_encoding import steane_encoding
+from tqec.utils.position import Direction3D, Position3D, SignedDirection3D
+
+def single_cnot_full_memory(self, distance_scale: int = 1, n1: int = 1):
+        """Construct a lattice surgery CNOT gate using tQEC
+
+        Construct n1 number of lattice surgery CNOT gates
+
+        Args:
+            distance_scale (int, optional): Code distance defined as code_distance = 2*distance_scale+1. Defaults to 1.
+            n1 (int, optional): Number of CNOT gates. Defaults to 1.
+
+        Returns:
+            _type_: Stim circuit containing the CNOT gate(s)
+        """
+
+        if n1 >= 1:
+            # go from left to right and place cnots
+
+            # Contains all patches and operations
+            g = BlockGraph("Logical CNOT")
+
+            placement_x = 0
+            placement_y = 0
+            cnot_counter = 0
+            for _ in range(n1):
+                nodes = [
+                    (Position3D(placement_x, placement_y, 0), "P", f"In_Control_{cnot_counter}"),
+                    (Position3D(placement_x, placement_y, 1), "ZXX", ""),
+                    (Position3D(placement_x, placement_y, 2), "ZXZ", ""),
+                    (Position3D(placement_x, placement_y, 3), "P", f"Out_Control_{cnot_counter}"),
+                    (Position3D(placement_x, placement_y+1, 1), "ZXX", ""),
+                    (Position3D(placement_x, placement_y+1, 2), "ZXZ", ""),
+                    (Position3D(placement_x+1, placement_y+1, 0), "P", f"In_Target_{cnot_counter}"),
+                    (Position3D(placement_x+1, placement_y+1, 1), "ZXZ", ""),
+                    (Position3D(placement_x+1, placement_y+1, 2), "ZXZ", ""),
+                    (Position3D(placement_x+1, placement_y+1, 3), "P", f"Out_Target_{cnot_counter}"),
+                ]
+                for pos, kind, label in nodes:
+                    g.add_cube(pos, kind, label)
+
+                pipes = [(0, 1), (1, 2), (2, 3), # Control
+                        (1, 4), (4, 5), # Ancilla
+                        (5, 8), # Merge
+                        (6, 7), (7, 8), (8, 9) # Target
+                        ]
+
+                for p0, p1 in pipes:
+                    g.add_pipe(nodes[p0][0], nodes[p1][0])
+
+                g.fill_ports(ZXCube.from_str("ZXZ"))
+
+                # Every CNOTS needs a width of 2
+                placement_x += 2
+
+            # Compile the block graph and construct stim circuit
+            compiled_graph = compile_block_graph(g)
+            stim_circuit = compiled_graph.generate_stim_circuit(
+                k = distance_scale,
+                manhattan_radius=2
+            )
+
+
+
+	return stim_circuit
+
 def run_experiment(
     experiment_name,
     backend_name,
