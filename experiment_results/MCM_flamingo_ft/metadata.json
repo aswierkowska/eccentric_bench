@@ -1,0 +1,45 @@
+{
+    "name": "MCM_flamingo_ft",
+    "num_samples": 10000,
+    "backends": [
+        "real_mcm"
+    ],
+    "distances": [
+        9,
+        11,
+        13
+    ],
+    "cycles": [
+        100
+    ],
+    "codes": [
+        "surface"
+    ],
+    "error_types": [
+        "real_flamingo_0.25_1_2",
+        "real_flamingo_0.5_1_2",
+        "real_flamingo_1_1_2",
+        "real_flamingo_2_1_2",
+        "real_flamingo_4_1_2",
+        "real_flamingo_1_0.25_2",
+        "real_flamingo_1_0.5_2",
+        "real_flamingo_1_0.75_2",
+        "real_flamingo_1_1.0_2",
+        "real_flamingo_1_1.5_2",
+        "real_flamingo_1_2.0_2",
+        "real_flamingo_0.25_1",
+        "real_flamingo_0.5_1",
+        "real_flamingo_1_1",
+        "real_flamingo_2_1",
+        "real_flamingo_4_1",
+        "real_flamingo_1_0.25",
+        "real_flamingo_1_0.5",
+        "real_flamingo_1_0.75",
+        "real_flamingo_1_1.0",
+        "real_flamingo_1_1.5",
+        "real_flamingo_1_2.0"
+    ],
+    "decoders": [
+        "mwpm"
+    ]
+}
