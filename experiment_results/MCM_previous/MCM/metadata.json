@@ -5,13 +5,13 @@
         "real_mcm"
     ],
     "distances": [
+        7,
         9,
-        11,
-        13
+        11
     ],
     "cycles": [
-        100,
-        200
+        11,
+        100
     ],
     "codes": [
         "surface"
