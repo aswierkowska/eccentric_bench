@@ -64,13 +64,17 @@ def run_experiment(
         #if translating_method:
         #    code.qc = translate(code.qc, translating_method)
        
-        #mappings = {}
+        mappings = {}
 
-        #for _ in range(10):
-        #    t = run_transpiler(code.qc, backend, layout_method, routing_method)
-        #    mappings[detailed_gate_count_qiskit(t)["swap"]] = t
+        for _ in range(10):
+            t = run_transpiler(code.qc, backend, layout_method, routing_method)
+            if "swap" in detailed_gate_count_qiskit(t):
+                mappings[detailed_gate_count_qiskit(t)["swap"]] = t
+            else:
+                mapping[0] = t
 
-        code.qc = run_transpiler(code.qc, backend, layout_method, routing_method)
+        code.qc = mappings[min(mappings)]
+        #code.qc = run_transpiler(code.qc, backend, layout_method, routing_method)
         qt = QubitTracking(backend, code.qc)
         stim_circuit = get_stim_circuits(
             code.qc, detectors=detectors, logicals=logicals
