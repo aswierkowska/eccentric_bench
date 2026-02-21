@@ -106,9 +106,9 @@ def run_experiment(
         #if cycles is None:
         #    cycles = d
         
-        x = (d - 1) / 2
-        ls = single_cnot_full_memory(x, 1)
-        code = StimCodeCircuit(stim_circuit = ls)
+        x = int((d - 1) / 2)
+        stim_circuit = single_cnot_full_memory(x, 1)
+        code = StimCodeCircuit(stim_circuit = stim_circuit)
         detectors, logicals = code.stim_detectors()
 
         if translating_method:
@@ -126,10 +126,9 @@ def run_experiment(
         code.qc = mappings[min(mappings)]
         #code.qc = run_transpiler(code.qc, backend, layout_method, routing_method)
         qt = QubitTracking(backend, code.qc)
-        stim_circuit = get_stim_circuits(
-            code.qc, detectors=detectors, logicals=logicals
-        )[0][0]
-        
+        #stim_circuit = get_stim_circuits(
+        #    code.qc, detectors=detectors, logicals=logicals
+        #)[0][0]
         for error_type in error_types:
             noise_model = get_noise_model(error_type, qt, error_prob, backend)
             noisy_stim_circuit = noise_model.noisy_circuit(stim_circuit)
