@@ -34,41 +34,163 @@ from tqec.gallery import cnot, three_cnots, memory, stability, cz
 from tqec.gallery.steane_encoding import steane_encoding
 from tqec.utils.position import Direction3D, Position3D, SignedDirection3D
 
-def single_cnot_full_memory(self, distance_scale: int = 1, n1: int = 1):
-        if n1 >= 1:
-            g = BlockGraph("Logical CNOT")
-            placement_x = 0
-            placement_y = 0
-            cnot_counter = 0
-            for _ in range(n1):
-                nodes = [
-                    (Position3D(placement_x, placement_y, 0), "P", f"In_Control_{cnot_counter}"),
-                    (Position3D(placement_x, placement_y, 1), "ZXX", ""),
-                    (Position3D(placement_x, placement_y, 2), "ZXZ", ""),
-                    (Position3D(placement_x, placement_y, 3), "P", f"Out_Control_{cnot_counter}"),
-                    (Position3D(placement_x, placement_y+1, 1), "ZXX", ""),
-                    (Position3D(placement_x, placement_y+1, 2), "ZXZ", ""),
-                    (Position3D(placement_x+1, placement_y+1, 0), "P", f"In_Target_{cnot_counter}"),
-                    (Position3D(placement_x+1, placement_y+1, 1), "ZXZ", ""),
-                    (Position3D(placement_x+1, placement_y+1, 2), "ZXZ", ""),
-                    (Position3D(placement_x+1, placement_y+1, 3), "P", f"Out_Target_{cnot_counter}"),
-                ]
-                for pos, kind, label in nodes:
-                    g.add_cube(pos, kind, label)
-                    pipes = [(0, 1), (1, 2), (2, 3), 
-                        (1, 4), (4, 5), (5, 8),
-                        (6, 7), (7, 8), (8, 9)
-                ]
-                for p0, p1 in pipes:
-                    g.add_pipe(nodes[p0][0], nodes[p1][0])
-                g.fill_ports(ZXCube.from_str("ZXZ"))
-                placement_x += 2
-            compiled_graph = compile_block_graph(g)
-            stim_circuit = compiled_graph.generate_stim_circuit(
-                k = distance_scale, manhattan_radius=2
-            )
+def single_cnot_full_memory(self, distance_scale: int = 1, n1: int = 1, cycles: int = 1):
+    g = BlockGraph("Logical CNOT")
+    cnot_counter = 0
+    for _ in range(n1):
+        nodes = [
+            (Position3D(placement_x, placement_y, 0), "P", f"In_Control_{cnot_counter}"),
+            (Position3D(placement_x, placement_y, 1), "ZXX", ""),
+            (Position3D(placement_x, placement_y, 2), "ZXZ", ""),
+            (Position3D(placement_x, placement_y, 3), "P", f"Out_Control_{cnot_counter}"),
+            (Position3D(placement_x, placement_y+1, 1), "ZXX", ""),
+            (Position3D(placement_x, placement_y+1, 2), "ZXZ", ""),
+            (Position3D(placement_x+1, placement_y+1, 0), "P", f"In_Target_{cnot_counter}"),
+            (Position3D(placement_x+1, placement_y+1, 1), "ZXZ", ""),
+            (Position3D(placement_x+1, placement_y+1, 2), "ZXZ", ""),
+            (Position3D(placement_x+1, placement_y+1, 3), "P", f"Out_Target_{cnot_counter}"),
+        ]
+        for pos, kind, label in nodes:
+            g.add_cube(pos, kind, label)
+            pipes = [(0, 1), (1, 2), (2, 3), 
+                (1, 4), (4, 5), (5, 8),
+                (6, 7), (7, 8), (8, 9)
+        ]
+        for p0, p1 in pipes:
+            g.add_pipe(nodes[p0][0], nodes[p1][0])
+        g.fill_ports(ZXCube.from_str("ZXZ"))
+        placement_x += 2
+    compiled_graph = compile_block_graph(g)
+    stim_circuit = compiled_graph.generate_stim_circuit(
+        k = distance_scale, manhattan_radius=2
+    )
 
-            return stim_circuit
+    return stim_circuit
+
+def single_cnot_n_rounds(
+        self,
+        distance_scale: int = 1,
+        num_memory_rounds: int = 3,
+):
+    """
+    Builds:
+        - One CNOT interaction layer
+        - Followed by N syndrome measurement memory rounds
+        - On both control and target
+    """
+
+    g = BlockGraph("Logical CNOT + N memory rounds")
+
+    cnot_counter = 0
+    nodes = []
+
+    # =========================
+    # CONTROL PATCH
+    # =========================
+    control_nodes = []
+
+    # Input
+    control_nodes.append(
+        (Position3D(0, 0, 0), "P", f"In_Control_{cnot_counter}")
+    )
+
+    # CNOT interaction layer
+    control_nodes.append(
+        (Position3D(0, 0, 1), "ZXX", "")
+    )
+
+    # Memory rounds after CNOT
+    for r in range(num_memory_rounds):
+        z = 2 + r
+        control_nodes.append(
+            (Position3D(0, 0, z), "ZXZ", "")
+        )
+
+    # Output
+    control_out_z = 2 + num_memory_rounds
+    control_nodes.append(
+        (Position3D(0, 0, control_out_z), "P",
+         f"Out_Control_{cnot_counter}")
+    )
+
+    nodes.extend(control_nodes)
+
+    # =========================
+    # TARGET PATCH
+    # =========================
+    target_nodes = []
+
+    target_nodes.append(
+        (Position3D(1, 1, 0), "P", f"In_Target_{cnot_counter}")
+    )
+
+    # CNOT interaction layer
+    target_nodes.append(
+        (Position3D(1, 1, 1), "ZXZ", "")
+    )
+
+    # Memory rounds
+    for r in range(num_memory_rounds):
+        z = 2 + r
+        target_nodes.append(
+            (Position3D(1, 1, z), "ZXZ", "")
+        )
+
+    target_out_z = 2 + num_memory_rounds
+    target_nodes.append(
+        (Position3D(1, 1, target_out_z), "P",
+         f"Out_Target_{cnot_counter}")
+    )
+
+    nodes.extend(target_nodes)
+
+    # =========================
+    # ANCILLA COLUMN (fixed)
+    # =========================
+    ancilla_nodes = [
+        (Position3D(0, 1, 1), "ZXX", ""),
+        (Position3D(0, 1, 2), "ZXZ", ""),
+    ]
+    nodes.extend(ancilla_nodes)
+
+    # =========================
+    # ADD CUBES
+    # =========================
+    for pos, kind, label in nodes:
+        g.add_cube(pos, kind, label)
+
+    # =========================
+    # ADD VERTICAL PIPES
+    # =========================
+    def connect_column(column_nodes):
+        for i in range(len(column_nodes) - 1):
+            g.add_pipe(column_nodes[i][0], column_nodes[i + 1][0])
+
+    connect_column(control_nodes)
+    connect_column(target_nodes)
+
+    # =========================
+    # CNOT INTERACTION PIPES
+    # =========================
+    # Control z=1 -> Ancilla z=1
+    g.add_pipe(control_nodes[1][0], ancilla_nodes[0][0])
+
+    # Ancilla z=1 -> z=2
+    g.add_pipe(ancilla_nodes[0][0], ancilla_nodes[1][0])
+
+    # =========================
+    # Finalize
+    # =========================
+    g.fill_ports(ZXCube.from_str("ZXZ"))
+
+    compiled_graph = compile_block_graph(g)
+    stim_circuit = compiled_graph.generate_stim_circuit(
+        k=distance_scale,
+        manhattan_radius=2
+    )
+
+    return stim_circuit
+
 
 def run_experiment(
     experiment_name,
@@ -107,7 +229,7 @@ def run_experiment(
         #    cycles = d
         
         x = int((d - 1) / 2)
-        stim_circuit = single_cnot_full_memory(x, 1)
+        stim_circuit = single_cnot_n_rounds(x, 1, cycles)
         code = StimCodeCircuit(stim_circuit = stim_circuit)
         detectors, logicals = code.stim_detectors()
 
